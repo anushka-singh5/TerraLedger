@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TerraLedger — AI-Verified Carbon Credits on QIE</title>
+<link rel="icon" type="image/png" href="assets/logo-icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" crossorigin="anonymous"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#040507; --surface:#0b0d12; --surface2:#111420;
+  --border:#1c2035; --border2:#252a40;
+  --green:#00e57a; --green2:#00b861; --green-glow:rgba(0,229,122,0.1);
+  --red:#ff4560; --amber:#f5a623; --blue:#4f8cff; --purple:#9d7bff;
+  --text:#e8eaf0; --muted:#6b7280; --muted2:#9aa0b0;
+  --font:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+html{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
+body{min-height:100vh;overflow-x:hidden}
+a{color:var(--blue);text-decoration:none}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:60px;background:rgba(4,5,7,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.02em;cursor:pointer}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.logo-mark{width:42px;height:42px;border-radius:11px;object-fit:cover;flex-shrink:0;box-shadow:0 0 0 1px rgba(255,255,255,.07),0 3px 14px rgba(0,0,0,.45);transition:transform .25s cubic-bezier(.16,1,.3,1)}
+.nav-logo{gap:12px;font-size:20px}
+.nav-logo:hover .logo-mark{transform:scale(1.05)}
+.site-footer .logo-mark{width:50px;height:50px;border-radius:13px}
+.site-footer .nav-logo{font-size:23px;gap:14px}
+.nav-links{display:flex;gap:4px}
+.nav-link{padding:6px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted2);cursor:pointer;transition:all .15s;border:none;background:none;font-family:var(--font)}
+.nav-link:hover,.nav-link.active{color:var(--text);background:var(--surface2)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.qiepass-chip{display:none;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:500;
+  border:1px solid var(--border2);background:var(--surface2);cursor:pointer;transition:all .15s;font-family:var(--font);color:var(--muted2)}
+.qiepass-chip:hover{border-color:var(--purple)}
+.qiepass-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.qiepass-chip.verified{color:var(--purple);border-color:rgba(157,123,255,0.4)}
+.qiepass-chip.verified .dot{background:var(--purple);box-shadow:0 0 6px var(--purple)}
+.nav-cta{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;background:var(--green);color:#040507;border:none;cursor:pointer;transition:all .15s;font-family:var(--font)}
+.nav-cta:hover{background:var(--green2)}
+.nav-cta.connected{background:var(--surface2);color:var(--green);border:1px solid rgba(0,229,122,0.3);font-family:var(--mono);font-size:12px}
+.wallet-wrap{position:relative}
+.wallet-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:220px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:6px;box-shadow:0 16px 44px rgba(0,0,0,0.55);display:none;z-index:200}
+.wallet-menu.show{display:block;animation:fadeIn .15s ease}
+.wm-addr{font-family:var(--mono);font-size:11.5px;color:var(--muted2);padding:9px 10px;border-bottom:1px solid var(--border);word-break:break-all}
+.wm-row{font-family:var(--mono);font-size:11.5px;color:var(--green);padding:8px 10px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.wm-item{display:block;padding:9px 10px;border-radius:8px;font-size:13px;color:var(--muted2);cursor:pointer;transition:all .12s}
+.wm-item:hover{background:var(--surface2);color:var(--text)}
+.wm-item.danger{color:var(--red)}
+.wm-item.danger:hover{background:rgba(255,69,96,0.08)}
+
+/* PAGES */
+.page{display:none;padding-top:60px;min-height:100vh}
+.page.active{display:block}
+
+/* LANDING */
+.hero{text-align:center;padding:90px 24px 70px;background:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,229,122,0.08) 0%, transparent 70%)}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;border:1px solid rgba(0,229,122,0.25);
+  background:rgba(0,229,122,0.06);font-size:12px;font-weight:500;color:var(--green);margin-bottom:26px;font-family:var(--mono);letter-spacing:.02em}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+h1{font-size:clamp(36px,6vw,64px);font-weight:700;line-height:1.05;letter-spacing:-.03em;margin-bottom:18px}
+h1 span{color:var(--green)}
+.hero-sub{font-size:17px;color:var(--muted2);max-width:600px;margin:0 auto 36px;font-weight:400;line-height:1.7}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;background:var(--green);color:#040507;border:none;cursor:pointer;transition:all .15s;font-family:var(--font)}
+.btn-primary:hover{background:var(--green2);transform:translateY(-1px)}
+.btn-secondary{padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;background:transparent;color:var(--text);border:1px solid var(--border2);cursor:pointer;transition:all .15s;font-family:var(--font)}
+.btn-secondary:hover{border-color:var(--muted);background:var(--surface2)}
+
+.stats-bar{display:flex;justify-content:center;border:1px solid var(--border);border-radius:14px;max-width:680px;margin:0 auto 70px;overflow:hidden;background:var(--surface)}
+.stat-item{flex:1;padding:20px 16px;text-align:center;border-right:1px solid var(--border)}
+.stat-item:last-child{border-right:none}
+.stat-val{font-size:24px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.stat-val.green{color:var(--green)}.stat-val.red{color:var(--red)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+
+.section{max-width:1100px;margin:0 auto;padding:0 24px 70px}
+.section-title{font-size:28px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+.section-sub{color:var(--muted2);margin-bottom:36px;font-size:15px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+.problem-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px}
+.problem-card.bad{border-color:rgba(255,69,96,0.2);background:rgba(255,69,96,0.03)}
+.problem-card.good{border-color:rgba(0,229,122,0.2);background:rgba(0,229,122,0.03)}
+.pc-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.pc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.pc-icon.red{background:rgba(255,69,96,0.12);color:var(--red)}
+.pc-icon.green{background:rgba(0,229,122,0.1);color:var(--green)}
+.pc-title{font-size:14px;font-weight:600}
+.pc-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.pc-item:last-child{border-bottom:none}
+.pc-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:7px}
+.gate-line{margin:36px 0 0;padding:18px 22px;border-radius:12px;border:1px solid rgba(0,229,122,0.25);background:rgba(0,229,122,0.04);
+  text-align:center;font-size:15px;color:var(--muted2)}
+.gate-line strong{color:var(--green);font-weight:600}
+
+.modules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:20px}
+.module-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;transition:border-color .2s,transform .2s}
+.module-card:hover{border-color:var(--border2);transform:translateY(-3px)}
+.mc-num{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--green);margin-bottom:10px;letter-spacing:.06em}
+.mc-title{font-size:14px;font-weight:600;margin-bottom:6px}
+.mc-desc{font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:12px}
+.mc-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;background:var(--surface2);color:var(--muted2);border:1px solid var(--border);font-family:var(--mono)}
+
+/* FORMS */
+.submit-layout,.verify-layout{max-width:760px;margin:0 auto;padding:40px 24px}
+.market-layout{max-width:1140px;margin:0 auto;padding:40px 24px}
+.page-header{margin-bottom:28px}
+.page-title{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.page-desc{color:var(--muted2);font-size:14px}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;margin-bottom:16px}
+.form-section-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-row.full{grid-template-columns:1fr}
+.field{display:flex;flex-direction:column;gap:5px}
+label{font-size:12px;font-weight:500;color:var(--muted2)}
+label span{color:var(--red)}
+input,select,textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text);font-family:var(--font);transition:border-color .15s;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,229,122,0.08)}
+select option{background:var(--surface2)}
+textarea{resize:vertical;min-height:80px;font-family:var(--mono);font-size:12px}
+.gps-input-area{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:14px}
+.gps-coords{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.coord-row{display:flex;gap:8px;align-items:center}
+.coord-row input{flex:1}
+.coord-label{font-size:11px;color:var(--muted);font-family:var(--mono);min-width:30px}
+.gps-actions{display:flex;gap:8px}
+.btn-ghost{padding:6px 12px;border-radius:7px;font-size:12px;font-weight:500;background:transparent;color:var(--muted2);border:1px solid var(--border2);cursor:pointer;transition:all .15s;font-family:var(--font)}
+.btn-ghost:hover{color:var(--text);border-color:var(--muted)}
+.upload-area{border:1.5px dashed var(--border2);border-radius:10px;padding:26px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+.upload-area:hover,.upload-area.has-file{border-color:var(--green);background:rgba(0,229,122,0.04)}
+.upload-icon{font-size:26px;margin-bottom:8px;opacity:.6}
+.upload-text{font-size:13px;color:var(--muted2)}.upload-text strong{color:var(--text)}
+.upload-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.upload-filename{font-size:12px;color:var(--green);font-family:var(--mono);margin-top:6px}
+input[type=file]{display:none}
+.submit-btn{width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:600;background:var(--green);color:#040507;border:none;cursor:pointer;transition:all .2s;font-family:var(--font);margin-top:8px}
+.submit-btn:hover{background:var(--green2)}
+.submit-btn:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed}
+.confirm-actions{display:flex;gap:10px;margin-top:20px}
+.confirm-actions .submit-btn{margin-top:0;flex:1}
+.submit-btn.ghost-btn{background:transparent;color:var(--muted2);border:1px solid var(--border2)}
+.submit-btn.ghost-btn:hover{background:transparent;border-color:var(--text);color:var(--text)}
+.submit-btn.danger{background:var(--red);color:#fff}
+.submit-btn.danger:hover{background:var(--red);filter:brightness(1.12)}
+.lbl-opt{color:var(--muted);font-weight:400;font-size:.85em}
+
+/* VERIFY */
+.processing-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:34px 28px;text-align:center;margin-bottom:20px}
+.processing-ring{width:68px;height:68px;border-radius:50%;margin:0 auto 18px;border:3px solid var(--border);border-top-color:var(--green);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.processing-title{font-size:19px;font-weight:700;margin-bottom:6px}
+.processing-sub{font-size:13px;color:var(--muted2)}
+.steps{display:flex;flex-direction:column}
+.step{display:flex;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border)}
+.step:last-child{border-bottom:none}
+.step-indicator{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid var(--border2);background:var(--surface2);transition:all .3s}
+.step-indicator.running{border-color:var(--amber);color:var(--amber);animation:stepPulse 1s infinite}
+.step-indicator.done{border-color:var(--green);background:rgba(0,229,122,0.1);color:var(--green)}
+.step-indicator.fail{border-color:var(--red);background:rgba(255,69,96,0.1);color:var(--red)}
+.step-indicator.pending{border-color:var(--border2);color:var(--muted)}
+@keyframes stepPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,0.4)}50%{box-shadow:0 0 0 6px rgba(245,166,35,0)}}
+.step-body{flex:1;padding-top:6px}
+.step-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.step-detail{font-size:12px;color:var(--muted2)}
+.step-score{font-family:var(--mono);font-size:13px;font-weight:600;padding-top:6px}
+.result-card{border-radius:16px;padding:28px;margin-bottom:16px;border:1.5px solid}
+.result-card.pass{border-color:rgba(0,229,122,0.3);background:rgba(0,229,122,0.04)}
+.result-card.fail{border-color:rgba(255,69,96,0.3);background:rgba(255,69,96,0.03)}
+.rc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.rc-verdict{font-size:22px;font-weight:700}
+.rc-verdict.pass{color:var(--green)}.rc-verdict.fail{color:var(--red)}
+.rc-score{font-family:var(--mono);font-size:32px;font-weight:700;line-height:1}
+.rc-score span{font-size:16px;color:var(--muted);font-weight:400}
+.score-bars{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.score-bar-row{display:grid;grid-template-columns:120px 1fr 60px;gap:10px;align-items:center}
+.sb-label{font-size:12px;color:var(--muted2)}
+.sb-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.sb-fill{height:100%;border-radius:3px;transition:width .8s ease .2s}
+.sb-fill.green{background:var(--green)}.sb-fill.amber{background:var(--amber)}.sb-fill.red{background:var(--red)}
+.sb-val{font-size:12px;font-family:var(--mono);color:var(--muted2);text-align:right}
+.flags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.flag{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;font-family:var(--mono);background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.25)}
+.rl-warn{border:1px solid rgba(245,166,35,0.3);background:rgba(245,166,35,0.06);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start}
+.rl-warn.ban{border-color:rgba(255,69,96,0.35);background:rgba(255,69,96,0.07)}
+.rl-warn-ic{font-size:18px;line-height:1.2}
+.rl-warn-h{font-size:13px;font-weight:600;color:var(--amber);margin-bottom:5px}
+.rl-warn.ban .rl-warn-h{color:var(--red)}
+.rl-warn-b{font-size:12.5px;color:var(--muted2);line-height:1.65}
+.rl-left{font-size:11px;font-family:var(--mono);color:var(--amber);margin-top:8px}
+/* Button spinner + disabled */
+.spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-1px;margin-right:6px}
+button:disabled{opacity:.6;cursor:wait}
+/* Skeleton loaders */
+.skel-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;height:210px}
+.skel{background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 37%,var(--surface2) 63%);background-size:400% 100%;animation:shimmer 1.3s ease infinite;border-radius:6px}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+/* Wrong-network banner */
+#net-banner{position:fixed;top:60px;left:0;right:0;z-index:90;display:none;align-items:center;justify-content:center;gap:14px;
+  padding:9px 16px;font-size:13px;background:rgba(245,166,35,0.12);border-bottom:1px solid rgba(245,166,35,0.3);color:var(--amber)}
+#net-banner.show{display:flex}
+#net-banner button{padding:5px 14px;border-radius:7px;font-size:12px;font-weight:600;background:var(--amber);color:#040507;border:none;cursor:pointer;font-family:var(--font)}
+/* Submit live score preview */
+.sp-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px 26px;margin-bottom:16px}
+.sp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.sp-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.sp-total{font-family:var(--mono);font-size:20px;font-weight:700}
+.sp-row{display:grid;grid-template-columns:110px 1fr 56px;gap:12px;align-items:center;margin-bottom:9px}
+.sp-lbl{font-size:12px;color:var(--muted2)}
+.sp-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.sp-fill{height:100%;border-radius:3px;background:var(--green);width:0;transition:width .4s ease}
+.sp-pts{font-size:11px;font-family:var(--mono);color:var(--muted2);text-align:right}
+.sp-note{font-size:11px;color:var(--muted);margin-top:10px}
+.tx-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--muted2);margin-bottom:8px}
+.tx-hash{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx-link{color:var(--blue);cursor:pointer;font-size:11px;white-space:nowrap}
+.report-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--muted2);max-height:240px;overflow-y:auto;margin-top:14px;white-space:pre-wrap}
+
+/* MARKETPLACE */
+.market-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:16px}
+.market-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;transition:all .15s;font-family:var(--font)}
+.filter-btn:hover,.filter-btn.active{border-color:var(--green);color:var(--green);background:rgba(0,229,122,0.06)}
+.tab-count{display:inline-block;margin-left:5px;font-size:10px;padding:0 6px;border-radius:10px;background:var(--surface2);color:var(--muted)}
+.filter-btn.active .tab-count{background:rgba(0,229,122,0.18);color:var(--green)}
+.credits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.credit-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .2s}
+.credit-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.cc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:10px}
+.cc-name{font-size:14px;font-weight:600;line-height:1.3}
+.cc-id{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;display:flex;align-items:center;gap:6px}
+.copy-ic{cursor:pointer;color:var(--muted);font-size:12px;transition:color .15s}
+.copy-ic:hover{color:var(--green)}
+.cc-links{display:flex;gap:14px;align-items:center}
+.ai-score-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--mono);background:var(--green-glow);color:var(--green);border:1px solid rgba(0,229,122,0.25);white-space:nowrap}
+.cc-meta{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.cc-meta-row{display:flex;justify-content:space-between;font-size:12px}
+.cc-meta-label{color:var(--muted)}
+.cc-meta-val{color:var(--muted2);font-family:var(--mono)}
+.cc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border);gap:10px;flex-wrap:wrap}
+.cc-price{font-size:17px;font-weight:700;font-family:var(--mono)}
+.cc-price span{font-size:11px;color:var(--muted);font-weight:400;font-family:var(--font)}
+.mini-btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s;font-family:var(--font)}
+.mini-btn.buy{background:var(--green);color:#040507}.mini-btn.buy:hover{background:var(--green2)}
+.mini-btn.ghost{background:transparent;color:var(--muted2);border:1px solid var(--border2)}
+.mini-btn.ghost:hover{border-color:var(--text);color:var(--text)}
+.mini-btn.red:hover{border-color:var(--red);color:var(--red)}
+.cc-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.retired-badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(107,114,128,0.12);color:var(--muted2);border:1px solid var(--border2);font-family:var(--mono)}
+.view-cred{font-size:11px;color:var(--blue);cursor:pointer}
+.empty-state{grid-column:1/-1;text-align:center;color:var(--muted);padding:50px 20px;font-size:14px}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(4,5,7,0.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,0.6);animation:modalUp .25s cubic-bezier(.16,1,.3,1)}
+@keyframes modalUp{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.modal-title{font-size:20px;font-weight:700}
+.modal-x{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+.modal-sub{font-size:13px;color:var(--muted2);margin-bottom:20px;line-height:1.6}
+.cred-scores{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.cred-score-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.cred-score-item .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.cred-score-item .val{font-family:var(--mono);font-size:18px;font-weight:600;margin-top:4px}
+.cred-row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.cred-row:last-child{border-bottom:none}
+.cred-row .k{color:var(--muted2)}
+.cred-row .v{color:var(--text);font-family:var(--mono);text-align:right;word-break:break-all}
+.sub-title{margin:20px 0 8px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+/* Credential modal — clear labeled sections */
+.cred-scorebox{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border:1px solid var(--border2);border-radius:12px;background:var(--surface2);margin-bottom:10px}
+.cred-scorebox-lbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin-bottom:5px}
+.cred-verdict{font-size:12px;font-weight:600;font-family:var(--mono);padding:7px 12px;border-radius:8px;border:1px solid;white-space:nowrap;text-align:center}
+.cred-section{border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px;background:var(--surface2)}
+.cred-section-head{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.cred-section-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.cred-section-title{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.cred-section-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.cred-section-desc{font-size:12.5px;color:var(--muted2);margin-bottom:12px;line-height:1.65}
+.audit-text{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:var(--muted2);max-height:200px;overflow-y:auto;white-space:pre-wrap}
+.kyc-status{padding:12px 14px;border-radius:10px;font-size:13px;margin-top:12px;border:1px solid var(--border2);background:var(--surface2)}
+.kyc-status.ok{border-color:rgba(0,229,122,0.3);background:rgba(0,229,122,0.05);color:var(--green)}
+.kyc-status.warn{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.05);color:var(--amber)}
+.kyc-status.err{border-color:rgba(255,69,96,0.3);background:rgba(255,69,96,0.05);color:var(--red)}
+.proof-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-family:var(--mono);padding:2px 8px;border-radius:6px;background:rgba(157,123,255,0.12);color:var(--purple);border:1px solid rgba(157,123,255,0.3);margin:2px 4px 2px 0}
+
+/* TOAST + BANNER */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;background:var(--surface);border:1px solid var(--border);color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,0.5);transform:translateY(80px);opacity:0;transition:all .3s;max-width:380px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:rgba(0,229,122,0.4);background:rgba(0,229,122,0.08)}
+.toast.error{border-color:rgba(255,69,96,0.4);background:rgba(255,69,96,0.06)}
+#backend-banner{position:fixed;left:0;right:0;bottom:0;z-index:400;padding:9px 16px;font-size:12.5px;text-align:center;font-family:var(--font);backdrop-filter:blur(8px)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* Smooth page transition */
+.page.active{animation:pageIn .4s cubic-bezier(.16,1,.3,1)}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Verify empty-state animated pipeline */
+.pipe{position:relative;margin-top:6px}
+.pipe::before{content:'';position:absolute;left:17px;top:24px;bottom:24px;width:2px;
+  background:linear-gradient(180deg,transparent,var(--border2) 12%,var(--border2) 88%,transparent);}
+.pipe-step{position:relative;display:flex;gap:16px;align-items:flex-start;padding:16px 12px 16px 0;
+  border-radius:12px;opacity:0;transform:translateY(12px);animation:fadeUp .5s cubic-bezier(.16,1,.3,1) forwards;transition:background .2s}
+.pipe-step:hover{background:rgba(255,255,255,0.02)}
+.pipe-step:nth-child(1){animation-delay:.06s}.pipe-step:nth-child(2){animation-delay:.15s}
+.pipe-step:nth-child(3){animation-delay:.24s}.pipe-step:nth-child(4){animation-delay:.33s}.pipe-step:nth-child(5){animation-delay:.42s}
+@keyframes fadeUp{to{opacity:1;transform:none}}
+.pipe-ind{position:relative;z-index:1;width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:600;border:1.5px solid var(--border2);background:var(--surface2);color:var(--muted);
+  font-family:var(--mono);transition:all .45s cubic-bezier(.16,1,.3,1)}
+.pipe-ind.scan{border-color:var(--green);background:rgba(0,229,122,0.16);color:var(--green);
+  box-shadow:0 0 0 6px rgba(0,229,122,0.10),0 0 18px rgba(0,229,122,0.35);transform:scale(1.14)}
+.pipe-step .step-body{padding-top:6px;flex:1}
+.pipe-step.scan .step-name{color:var(--green);transition:color .4s}
+.pipe-tag{align-self:center;font-size:10px;font-family:var(--mono);color:var(--muted);border:1px solid var(--border);
+  border-radius:6px;padding:2px 8px;white-space:nowrap;opacity:.7;transition:all .4s}
+.pipe-step.scan .pipe-tag{color:var(--green);border-color:rgba(0,229,122,0.3);opacity:1}
+/* gentle float on the gate line */
+.gate-line{animation:fadeUp .5s cubic-bezier(.16,1,.3,1) .5s both}
+
+/* ── Landing pitch sections ─────────────────────────────── */
+.mission{background:linear-gradient(135deg,rgba(0,229,122,0.05),rgba(79,140,255,0.04));border:1px solid var(--border2);border-radius:18px;padding:34px;margin-bottom:24px}
+.mission h3{font-size:13px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+.mission p{font-size:16px;line-height:1.8;color:var(--text);max-width:820px}
+.mission p .dim{color:var(--muted2)}
+.diff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:24px}
+.diff{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted2);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+.diff .tick{color:var(--green);font-weight:700;flex-shrink:0}
+.diff b{color:var(--text);font-weight:600}
+
+/* lifecycle flow */
+.flow{position:relative;margin-top:8px}
+.flow::before{content:'';position:absolute;left:21px;top:30px;bottom:30px;width:2px;background:var(--border2);z-index:0}
+.flow::after{content:'';position:absolute;left:21px;top:30px;width:2px;height:var(--progress,0%);max-height:calc(100% - 60px);
+  background:linear-gradient(180deg,var(--green),var(--blue));box-shadow:0 0 10px rgba(0,229,122,.45);transition:height .12s linear;z-index:0}
+.flow-step{position:relative;z-index:1;display:flex;gap:18px;align-items:flex-start;padding:14px 0}
+/* enhanced reveal: slide from left + number pop + active-step glow */
+.flow-step.reveal{transform:translateX(-26px)}
+.flow-step.reveal.in{transform:none}
+.flow-num{transition:transform .45s cubic-bezier(.16,1,.3,1),box-shadow .45s,background .45s,color .45s,border-color .45s}
+/* reached steps turn green (completed cascade as you scroll past) */
+.flow-step.in .flow-num{border-color:var(--green);color:var(--green);animation:numPop .55s cubic-bezier(.16,1,.3,1)}
+@keyframes numPop{0%{transform:scale(.6)}55%{transform:scale(1.12)}100%{transform:scale(1)}}
+/* active step — subtle, not a blob */
+.flow-step.active .flow-num{background:rgba(0,229,122,0.14);border-color:var(--green);color:var(--green);box-shadow:0 0 14px rgba(0,229,122,.28);transform:scale(1.05)}
+.flow-step.active .flow-name{color:var(--green);transition:color .3s}
+.flow-num{position:relative;z-index:1;width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:700;font-size:15px;background:var(--surface2);border:2px solid var(--border2);color:var(--muted)}
+.flow-body{flex:1;padding-top:3px}
+.flow-name{font-size:15px;font-weight:600;margin-bottom:3px}
+.flow-name span{font-size:11px;font-family:var(--mono);color:var(--muted);font-weight:400;margin-left:8px}
+.flow-desc{font-size:13px;color:var(--muted2);line-height:1.6}
+
+/* audience + scale cards */
+.aud-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.aud-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;transition:border-color .2s,transform .2s}
+.aud-card:hover{border-color:var(--border2);transform:translateY(-3px)}
+.aud-ic{font-size:22px;margin-bottom:12px}
+.aud-card h4{font-size:15px;font-weight:600;margin-bottom:6px}
+.aud-card p{font-size:13px;color:var(--muted2);line-height:1.6}
+
+/* roadmap */
+.roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.rm{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
+.rm-tag{display:inline-block;font-size:10px;font-family:var(--mono);padding:3px 9px;border-radius:6px;margin-bottom:12px;letter-spacing:.04em}
+.rm-tag.now{background:var(--green-glow);color:var(--green);border:1px solid rgba(0,229,122,0.3)}
+.rm-tag.next{background:rgba(79,140,255,0.12);color:var(--blue);border:1px solid rgba(79,140,255,0.3)}
+.rm-tag.later{background:rgba(157,123,255,0.12);color:var(--purple);border:1px solid rgba(157,123,255,0.3)}
+.rm ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.rm li{font-size:12.5px;color:var(--muted2);line-height:1.5;padding-left:16px;position:relative}
+.rm li::before{content:'›';position:absolute;left:0;color:var(--muted)}
+.disclaimer{margin-top:28px;border:1px dashed var(--border2);border-radius:12px;padding:18px 22px;font-size:12.5px;color:var(--muted);line-height:1.7;background:var(--surface)}
+.disclaimer b{color:var(--muted2)}
+
+/* ── Hamburger + mobile menu ─────────────────────────────── */
+.nav-burger{display:none;background:none;border:1px solid var(--border2);color:var(--text);font-size:18px;width:38px;height:34px;border-radius:8px;cursor:pointer;line-height:1}
+.mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;z-index:95;flex-direction:column;background:rgba(8,10,15,0.98);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:8px}
+.mobile-menu.show{display:flex;animation:fadeIn .15s ease}
+.mobile-menu .nav-link{text-align:left;padding:12px 16px;font-size:15px;border-radius:8px}
+
+/* ── Footer ──────────────────────────────────────────────── */
+.site-footer{border-top:1px solid var(--border);background:var(--surface);margin-top:40px;padding:48px 24px 28px}
+.ft-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px}
+.ft-brand p{font-size:13px;color:var(--muted2);line-height:1.7;margin-top:6px;max-width:420px}
+.ft-live{display:inline-flex;align-items:center;gap:7px;margin-top:16px;font-size:12px;font-family:var(--mono);color:var(--green)}
+.ft-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite}
+.ft-col h5{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+.ft-col a{display:block;font-size:13.5px;color:var(--muted2);margin-bottom:10px;cursor:pointer;transition:color .15s}
+.ft-col a:hover{color:var(--green)}
+.ft-bottom{max-width:1100px;margin:32px auto 0;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.ft-honest{max-width:520px;text-align:right}
+
+/* Visual polish layer. Sits after the base styles but before the responsive
+   blocks, so it overrides the base while the media queries still win on mobile. */
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+:root{--shadow:0 2px 6px rgba(0,0,0,.35),0 14px 40px rgba(0,0,0,.28)}
+body{letter-spacing:-0.01em}
+
+/* scroll-reveal (Ledger-style fade-in-up as elements enter the viewport) */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .75s cubic-bezier(.16,1,.3,1),transform .75s cubic-bezier(.16,1,.3,1);will-change:opacity,transform}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1!important;transform:none!important;transition:none}}
+
+/* roomier, calmer sections + dramatic type hierarchy */
+.section{padding:0 24px 100px}
+.section-title{font-size:36px;font-weight:700;letter-spacing:-.035em;line-height:1.08;margin-bottom:10px}
+.section-sub{font-size:16.5px;color:var(--muted2);margin-bottom:48px;max-width:620px;line-height:1.6}
+
+/* hero — more air + drama */
+.hero{padding:118px 24px 88px;background:radial-gradient(ellipse 70% 50% at 50% -5%,rgba(0,229,122,0.10),transparent 65%)}
+h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
+.hero-sub{font-size:18px;line-height:1.75;margin:0 auto 42px;max-width:640px}
+.hero-badge{margin-bottom:34px}
+
+/* premium pill buttons with lift */
+.btn-primary,.btn-secondary,.nav-cta{border-radius:999px}
+.btn-primary{padding:14px 32px;font-size:15px;box-shadow:0 6px 22px rgba(0,229,122,.2)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,229,122,.32)}
+.btn-secondary{padding:14px 32px;font-size:15px}
+.btn-secondary:hover{transform:translateY(-2px)}
+
+/* cards — unified radius, depth, smoother hover */
+.problem-card,.module-card,.aud-card,.rm,.credit-card,.form-card,.mission,.stats-bar{border-radius:20px}
+.module-card,.aud-card,.problem-card{transition:transform .28s cubic-bezier(.16,1,.3,1),border-color .28s,box-shadow .28s}
+.module-card:hover,.aud-card:hover{box-shadow:var(--shadow);border-color:var(--border2);transform:translateY(-4px)}
+
+/* premium stats strip */
+.stats-bar{box-shadow:var(--shadow);margin-bottom:88px}
+.stat-item{padding:28px 18px}
+.stat-val{font-size:32px;letter-spacing:-.025em}
+.stat-label{font-size:11px;letter-spacing:.08em;margin-top:6px}
+
+/* tighter, premium module text */
+.mc-title,.aud-card h4{letter-spacing:-.01em}
+.gate-line{padding:22px 26px;font-size:15.5px;border-radius:14px}
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media(max-width:768px){
+  nav{padding:0 16px}
+  .nav-links{display:none}
+  .nav-burger{display:block}
+  .qiepass-chip{padding:6px 9px}
+  #qiepass-status{display:none}            /* show only the dot on mobile */
+  .qiepass-chip.verified #qiepass-status{display:inline}
+  .nav-cta{padding:7px 12px;font-size:12px}
+  .logo-mark{width:36px;height:36px}
+  .nav-logo{font-size:17px;gap:10px}
+  .site-footer .logo-mark{width:44px;height:44px}
+  .hero{padding:70px 18px 50px}
+  .hero-sub{font-size:15px}
+  .section{padding:0 18px 50px}
+  .section-title{font-size:22px}
+  .stats-bar{flex-wrap:wrap}
+  .stat-item{flex:1 1 45%;border-right:none;border-bottom:1px solid var(--border)}
+  .stat-item:nth-child(odd){border-right:1px solid var(--border)}
+  .mission{padding:24px}
+  .mission p{font-size:14.5px}
+  .form-row{grid-template-columns:1fr}        /* forms stack */
+  .submit-layout,.verify-layout{padding:28px 16px}
+  .market-layout{padding:28px 16px}
+  .coord-row{flex-wrap:wrap}
+  .coord-row input{flex:1 1 100%}
+  .coord-label{min-width:auto}
+  .score-bar-row{grid-template-columns:88px 1fr 48px;gap:8px}
+  .credits-grid{grid-template-columns:1fr}
+  .cred-scores{grid-template-columns:1fr 1fr}
+  .modal{padding:20px;max-height:86vh}
+  .modal-title{font-size:18px}
+  .toast{left:16px;right:16px;bottom:16px;max-width:none}
+  .wallet-menu{min-width:200px}
+  .ft-grid{grid-template-columns:1fr;gap:24px}
+  .ft-bottom{flex-direction:column}
+  .ft-honest{text-align:left;max-width:none}
+  .flow::before,.flow::after{left:18px}
+  .flow-num{width:38px;height:38px;font-size:13px}
+  .rc-header{flex-direction:column;align-items:flex-start;gap:8px}
+}
+@media(max-width:430px){
+  h1{font-size:34px}
+  .hero-btns{flex-direction:column}
+  .hero-btns button{width:100%}
+  .stat-val{font-size:20px}
+  .nav-logo{font-size:15px}
+  .cc-footer{flex-direction:column;align-items:flex-start}
+  .cc-actions{justify-content:flex-start}
+  .market-header{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo" onclick="showPage('landing')"><img class="logo-mark" src="assets/logo-icon.png" alt="TerraLedger"/>TerraLedger</div>
+  <div class="nav-links" id="nav-links">
+    <button class="nav-link active" onclick="showPage('landing')">Home</button>
+    <button class="nav-link" onclick="showPage('submit')">Submit Project</button>
+    <button class="nav-link" onclick="showPage('verify')">Verify</button>
+    <button class="nav-link" onclick="showPage('market')">Marketplace</button>
+  </div>
+  <div class="nav-right">
+    <button class="qiepass-chip" id="qiepass-chip" onclick="openQiePass()"><span class="dot"></span><span id="qiepass-status">QIE Pass</span></button>
+    <button class="nav-burger" id="nav-burger" onclick="toggleMobileMenu()" aria-label="Menu">☰</button>
+    <div class="wallet-wrap">
+      <button class="nav-cta" id="connect-btn" onclick="walletBtnClick()">Connect Wallet</button>
+      <div class="wallet-menu" id="wallet-menu">
+        <div class="wm-addr" id="wm-addr">0x…</div>
+        <div class="wm-row" id="wm-qusdc">QUSDC: —</div>
+        <div class="wm-item" onclick="copyText(walletAddr,'Address');toggleWalletMenu()">⧉ Copy address</div>
+        <a class="wm-item" id="wm-explorer" href="#" target="_blank" onclick="toggleWalletMenu()">↗ View on QIE Explorer</a>
+        <div class="wm-item danger" onclick="disconnectWallet()">⏻ Disconnect</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <button class="nav-link" onclick="showPage('landing');closeMobileMenu()">Home</button>
+  <button class="nav-link" onclick="showPage('submit');closeMobileMenu()">Submit Project</button>
+  <button class="nav-link" onclick="showPage('verify');closeMobileMenu()">Verify</button>
+  <button class="nav-link" onclick="showPage('market');closeMobileMenu()">Marketplace</button>
+</div>
+
+<div id="net-banner"><span id="net-banner-msg">⚠ Wrong network</span><button onclick="switchNetwork()">Switch network</button></div>
+
+<!-- LANDING -->
+<div class="page active" id="page-landing">
+  <div class="hero">
+    <div class="hero-badge"><div class="hero-badge-dot"></div>QIE Blockchain · AI + Web3 Track</div>
+    <h1>Carbon Credits.<br><span>Actually Verified.</span></h1>
+    <p class="hero-sub">The carbon market is full of phantom credits — tokenized first, verified never. We're not claiming to fix carbon accounting. We built something narrower and provable: <strong style="color:var(--text)">on TerraLedger a fraudulent credit can't be minted in the first place.</strong> AI verification is the gate. No passing AI, no NFT.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="showPage('submit')">Submit a Project</button>
+      <button class="btn-secondary" onclick="showPage('market')">Browse Credits →</button>
+    </div>
+  </div>
+  <div class="section">
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-val green" id="stat-verified">—</div><div class="stat-label">Credits verified</div></div>
+      <div class="stat-item"><div class="stat-val red" id="stat-blocked">—</div><div class="stat-label">Frauds blocked</div></div>
+      <div class="stat-item"><div class="stat-val" id="stat-tonnes">—</div><div class="stat-label">Tonnes CO₂</div></div>
+      <div class="stat-item"><div class="stat-val green">0</div><div class="stat-label">Double-counted</div></div>
+    </div>
+
+    <div class="section-title">The problem with existing carbon markets</div>
+    <p class="section-sub">Every major blockchain carbon project made the same fatal mistake</p>
+    <div class="two-col" style="margin-bottom:60px">
+      <div class="problem-card bad">
+        <div class="pc-header"><div class="pc-icon red">✕</div><div class="pc-title">Toucan / KlimaDAO approach</div></div>
+        <div class="pc-item"><div class="pc-dot" style="background:var(--red)"></div>Tokenized FIRST, verified never</div>
+        <div class="pc-item"><div class="pc-dot" style="background:var(--red)"></div>Bridged already-retired credits on-chain</div>
+        <div class="pc-item"><div class="pc-dot" style="background:var(--red)"></div>No satellite data, no ownership check</div>
+        <div class="pc-item"><div class="pc-dot" style="background:var(--red)"></div>Anyone could submit any project</div>
+        <div class="pc-item"><div class="pc-dot" style="background:var(--red)"></div>Result: fraud on-chain, nothing removed</div>
+      </div>
+      <div class="problem-card good">
+        <div class="pc-header"><div class="pc-icon green">✓</div><div class="pc-title">TerraLedger approach</div></div>
+        <div class="pc-item"><div class="pc-dot" style="background:var(--green)"></div>AI verification GATES the mint</div>
+        <div class="pc-item"><div class="pc-dot" style="background:var(--green)"></div>Real NASA satellite data required</div>
+        <div class="pc-item"><div class="pc-dot" style="background:var(--green)"></div>Land ownership document verified</div>
+        <div class="pc-item"><div class="pc-dot" style="background:var(--green)"></div>On-chain GPS lock blocks duplicate land</div>
+        <div class="pc-item"><div class="pc-dot" style="background:var(--green)"></div>Fraud attempts logged on-chain forever</div>
+      </div>
+    </div>
+
+    <div class="section-title">5 AI verification layers</div>
+    <p class="section-sub">Every submission passes all checks before a single token is minted</p>
+    <div class="modules-grid">
+      <div class="module-card"><div class="mc-num">MODULE 01 · 30 PTS</div><div class="mc-title">GPS Duplicate Detector</div><div class="mc-desc">Checks the GPS polygon against every registered project. >20% overlap = hard reject. An on-chain bounding-box guard makes duplicate land claims publicly queryable.</div><span class="mc-tag">shapely + on-chain bbox</span></div>
+      <div class="module-card"><div class="mc-num">MODULE 02 · 25 PTS</div><div class="mc-title">Ownership Document Parser</div><div class="mc-desc">Extracts owner + GPS from the land deed via OCR/NLP, runs forgery (ELA) and reuse detection. GPS mismatch or forgery = hard reject. SHA-256 stored on-chain.</div><span class="mc-tag">PyMuPDF · spaCy · ELA</span></div>
+      <div class="module-card"><div class="mc-num">MODULE 03 · 25 PTS</div><div class="mc-title">Carbon Claim Anomaly AI</div><div class="mc-desc">Isolation Forest trained on real Verra registry data. Flags abnormal tonnes/hectare claims vs. similar real-world projects.</div><span class="mc-tag">sklearn IsolationForest</span></div>
+      <div class="module-card"><div class="mc-num">MODULE 04 · 20 PTS</div><div class="mc-title">NASA Satellite Check</div><div class="mc-desc">Queries real NASA FIRMS data for fire/deforestation over 90 days. Forest burned recently? No credit. Real data, not mock.</div><span class="mc-tag">NASA FIRMS API</span></div>
+      <div class="module-card"><div class="mc-num">MODULE 05 · REPORT</div><div class="mc-title">Audit Report + On-chain Score</div><div class="mc-desc">Llama 3 writes a plain-English audit, pinned to IPFS and linked to the NFT. The total + per-module score is written on-chain at mint.</div><span class="mc-tag">Llama 3 · IPFS</span></div>
+    </div>
+    <div class="gate-line">Minimum <strong>70 / 100</strong> to mint. No passing AI = no NFT — verification is the gate. Minting requires an <strong>M-of-N oracle</strong> attestation.</div>
+  </div>
+
+  <!-- WHY / MISSION -->
+  <div class="section">
+    <div class="mission">
+      <h3>Why TerraLedger exists</h3>
+      <p>We're <span class="dim">not</span> claiming to have fixed carbon fraud across the world's registries — measuring real sequestered carbon is an MRV and policy problem. What we <b>can</b> guarantee is narrower and provable: <b>on TerraLedger, a fake, duplicate or forged carbon credit cannot be created in the first place.</b> <span class="dim">Every credit must pass five AI checks and an on-chain oracle attestation before a single token exists — and every fraud attempt is logged on-chain forever. It isn't "trust us." It's verifiable proof attached to every credit.</span></p>
+      <div class="diff-grid">
+        <div class="diff"><span class="tick">✓</span><div><b>Verify-before-mint.</b> Others tokenize first and verify never. We gate the mint.</div></div>
+        <div class="diff"><span class="tick">✓</span><div><b>Real data.</b> NASA FIRMS satellite + a Verra-trained anomaly model — not mock.</div></div>
+        <div class="diff"><span class="tick">✓</span><div><b>On-chain everything.</b> Score, document hash, fraud log and retirement all live on-chain.</div></div>
+        <div class="diff"><span class="tick">✓</span><div><b>Decentralised oracle.</b> M-of-N attestation — no single point of trust.</div></div>
+        <div class="diff"><span class="tick">✓</span><div><b>Honest by design.</b> We gate fraud; we don't fake measurement.</div></div>
+        <div class="diff"><span class="tick">✓</span><div><b>QIE-native.</b> Wallet, QUSDC, QIE Pass identity and Explorer, end to end.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="section">
+    <div class="section-title">How it works — submission to retirement</div>
+    <p class="section-sub">The full lifecycle of a verified carbon credit on TerraLedger</p>
+    <div class="flow">
+      <div class="flow-step"><div class="flow-num">1</div><div class="flow-body"><div class="flow-name">Submit <span>project developer</span></div><div class="flow-desc">A developer submits the GPS polygon, area, claimed tonnes and the ownership deed, and signs the submission with their wallet (proving ownership).</div></div></div>
+      <div class="flow-step"><div class="flow-num">2</div><div class="flow-body"><div class="flow-name">AI verification gate <span>5 modules</span></div><div class="flow-desc">GPS de-duplication, ownership-document forensics (OCR + forgery + reuse), anomaly detection, and real NASA satellite permanence run in sequence. Any hard-fail — duplicate land, forged deed, burned forest — blocks the mint instantly and logs a fraud attempt on-chain.</div></div></div>
+      <div class="flow-step"><div class="flow-num">3</div><div class="flow-body"><div class="flow-name">Oracle attestation <span>M-of-N</span></div><div class="flow-desc">A passing result (≥70/100) is attested by the decentralised oracle set. The total and per-module score are written into the NFT on-chain — trustless, no backend needed to read them.</div></div></div>
+      <div class="flow-step"><div class="flow-num">4</div><div class="flow-body"><div class="flow-name">Mint <span>ERC-721 credit</span></div><div class="flow-desc">The credit NFT is minted to the developer. A plain-English Llama-3 audit is pinned to IPFS and linked to the token forever — the public proof behind the score.</div></div></div>
+      <div class="flow-step"><div class="flow-num">5</div><div class="flow-body"><div class="flow-name">Marketplace <span>list &amp; buy with QUSDC</span></div><div class="flow-desc">Credits are listed and traded in QUSDC. Before buying, anyone can open the full on-chain credential + audit and verify document integrity — for free.</div></div></div>
+      <div class="flow-step"><div class="flow-num">6</div><div class="flow-body"><div class="flow-name">Retire <span>QIE Pass-verified buyer</span></div><div class="flow-desc">A KYC-verified corporate buyer permanently retires (burns) the credit to claim the offset. The retirement is recorded on-chain forever and a PDF certificate is issued — no double-counting, ever.</div></div></div>
+    </div>
+  </div>
+
+  <!-- WHO IT'S FOR -->
+  <div class="section">
+    <div class="section-title">Who it's for</div>
+    <p class="section-sub">A trust layer that serves every side of the carbon market</p>
+    <div class="aud-grid">
+      <div class="aud-card"><div class="aud-ic">🌳</div><h4>Project developers</h4><p>Get credits that actually sell — each one carries verifiable, on-chain proof buyers can trust, not just a claim.</p></div>
+      <div class="aud-card"><div class="aud-ic">🏢</div><h4>Corporate buyers</h4><p>Buy offsets you can defend to auditors and regulators. Identity-gated via QIE Pass, with a permanent retirement certificate.</p></div>
+      <div class="aud-card"><div class="aud-ic">📋</div><h4>Registries &amp; auditors</h4><p>Every credit's evidence — scores, document hash, satellite data — is public and tamper-proof. Audit without asking anyone.</p></div>
+      <div class="aud-card"><div class="aud-ic">⚖️</div><h4>Regulators</h4><p>Fraud attempts are logged on-chain permanently. A transparent, queryable record of what was rejected and why.</p></div>
+    </div>
+  </div>
+
+  <!-- BUILT TO SCALE -->
+  <div class="section">
+    <div class="section-title">Built to scale</div>
+    <p class="section-sub">Designed to grow from a hackathon pilot to a production trust layer</p>
+    <div class="aud-grid">
+      <div class="aud-card"><div class="aud-ic">🔗</div><h4>Config-driven networks</h4><p>Testnet ↔ mainnet is a one-line address swap — no code changes. Already live on QIE Mainnet.</p></div>
+      <div class="aud-card"><div class="aud-ic">🛡️</div><h4>Add verifiers, not trust</h4><p>The M-of-N oracle lets independent verifiers join and raise the attestation threshold without redeploying.</p></div>
+      <div class="aud-card"><div class="aud-ic">🧩</div><h4>Modular AI pipeline</h4><p>Each check is independent and fail-closed — plug in new data sources, biomes or models without touching the rest.</p></div>
+      <div class="aud-card"><div class="aud-ic">⚡</div><h4>Stateless verification</h4><p>The verification API scales horizontally; the chain holds the source of truth, so throughput grows with demand.</p></div>
+    </div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="section">
+    <div class="section-title">Roadmap — where this goes next</div>
+    <p class="section-sub">How the model improves from fraud-gating toward measurement-grade trust</p>
+    <div class="roadmap">
+      <div class="rm"><span class="rm-tag now">LIVE NOW</span><ul>
+        <li>5-module AI verification gate</li>
+        <li>On-chain scores, fraud log &amp; retirement</li>
+        <li>M-of-N oracle + QIE Pass KYC bridge</li>
+        <li>Live on QIE Mainnet with QUSDC settlement</li>
+      </ul></div>
+      <div class="rm"><span class="rm-tag next">NEXT</span><ul>
+        <li>Multi-oracle MRV feeds — satellite-biomass + field validators for measurement-grade attestation</li>
+        <li>On-chain GPS overlap proofs (verifiable geometry / ZK)</li>
+        <li>Third-party audit, owner multisig + timelock, Pausable</li>
+        <li>Deeper QIE Pass KYC tiers &amp; corporate onboarding</li>
+      </ul></div>
+      <div class="rm"><span class="rm-tag later">LATER</span><ul>
+        <li>More project types &amp; biomes; expanded Verra / Gold-Standard training data</li>
+        <li>Credit fractionalization &amp; a retirement API for enterprises</li>
+        <li>Cross-registry duplicate detection (bridge guard)</li>
+        <li>Public credit-credential API for third-party apps</li>
+      </ul></div>
+    </div>
+    <div class="disclaimer"><b>An honest note on what we do and don't claim:</b> TerraLedger gates fraud at the moment of minting — it does not physically measure sequestered carbon (an MRV problem no blockchain solves today). Claimed tonnage is checked for <b>plausibility and permanence</b>, not measured. Our roadmap brings measurement-grade MRV oracles on-chain; until then, every credit is honest about exactly what it has — and hasn't — been verified for.</div>
+  </div>
+</div>
+
+<!-- SUBMIT -->
+<div class="page" id="page-submit">
+  <div class="submit-layout">
+    <div class="page-header"><div class="page-title">Submit Carbon Project</div><div class="page-desc">AI verifies before any token is minted. Score 70/100 minimum. Connect your wallet — the credit mints to you on success.</div></div>
+    <div class="form-card">
+      <div class="form-section-title">Project information</div>
+      <div class="form-row">
+        <div class="field"><label>Project name <span>*</span></label><input type="text" id="f-name" placeholder="Amazon Reforestation Zone A"/></div>
+        <div class="field"><label>Project ID <span>*</span></label><input type="text" id="f-id" placeholder="auto-generated"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Project type <span>*</span></label><select id="f-type"><option value="">Select type</option><option value="forest">Forest / REDD+</option><option value="agriculture">Agriculture</option><option value="renewable">Renewable Energy</option><option value="methane">Methane Capture</option></select></div>
+        <div class="field"><label>Biome <span>*</span></label><select id="f-biome"><option value="">Select biome</option><option value="tropical">Tropical</option><option value="temperate">Temperate</option><option value="boreal">Boreal</option><option value="wetland">Wetland</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Forest area (hectares) <span>*</span></label><input type="number" id="f-ha" placeholder="5000" min="1"/></div>
+        <div class="field"><label>Claimed CO₂ (tonnes) <span>*</span></label><input type="number" id="f-tonnes" placeholder="25000" min="1"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Vintage year <span>*</span></label><input type="number" id="f-vintage" placeholder="2025" min="2000" max="2026"/></div>
+        <div class="field"><label>Country</label><input type="text" id="f-country" placeholder="Brazil"/></div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-section-title">GPS polygon <span style="color:var(--red)">*</span></div>
+      <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">At least 3 corner coordinates, decimal degrees.</p>
+      <div class="gps-input-area">
+        <div class="gps-coords" id="gps-coords">
+          <div class="coord-row"><span class="coord-label">P1</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
+          <div class="coord-row"><span class="coord-label">P2</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
+          <div class="coord-row"><span class="coord-label">P3</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
+        </div>
+        <div class="gps-actions"><button class="btn-ghost" onclick="addGpsPoint()">+ Add point</button><button class="btn-ghost" onclick="fillDemoGPS()">Use demo coords</button></div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-section-title">Ownership document <span style="color:var(--red)">*</span></div>
+      <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">Land title / cadastral certificate. AI extracts owner + GPS and checks authenticity.</p>
+      <label for="doc-upload"><div class="upload-area" id="upload-area"><div class="upload-icon">📄</div><div class="upload-text"><strong>Click to upload</strong> or drag & drop</div><div class="upload-sub">PDF, JPG, PNG — max 10MB</div><div class="upload-filename" id="upload-filename"></div></div></label>
+      <input type="file" id="doc-upload" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(this)"/>
+      <p style="font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.6">💡 The document's GPS must be within 50 km of the project polygon, or it hard-fails as a duplicate/mismatch (anti-fraud). <b style="color:var(--muted2)">Demo:</b> click “Use demo coords” then upload <span style="font-family:var(--mono);color:var(--green)">samples/genuine_land_deed.pdf</span> to PASS — or <span style="font-family:var(--mono);color:var(--red)">samples/forged_document.pdf</span> to see the forgery hard-fail.</p>
+    </div>
+    <div class="sp-card">
+      <div class="sp-head"><div class="sp-title">Estimated score preview</div><div class="sp-total" id="sp-total" style="color:var(--muted)">—<span style="font-size:13px;color:var(--muted)">/100</span></div></div>
+      <div class="sp-row"><div class="sp-lbl">GPS</div><div class="sp-track"><div class="sp-fill" id="spf-gps"></div></div><div class="sp-pts" id="spp-gps">0/30</div></div>
+      <div class="sp-row"><div class="sp-lbl">Ownership</div><div class="sp-track"><div class="sp-fill" id="spf-own"></div></div><div class="sp-pts" id="spp-own">0/25</div></div>
+      <div class="sp-row"><div class="sp-lbl">Anomaly AI</div><div class="sp-track"><div class="sp-fill" id="spf-ano"></div></div><div class="sp-pts" id="spp-ano">0/25</div></div>
+      <div class="sp-row"><div class="sp-lbl">Satellite</div><div class="sp-track"><div class="sp-fill" id="spf-sat"></div></div><div class="sp-pts" id="spp-sat">0/20</div></div>
+      <div class="sp-note">Estimate only — the real score comes from the live AI run. 70/100 needed to mint.</div>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="submitProject()">Run AI Verification →</button>
+  </div>
+</div>
+
+<!-- VERIFY -->
+<div class="page" id="page-verify">
+  <div class="verify-layout">
+    <div class="page-header"><div class="page-title">Verification Status</div><div class="page-desc">Live AI verification pipeline — real modules, on-chain mint on pass.</div></div>
+
+    <!-- Empty state: show the AI pipeline when nothing is running -->
+    <div id="verify-empty">
+      <div class="form-card">
+        <div class="form-section-title">How AI verification works</div>
+        <p style="font-size:13px;color:var(--muted2);margin-bottom:18px;line-height:1.7">Submit a project and all 5 modules run in sequence. The first failing hard-check (duplicate GPS, forged deed, burned forest) blocks the mint immediately. A passing score is written on-chain and attested by the oracle before any NFT exists.</p>
+        <div class="pipe">
+          <div class="pipe-step"><div class="pipe-ind">1</div><div class="step-body"><div class="step-name">GPS Duplicate Detector · 30 pts</div><div class="step-detail">Polygon checked against every registered project + on-chain bounding-box guard. >20% overlap = hard reject.</div></div><div class="pipe-tag">shapely</div></div>
+          <div class="pipe-step"><div class="pipe-ind">2</div><div class="step-body"><div class="step-name">Ownership Document Parser · 25 pts</div><div class="step-detail">OCR/NLP extracts owner + GPS; ELA forgery + reuse detection. GPS mismatch or forgery = hard reject. SHA-256 stored on-chain.</div></div><div class="pipe-tag">spaCy · ELA</div></div>
+          <div class="pipe-step"><div class="pipe-ind">3</div><div class="step-body"><div class="step-name">Carbon Claim Anomaly AI · 25 pts</div><div class="step-detail">Isolation Forest trained on real Verra data flags abnormal tonnes/hectare claims.</div></div><div class="pipe-tag">sklearn</div></div>
+          <div class="pipe-step"><div class="pipe-ind">4</div><div class="step-body"><div class="step-name">NASA FIRMS Satellite Check · 20 pts</div><div class="step-detail">Real 90-day fire/deforestation data. Recently burned forest = no credit.</div></div><div class="pipe-tag">NASA</div></div>
+          <div class="pipe-step"><div class="pipe-ind">5</div><div class="step-body"><div class="step-name">Audit Report + On-chain Mint</div><div class="step-detail">Llama 3 audit pinned to IPFS; total + per-module score written into the NFT at mint.</div></div><div class="pipe-tag">Llama 3</div></div>
+        </div>
+      </div>
+      <div class="gate-line">Minimum <strong>70 / 100</strong> to mint. No passing AI = no NFT — verification is the gate.</div>
+      <div style="text-align:center;margin-top:20px"><button class="btn-primary" onclick="showPage('submit')">Submit a project →</button></div>
+    </div>
+
+    <div id="verify-processing" style="display:none">
+      <div class="processing-card"><div class="processing-ring"></div><div class="processing-title">AI Verification Running</div><div class="processing-sub" id="processing-step-label">Running 5 AI modules + on-chain oracle…</div><div class="processing-sub" id="verify-elapsed" style="margin-top:8px;font-family:var(--mono);font-size:12px;color:var(--muted)">Elapsed 0s · real NASA + AI checks take ~30–60s</div></div>
+    </div>
+    <div class="form-card" id="verify-steps" style="display:none">
+      <div class="form-section-title">Verification pipeline</div>
+      <div class="steps">
+        <div class="step"><div class="step-indicator pending" id="ind-gps">1</div><div class="step-body"><div class="step-name">GPS Duplicate Check</div><div class="step-detail" id="det-gps">Checking polygon against on-chain registry…</div></div><div class="step-score" id="score-gps" style="display:none"></div></div>
+        <div class="step"><div class="step-indicator pending" id="ind-own">2</div><div class="step-body"><div class="step-name">Ownership Document Parser</div><div class="step-detail" id="det-own">Extracting owner + GPS, forgery check…</div></div><div class="step-score" id="score-own" style="display:none"></div></div>
+        <div class="step"><div class="step-indicator pending" id="ind-ano">3</div><div class="step-body"><div class="step-name">Anomaly Detection (Isolation Forest)</div><div class="step-detail" id="det-ano">Running ML model on carbon claim…</div></div><div class="step-score" id="score-ano" style="display:none"></div></div>
+        <div class="step"><div class="step-indicator pending" id="ind-sat">4</div><div class="step-body"><div class="step-name">NASA FIRMS Satellite Check</div><div class="step-detail" id="det-sat">Querying real satellite fire data…</div></div><div class="step-score" id="score-sat" style="display:none"></div></div>
+        <div class="step"><div class="step-indicator pending" id="ind-rep">5</div><div class="step-body"><div class="step-name">Audit Report + On-chain Mint</div><div class="step-detail" id="det-rep">Generating report, pinning to IPFS, minting…</div></div><div class="step-score" id="score-rep" style="display:none"></div></div>
+      </div>
+    </div>
+    <div id="verify-result" style="display:none">
+      <div class="result-card" id="result-card">
+        <div class="rc-header"><div><div class="rc-verdict" id="rc-verdict">VERIFIED</div><div style="font-size:13px;color:var(--muted2);margin-top:4px" id="rc-project-name"></div></div><div class="rc-score" id="rc-score">—<span>/100</span></div></div>
+        <div class="score-bars" id="score-bars"></div>
+        <div class="flags" id="result-flags"></div>
+        <div id="rl-warning"></div>
+        <div class="tx-row" id="tx-row" style="display:none"><span style="color:var(--muted);font-size:11px">ON-CHAIN TX</span><span class="tx-hash" id="tx-hash">0x…</span><span class="tx-link" onclick="openExplorer()">QIE Explorer ↗</span></div>
+        <div class="report-box" id="audit-report"></div>
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap" id="result-actions"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MARKETPLACE -->
+<div class="page" id="page-market">
+  <div class="market-layout">
+    <div class="market-header">
+      <div><div class="page-title">Verified Credits</div><div class="page-desc" style="margin-top:4px">Every credit AI-verified. Buy & retire with QUSDC. Every retirement permanent.</div></div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px" id="qusdc-bal">QUSDC: —</div>
+        <button class="btn-ghost" id="faucet-btn" onclick="getFaucet()">Get test QUSDC</button>
+        <div id="qusdc-note" style="font-size:10.5px;color:var(--muted);margin-top:6px;display:none;max-width:200px">Buying needs QUSDC — bridge USDC (Ethereum) → QUSDC on QIE.</div>
+      </div>
+    </div>
+    <div class="market-tabs" id="market-tabs">
+      <button class="filter-btn active" data-tab="all" onclick="setMarketTab('all',this)">All <span class="tab-count" id="tc-all">0</span></button>
+      <button class="filter-btn" data-tab="sale" onclick="setMarketTab('sale',this)">For Sale <span class="tab-count" id="tc-sale">0</span></button>
+      <button class="filter-btn" data-tab="owned" onclick="setMarketTab('owned',this)">Owned <span class="tab-count" id="tc-owned">0</span></button>
+      <button class="filter-btn" data-tab="mine" onclick="setMarketTab('mine',this)">My Credits <span class="tab-count" id="tc-mine">0</span></button>
+      <button class="filter-btn" data-tab="retired" onclick="setMarketTab('retired',this)">Retired <span class="tab-count" id="tc-retired">0</span></button>
+    </div>
+    <div style="margin-top:18px"></div>
+    <div class="credits-grid" id="credits-grid"><div class="empty-state">Loading on-chain credits…</div></div>
+  </div>
+</div>
+
+<!-- CREDENTIAL MODAL -->
+<div class="modal-overlay" id="cred-modal">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" id="cred-title">Credit Credential</div><button class="modal-x" onclick="closeModal('cred-modal')">×</button></div>
+    <div class="modal-sub">On-chain credential + AI audit. The public proof of credibility — free for any buyer.</div>
+    <div id="cred-body"></div>
+  </div>
+</div>
+
+<!-- AUDIT MODAL -->
+<div class="modal-overlay" id="audit-modal">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" id="audit-modal-title">AI Audit Report</div><button class="modal-x" onclick="closeModal('audit-modal')">×</button></div>
+    <div class="modal-sub">Plain-English audit generated by Llama 3, pinned to IPFS and linked to the NFT — the public proof behind the score.</div>
+    <div id="audit-modal-body"></div>
+  </div>
+</div>
+
+<!-- QIE PASS MODAL -->
+<div class="modal-overlay" id="qiepass-modal">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">QIE Pass Identity</div><button class="modal-x" onclick="closeModal('qiepass-modal')">×</button></div>
+    <div class="modal-sub">Privacy-preserving identity for corporate buyers. Verify once with QIE, share selective-disclosure claims — never full PII.</div>
+    <div id="qiepass-body"></div>
+  </div>
+</div>
+
+<!-- LIST MODAL -->
+<div class="modal-overlay" id="list-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><div class="modal-title">List for Sale</div><button class="modal-x" onclick="closeModal('list-modal')">×</button></div>
+    <div class="modal-sub">Set a price in QUSDC. The marketplace gets approval to transfer the NFT on sale.</div>
+    <div class="field"><label>Price (QUSDC)</label><input type="number" id="list-price" placeholder="100" min="0.01" step="0.01"/></div>
+    <button class="submit-btn" id="list-confirm" onclick="confirmList()">List Credit</button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL (replaces the native window.confirm) -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><div class="modal-title" id="confirm-title">Confirm</div><button class="modal-x" onclick="resolveConfirm(false)">×</button></div>
+    <div class="modal-sub" id="confirm-msg"></div>
+    <div class="confirm-actions">
+      <button class="submit-btn ghost-btn" onclick="resolveConfirm(false)">Cancel</button>
+      <button class="submit-btn" id="confirm-ok" onclick="resolveConfirm(true)">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- RETIRE MODAL -->
+<div class="modal-overlay" id="retire-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><div class="modal-title" id="retire-title">Retire Credit</div><button class="modal-x" onclick="closeModal('retire-modal')">×</button></div>
+    <div class="modal-sub">This permanently burns the NFT and records the offset claim on-chain — it can't be undone. Name the beneficiary so the certificate shows who's claiming the offset.</div>
+    <div class="field"><label>Beneficiary name <span class="lbl-opt">(optional)</span></label><input type="text" id="retire-beneficiary" placeholder="e.g. Jane Doe" autocomplete="off"/></div>
+    <div class="field"><label>Organization / Company <span class="lbl-opt">(optional)</span></label><input type="text" id="retire-org" placeholder="e.g. Acme Corp" autocomplete="off"/></div>
+    <div class="confirm-actions">
+      <button class="submit-btn ghost-btn" onclick="closeModal('retire-modal')">Cancel</button>
+      <button class="submit-btn danger" id="retire-confirm" onclick="confirmRetire()">Retire permanently</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="ft-grid">
+    <div class="ft-brand">
+      <div class="nav-logo" style="cursor:default;margin-bottom:12px"><img class="logo-mark" src="assets/logo-icon.png" alt="TerraLedger"/>TerraLedger</div>
+      <p>AI-gated carbon credit verification on the QIE blockchain. A credit can't be minted here unless it passes five AI checks and an on-chain oracle attestation — every fraud attempt logged on-chain forever.</p>
+      <div class="ft-live"><span class="ft-dot"></span>Live on QIE Mainnet · Chain 1990</div>
+    </div>
+    <div class="ft-col">
+      <h5>Platform</h5>
+      <a onclick="showPage('submit')">Submit Project</a>
+      <a onclick="showPage('verify')">Verify</a>
+      <a onclick="showPage('market')">Marketplace</a>
+    </div>
+    <div class="ft-col">
+      <h5>Verify on-chain</h5>
+      <a id="ft-credit" target="_blank">CarbonCredit ↗</a>
+      <a id="ft-oracle" target="_blank">CarbonOracle ↗</a>
+      <a id="ft-market" target="_blank">Marketplace ↗</a>
+      <a id="ft-registry" target="_blank">ProjectRegistry ↗</a>
+    </div>
+  </div>
+  <div class="ft-bottom">
+    <span>© 2026 TerraLedger · Built on QIE Blockchain</span>
+    <span class="ft-honest">We gate fraud at minting — we don't physically measure carbon (an MRV problem). Tonnage is checked for plausibility &amp; permanence.</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── PRODUCTION: set this to your Render backend URL after deploying ───────────
+window.TERRALEDGER_API = '' // e.g. 'https://terraledger-backend.onrender.com'
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Config — QIE Mainnet (chain 1990). Addresses come from deployments/1990.json. ──
+const AI_BACKEND = (() => {
+  const strip = u => u.replace(/\/+$/,'')
+  try {
+    const q = new URLSearchParams(location.search).get('api')
+    if (q) { localStorage.setItem('tl_api', strip(q)); return strip(q) }
+    const s = localStorage.getItem('tl_api'); if (s) return strip(s)
+    if (window.TERRALEDGER_API) return strip(window.TERRALEDGER_API)
+    if (['localhost','127.0.0.1',''].includes(location.hostname) || location.protocol === 'file:') return 'http://localhost:8000'
+    return strip(location.origin)
+  } catch(_) { return 'http://localhost:8000' }
+})()
+const EXPLORER = 'https://mainnet.qie.digital'
+const IPFS_GATEWAY = 'https://gateway.pinata.cloud/ipfs/'
+const QUSDC_DECIMALS = 6
+
+const QIE_CHAIN = {
+  chainId: '0x7C6', // 1990
+  chainName: 'QIE Mainnet',
+  nativeCurrency: { name:'QIE', symbol:'QIEV3', decimals:18 },
+  rpcUrls: ['https://rpc1mainnet.qie.digital/'],
+  blockExplorerUrls: ['https://mainnet.qie.digital/'],
+}
+// Testnet (1983) uses MockQUSDC (faucet) + on-chain self-attest QIE Pass.
+// On mainnet both are hidden: real QUSDC has no faucet, and QIE Pass identity
+// comes only from the real REST API (then mirrored on-chain by the oracle).
+const IS_TESTNET = QIE_CHAIN.chainId === '0x7BF' // false on mainnet
+const ADDRESSES = {
+  ProjectRegistry:   '0x9894ee26e81c19ABfe9C381168f0f1e6b5f44112',
+  CarbonCredit:      '0x78650e0B619b5ECbb4B127Cb21c319befcE2ab16',
+  CarbonOracle:      '0x8A07F795Cef75350D4BE4b939F367cFC3A1ed219',
+  CarbonMarketplace: '0x04442AE6DCb22803A4D4Ca8bB2a49691F603c343',
+  QUSDC:             '0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5',
+  QIEPass:           '0xBc05fd5617167eD6ee45a42CC3844f2484836431',
+}
+const CREDIT_ABI = [
+  'function credits(uint256 tokenId) view returns (bytes32 projectId, uint256 vintage, uint256 tonnes, string ipfsCid, bool retired, uint256 retiredAt, address retiredBy, uint16 score, uint8 gpsScore, uint8 ownershipScore, uint8 anomalyScore, uint8 satelliteScore)',
+  'function ownerOf(uint256 tokenId) view returns (address)',
+  'function getApproved(uint256 tokenId) view returns (address)',
+  'function approve(address to, uint256 tokenId)',
+  'function totalMinted() view returns (uint256)',
+  'function getProjectTokens(bytes32 projectId) view returns (uint256[])',
+  'function retire(uint256 tokenId)',
+]
+const MARKET_ABI = [
+  'function list(uint256 tokenId, uint256 price)',
+  'function unlist(uint256 tokenId)',
+  'function buy(uint256 tokenId)',
+  'function getListing(uint256 tokenId) view returns (tuple(address seller, uint256 price, bool active))',
+]
+const QUSDC_ABI = [
+  'function balanceOf(address) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+  'function faucet()',
+]
+const ORACLE_ABI = [
+  'function getDocumentHash(bytes32 projectId) view returns (bytes32)',
+  'function requestDocumentAccess(bytes32 projectId)',
+  'function hasDocumentAccess(bytes32 projectId, address requester) view returns (bool)',
+  'function oracleCount() view returns (uint256)',
+  'function attestationThreshold() view returns (uint256)',
+]
+const QIEPASS_ABI = [
+  'function verifyMe(string fullName, string organization)',
+  'function isVerified(address wallet) view returns (bool)',
+  'function getIdentity(address wallet) view returns (string fullName, string organization, uint256 verifiedAt, bool verified)',
+]
+
+// ── State ──
+let provider = null, signer = null, walletAddr = null
+let uploadedFile = null, verificationResult = null
+let _credits = [], _marketTab = 'all', _listTokenId = null
+
+const readProvider = () => new ethers.providers.JsonRpcProvider(QIE_CHAIN.rpcUrls[0])
+const short = a => a ? a.slice(0,6)+'…'+a.slice(-4) : ''
+
+// Pre-built ABI interfaces for encoding tx data
+const IFACE = {
+  credit: new ethers.utils.Interface(CREDIT_ABI),
+  market: new ethers.utils.Interface(MARKET_ABI),
+  qusdc:  new ethers.utils.Interface(QUSDC_ABI),
+  oracle: new ethers.utils.Interface(ORACLE_ABI),
+  pass:   new ethers.utils.Interface(QIEPASS_ABI),
+}
+// Send a tx via the RAW EIP-1193 provider. Some injected wallets (incl. QIE Wallet)
+// choke on ethers' JsonRpcSigner tx population and never show a prompt. Building the
+// full request ourselves (from/to/data/gas) and calling eth_sendTransaction directly
+// makes the wallet prompt immediately. We then poll the read RPC for the receipt.
+async function rawSend(to, iface, method, args, gas){
+  if(!walletAddr) throw new Error('Connect wallet first')
+  const data = iface.encodeFunctionData(method, args)
+  const txHash = await window.ethereum.request({ method:'eth_sendTransaction', params:[{
+    from: walletAddr, to, data, value:'0x0', gas:'0x'+Number(gas).toString(16)
+  }]})
+  const rcpt = await readProvider().waitForTransaction(txHash, 1, 150000)
+  if(!rcpt || rcpt.status===0) throw new Error('Transaction reverted on-chain')
+  return rcpt
+}
+const explorerTx = h => `${EXPLORER}/tx/${h}`
+const explorerToken = t => `${EXPLORER}/token/${ADDRESSES.CarbonCredit}?a=${t}`
+const fmtQUSDC = raw => Number(ethers.utils.formatUnits(raw, QUSDC_DECIMALS)).toLocaleString(undefined,{maximumFractionDigits:2})
+
+// ── Nav ──
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'))
+  document.getElementById('page-'+id).classList.add('active')
+  document.querySelectorAll('.nav-link').forEach(l=>{ if(l.textContent.toLowerCase().includes(id==='landing'?'home':id)) l.classList.add('active') })
+  window.scrollTo(0,0)
+  if(id==='market') loadMarketplace()
+  if(id==='landing') loadStats()
+  if(id==='verify') startPipeAnim(); else stopPipeAnim()
+}
+
+// Looping "scan" through the empty-state pipeline so it feels live
+let _pipeTimer=null
+function startPipeAnim(){
+  stopPipeAnim()
+  const empty=document.getElementById('verify-empty')
+  if(!empty || empty.style.display==='none') return
+  const steps=[...empty.querySelectorAll('.pipe-step')]
+  if(!steps.length) return
+  let i=0
+  const tick=()=>{ steps.forEach(s=>{ s.classList.remove('scan'); s.querySelector('.pipe-ind').classList.remove('scan') })
+    steps[i].classList.add('scan'); steps[i].querySelector('.pipe-ind').classList.add('scan'); i=(i+1)%steps.length }
+  tick(); _pipeTimer=setInterval(tick,900)
+}
+function stopPipeAnim(){ clearInterval(_pipeTimer); _pipeTimer=null
+  document.querySelectorAll('#verify-empty .pipe-step,#verify-empty .pipe-ind').forEach(x=>x.classList.remove('scan')) }
+
+// ── Wallet connect ──
+async function connectWallet(){
+  if(!window.ethereum){ showToast('No wallet found. Install MetaMask / QIE Wallet.','error'); return }
+  localStorage.removeItem('tl_wallet_off')   // clear disconnect flag up front
+  const cbtn=document.getElementById('connect-btn'); const cdone=btnLoading(cbtn,'Connecting…')
+  try{
+    provider = new ethers.providers.Web3Provider(window.ethereum, 'any')
+    let accs = await window.ethereum.request({method:'eth_requestAccounts'}).catch(()=>null)
+    if(!accs || !accs.length){
+      // force the wallet to re-show its connect prompt (some wallets need this after disconnect)
+      try{ await window.ethereum.request({method:'wallet_requestPermissions',params:[{eth_accounts:{}}]}) }catch(_){}
+      accs = await window.ethereum.request({method:'eth_requestAccounts'}).catch(()=>null)
+    }
+    if(!accs || !accs.length){ cdone(); showToast('No account returned — open your wallet and approve the connection.','error'); return }
+    await ensureChain().catch(()=>{})   // never let a chain-switch failure block connect
+    signer = provider.getSigner()
+    walletAddr = accs[0]
+    cdone()
+    setWalletBtn()
+    updateQusdcBal(); updateQiePassChip(); checkNetwork()
+    window.ethereum.removeAllListeners?.('accountsChanged')
+    window.ethereum.on?.('accountsChanged', ()=>location.reload())
+    window.ethereum.on?.('chainChanged', ()=>location.reload())
+    showToast('Wallet connected: '+short(walletAddr),'success')
+  }catch(e){ cdone(); showToast('Connect failed: '+(e.message||e).toString().slice(0,80),'error') }
+}
+async function ensureChain(){
+  try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:QIE_CHAIN.chainId}]}) }
+  catch(e){ if(e.code===4902){ await window.ethereum.request({method:'wallet_addEthereumChain',params:[QIE_CHAIN]}) } }
+}
+function setWalletBtn(){
+  const b=document.getElementById('connect-btn')
+  b.textContent=short(walletAddr); b.classList.add('connected')
+  document.getElementById('qiepass-chip').style.display='flex'
+}
+function requireWallet(){ if(!signer){ showToast('Connect your wallet first','error'); return false } return true }
+function walletBtnClick(){ if(!walletAddr) connectWallet(); else toggleWalletMenu() }
+function toggleWalletMenu(){
+  const m=document.getElementById('wallet-menu'); const show=!m.classList.contains('show')
+  m.classList.toggle('show')
+  if(show){ document.getElementById('wm-addr').textContent=walletAddr
+    document.getElementById('wm-explorer').href=`${EXPLORER}/address/${walletAddr}`
+    const q=document.getElementById('wm-qusdc'); const bal=document.getElementById('qusdc-bal')?.textContent||'QUSDC: —'; q.textContent=bal }
+}
+function disconnectWallet(){
+  walletAddr=null; signer=null; provider=null
+  localStorage.setItem('tl_wallet_off','1')           // remember across refresh
+  const b=document.getElementById('connect-btn'); b.textContent='Connect Wallet'; b.classList.remove('connected')
+  document.getElementById('wallet-menu').classList.remove('show')
+  document.getElementById('qiepass-chip').style.display='none'
+  const qb=document.getElementById('qusdc-bal'); if(qb) qb.textContent='QUSDC: connect wallet'
+  showToast('Wallet disconnected','success')
+  if(document.getElementById('page-market').classList.contains('active')){ updateTabCounts(); renderMarketplace() }
+}
+// close wallet menu on outside click
+document.addEventListener('click',e=>{ const w=document.querySelector('.wallet-wrap'); const m=document.getElementById('wallet-menu'); if(m&&m.classList.contains('show')&&w&&!w.contains(e.target)) m.classList.remove('show') })
+
+// ── Live stats ──
+function countUp(el,target,fmt){
+  if(target==null||isNaN(target)){ el.textContent='—'; return }
+  const dur=1000, t0=performance.now()
+  function tick(now){ const p=Math.min((now-t0)/dur,1); const e=1-Math.pow(1-p,3); const v=Math.round(e*target)
+    el.textContent=fmt?fmt(v):v.toLocaleString(); if(p<1) requestAnimationFrame(tick) }
+  requestAnimationFrame(tick)
+}
+async function loadStats(){
+  try{
+    const r=await fetch(`${AI_BACKEND}/api/stats`); const d=await r.json()
+    if(d.error) return
+    const fmt=n=>n>=1000?(n/1000).toFixed(n>=10000?0:1)+'K':String(n)
+    countUp(document.getElementById('stat-verified'), d.credits_verified)
+    countUp(document.getElementById('stat-blocked'),  d.frauds_blocked)
+    countUp(document.getElementById('stat-tonnes'),   d.tonnes_co2, fmt)
+  }catch(_){}
+}
+
+// ── Project submission ──
+function addGpsPoint(){
+  const c=document.getElementById('gps-coords'); const n=c.querySelectorAll('.coord-row').length+1
+  const row=document.createElement('div'); row.className='coord-row'
+  row.innerHTML=`<span class="coord-label">P${n}</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/>`
+  c.appendChild(row)
+}
+function fillDemoGPS(){
+  // Coordinates matched to samples/genuine_land_deed.pdf (Sarawak, Borneo:
+  // Lat 1.15, Lng 110.75) so "demo coords + genuine deed" passes the GPS-match
+  // check out of the box. The deed is for 3200 ha forest, owner Rajesh Kumar Singh.
+  const pts=[[1.20,110.70],[1.20,110.80],[1.10,110.80],[1.10,110.70]]
+  const rows=document.querySelectorAll('#gps-coords .coord-row')
+  pts.forEach((p,i)=>{ if(rows[i]){ rows[i].querySelector('.gps-lat').value=p[0]; rows[i].querySelector('.gps-lon').value=p[1] } })
+  document.getElementById('f-name').value='Sarawak Rainforest Block 12'
+  document.getElementById('f-id').value='TL-'+Date.now()
+  document.getElementById('f-type').value='forest'; document.getElementById('f-biome').value='tropical'
+  document.getElementById('f-ha').value=3200; document.getElementById('f-tonnes').value=19200
+  document.getElementById('f-vintage').value=2025; document.getElementById('f-country').value='Malaysia'
+  updateScorePreview()
+  showToast('Demo loaded — now upload samples/genuine_land_deed.pdf to PASS','success')
+}
+function handleFileUpload(input){
+  if(input.files[0]){ uploadedFile=input.files[0]
+    document.getElementById('upload-area').classList.add('has-file')
+    document.getElementById('upload-filename').textContent='✓ '+uploadedFile.name
+    updateScorePreview() }
+}
+function collectPolygon(){
+  const lats=document.querySelectorAll('.gps-lat'), lons=document.querySelectorAll('.gps-lon')
+  const poly=[]; for(let i=0;i<lats.length;i++){ const la=parseFloat(lats[i].value),lo=parseFloat(lons[i].value); if(!isNaN(la)&&!isNaN(lo)) poly.push([la,lo]) }
+  return poly
+}
+
+async function submitProject(){
+  const name=document.getElementById('f-name').value.trim()
+  let projId=document.getElementById('f-id').value.trim()
+  const ha=document.getElementById('f-ha').value, tonnes=document.getElementById('f-tonnes').value
+  const type=document.getElementById('f-type').value, biome=document.getElementById('f-biome').value
+  const vintage=document.getElementById('f-vintage').value
+  const poly=collectPolygon()
+  if(!name||!ha||!tonnes||!type||!biome||!vintage){ showToast('Fill all required fields','error'); return }
+  if(poly.length<3){ showToast('Enter at least 3 GPS points','error'); return }
+  if(!requireWallet()) return
+  if(!projId){ projId='TL-'+Date.now(); document.getElementById('f-id').value=projId }
+
+  // Prove wallet ownership — sign the submission (backend recovers + checks it)
+  let signature='', signedTs=String(Date.now())
+  try{
+    signature=await signer.signMessage(`TerraLedger: verify project ${projId} as ${walletAddr} @ ${signedTs}`)
+  }catch(_){ showToast('Signature rejected — submission cancelled','error'); return }
+
+  const done=btnLoading(document.getElementById('submit-btn'),'Verifying…')
+  showPage('verify')
+  startStepAnimation()
+  const form=new FormData()
+  form.append('project_id',projId); form.append('project_name',name)
+  form.append('gps_polygon',JSON.stringify(poly))
+  form.append('hectares',ha); form.append('tonnes_co2',tonnes)
+  form.append('vintage_year',vintage); form.append('project_type',type); form.append('biome',biome)
+  form.append('submitter_address',walletAddr); form.append('registered_polygons','[]')
+  form.append('signature',signature); form.append('signed_ts',signedTs)
+  if(uploadedFile) form.append('document',uploadedFile)
+
+  try{
+    const res=await fetch(`${AI_BACKEND}/verify`,{method:'POST',body:form})
+    const data=await res.json()
+    if(!res.ok){
+      stopStepAnimation()
+      if(res.status===429||res.status===403){ renderBlocked(res.status,data.detail||''); return }
+      showToast('Verify failed: '+(data.detail||'error').toString().slice(0,90),'error'); return
+    }
+    verificationResult=data
+    renderVerifyResult(data)
+  }catch(e){ stopStepAnimation(); showToast('Backend unreachable. Start terraledger.py.','error') }
+  finally{ done() }
+}
+
+let _stepTimer=null, _elapsedTimer=null, _verifyStart=0
+function startStepAnimation(){
+  stopPipeAnim()
+  _verifyStart=Date.now(); clearInterval(_elapsedTimer)
+  _elapsedTimer=setInterval(()=>{ const s=Math.floor((Date.now()-_verifyStart)/1000); const el=document.getElementById('verify-elapsed'); if(el) el.textContent=`Elapsed ${s}s · real NASA + AI checks take ~30–60s` },1000)
+  document.getElementById('verify-empty').style.display='none'
+  document.getElementById('verify-processing').style.display='block'
+  document.getElementById('verify-steps').style.display='block'
+  document.getElementById('verify-result').style.display='none'
+  const ids=['gps','own','ano','sat','rep']
+  ids.forEach(i=>{ document.getElementById('ind-'+i).className='step-indicator pending'; document.getElementById('ind-'+i).textContent=ids.indexOf(i)+1; const s=document.getElementById('score-'+i); s.style.display='none' })
+  let i=0
+  const tick=()=>{ if(i>0) document.getElementById('ind-'+ids[i-1]).className='step-indicator done'
+    if(i<ids.length){ document.getElementById('ind-'+ids[i]).className='step-indicator running'; i++; _stepTimer=setTimeout(tick,1400) } }
+  tick()
+}
+function stopStepAnimation(){ clearTimeout(_stepTimer); clearInterval(_elapsedTimer); document.getElementById('verify-processing').style.display='none' }
+
+function renderVerifyResult(d){
+  stopStepAnimation()
+  const ids=['gps','own','ano','sat','rep']; ids.forEach(i=>document.getElementById('ind-'+i).className='step-indicator done')
+  const s=d.scores||{}
+  const setStep=(id,val,max,detail)=>{ const el=document.getElementById('score-'+id); el.style.display='block'; el.textContent=val+' pts'; el.style.color=val>0?'var(--green)':'var(--red)'; document.getElementById('det-'+id).textContent=detail }
+  setStep('gps',s.gps??0,30,`Overlap ${(d.gps_overlap_pct??0).toFixed(1)}% · ${d.conflicting_project_ids?.length||0} conflicts`)
+  setStep('own',s.ownership??0,25,`Owner: ${d.owner_name||'—'}`)
+  setStep('ano',s.anomaly??0,25,`Anomaly score ${(d.anomaly_score??0).toFixed(2)}`)
+  setStep('sat',s.satellite??0,20,`${d.fire_count??0} fire alerts · ${d.permanence_risk||'—'} risk`)
+  document.getElementById('det-rep').textContent=d.report_ipfs_cid?'Report pinned to IPFS ✓':'Report generated'
+  if(d.verdict!=='PASS') document.getElementById('ind-'+(s.ownership===0&&d.flags?.includes('OWNERSHIP_GPS_MISMATCH')?'own':'ano')).className='step-indicator fail'
+
+  const pass=d.verdict==='PASS'
+  const card=document.getElementById('result-card'); card.className='result-card '+(pass?'pass':'fail')
+  document.getElementById('rc-verdict').textContent=pass?'APPROVED FOR MINTING':'VERIFICATION FAILED'
+  document.getElementById('rc-verdict').className='rc-verdict '+(pass?'pass':'fail')
+  document.getElementById('rc-score').innerHTML=`${d.total_score}<span>/100</span>`
+  document.getElementById('rc-project-name').textContent=verificationResult.__name||document.getElementById('f-name').value||d.project_id
+
+  const bars={GPS:[s.gps??0,30],Ownership:[s.ownership??0,25],'Anomaly AI':[s.anomaly??0,25],Satellite:[s.satellite??0,20]}
+  document.getElementById('score-bars').innerHTML=Object.entries(bars).map(([k,[v,m]])=>{
+    const pct=Math.round(v/m*100), cls=pct>=70?'green':pct>=40?'amber':'red'
+    return `<div class="score-bar-row"><div class="sb-label">${k}</div><div class="sb-track"><div class="sb-fill ${cls}" style="width:${pct}%"></div></div><div class="sb-val">${v}/${m}</div></div>`
+  }).join('')
+  document.getElementById('result-flags').innerHTML=(d.flags||[]).map(f=>`<span class="flag">${f}</span>`).join('')
+  // Warnings: rate-limit on fail; mint-not-confirmed on pass-without-tx
+  document.getElementById('rl-warning').innerHTML = !pass
+    ? rlWarnHtml(d.rate_limit_remaining, d.submitter_fraud_history)
+    : (!d.on_chain_tx ? `<div class="rl-warn"><div class="rl-warn-ic">⚠️</div><div>
+        <div class="rl-warn-h">AI-approved, but the on-chain mint didn't confirm</div>
+        <div class="rl-warn-b">Verification passed, but the mint transaction didn't go through (gas / RPC / network). <b>No NFT exists yet.</b> Re-submit to retry — the same deed is allowed (it's only consumed on a successful mint).</div>
+      </div></div>` : '')
+
+  const txRow=document.getElementById('tx-row')
+  if(d.on_chain_tx){ txRow.style.display='flex'; document.getElementById('tx-hash').textContent=d.on_chain_tx.slice(0,22)+'…' } else txRow.style.display='none'
+  document.getElementById('audit-report').textContent=d.report_text||''
+
+  const actions=document.getElementById('result-actions'); const ipfsUrl=d.report_ipfs_cid?IPFS_GATEWAY+d.report_ipfs_cid:null
+  if(pass){
+    actions.innerHTML=`${d.on_chain_tx?`<button class="btn-primary" onclick="showPage('market')">View in Marketplace →</button>`:''}
+      ${ipfsUrl?`<a class="btn-secondary" href="${ipfsUrl}" target="_blank">IPFS Audit ↗</a>`:''}`
+  }else{
+    actions.innerHTML=`<button class="btn-secondary" onclick="showPage('submit')">← Fix & Resubmit</button>
+      ${ipfsUrl?`<a class="btn-secondary" href="${ipfsUrl}" target="_blank">IPFS Audit ↗</a>`:''}`
+  }
+  document.getElementById('verify-result').style.display='block'
+  showToast(pass?(d.on_chain_tx?'Verified & minted on-chain ✓':'Verified ✓'):'Verification failed', pass?'success':'error')
+}
+function openExplorer(){ if(verificationResult?.on_chain_tx) window.open(explorerTx(verificationResult.on_chain_tx),'_blank'); else window.open(EXPLORER,'_blank') }
+
+// Anti-fraud rate-limit warning block (shown on every failed verification)
+function rlWarnHtml(remaining, fraudHistory){
+  const left = (remaining!=null && remaining>=0) ? `<div class="rl-left">${remaining} submission(s) left this hour for this wallet</div>` : ''
+  const prior = (fraudHistory>0) ? ` This wallet already has <b>${fraudHistory}</b> on-chain fraud strike(s).` : ''
+  return `<div class="rl-warn"><div class="rl-warn-ic">⚠️</div><div>
+    <div class="rl-warn-h">Anti-fraud rate limiting is active</div>
+    <div class="rl-warn-b">This attempt is recorded.${prior} <b>2 failed verifications within 10 minutes</b> temporarily locks this wallet for <b>30 minutes</b> — no new document uploads or submissions. Submissions are also capped at <b>5 / hour</b>. Repeated on-chain fraud strikes can <b>permanently ban</b> the wallet from minting.</div>${left}
+  </div></div>`
+}
+
+// Blocked screen when the backend rejects upfront (429 cooldown / 403 ban)
+function renderBlocked(status, detail){
+  document.getElementById('verify-empty').style.display='none'
+  document.getElementById('verify-processing').style.display='none'
+  document.getElementById('verify-steps').style.display='none'
+  const banned = status===403
+  const card=document.getElementById('result-card'); card.className='result-card fail'
+  document.getElementById('rc-verdict').textContent = banned?'WALLET BANNED':'WALLET RATE-LIMITED'
+  document.getElementById('rc-verdict').className='rc-verdict fail'
+  document.getElementById('rc-score').innerHTML='⏻'
+  document.getElementById('rc-project-name').textContent = detail||''
+  document.getElementById('score-bars').innerHTML=''
+  document.getElementById('result-flags').innerHTML=''
+  document.getElementById('rl-warning').innerHTML = `<div class="rl-warn ${banned?'ban':''}"><div class="rl-warn-ic">⏻</div><div>
+    <div class="rl-warn-h">${banned?'This wallet is permanently banned':'This wallet is temporarily locked'}</div>
+    <div class="rl-warn-b">${banned
+      ? 'Too many on-chain fraud strikes from this wallet. It can no longer submit projects for minting. Use a legitimate project and a verified identity.'
+      : 'You hit the anti-fraud limit (2 failed attempts in 10 minutes, or 5 submissions/hour). New document uploads and submissions are blocked for ~30 minutes. This protects the registry from spam and fraud probing.'}</div>
+  </div></div>`
+  document.getElementById('tx-row').style.display='none'
+  document.getElementById('audit-report').textContent=''
+  document.getElementById('result-actions').innerHTML='<button class="btn-secondary" onclick="showPage(\'submit\')">← Back to Submit</button>'
+  document.getElementById('verify-result').style.display='block'
+  showToast(banned?'Wallet banned — too many fraud strikes':'Wallet rate-limited — cooldown active','error')
+}
+
+// ── Marketplace ──
+async function loadMarketplace(){
+  const grid=document.getElementById('credits-grid')
+  grid.innerHTML=Array(6).fill('<div class="skel-card"><div class="skel" style="height:18px;width:55%;margin-bottom:16px"></div><div class="skel" style="height:11px;width:100%;margin-bottom:9px"></div><div class="skel" style="height:11px;width:85%;margin-bottom:9px"></div><div class="skel" style="height:11px;width:70%;margin-bottom:22px"></div><div class="skel" style="height:30px;width:100%"></div></div>').join('')
+  updateQusdcBal(); updateQiePassChip()
+  try{
+    const res=await fetch(`${AI_BACKEND}/marketplace`); const data=await res.json()
+    const projects=data.credits||[]
+    const rp=readProvider()
+    const credit=new ethers.Contract(ADDRESSES.CarbonCredit,CREDIT_ABI,rp)
+    const market=new ethers.Contract(ADDRESSES.CarbonMarketplace,MARKET_ABI,rp)
+    // Read every credit's on-chain data in parallel (fast load)
+    const results=await Promise.all(projects.map(async p=>{
+      try{
+        const tokens=await credit.getProjectTokens(p.id); if(!tokens.length) return null
+        const tokenId=tokens[tokens.length-1].toString()
+        const m=await credit.credits(tokenId)
+        const c={ projectId:p.id, tokenId, tonnes:m.tonnes.toString(), vintage:m.vintage.toString(),
+          ipfsCid:m.ipfsCid, retired:m.retired, score:Number(m.score),
+          sub:{gps:Number(m.gpsScore),ownership:Number(m.ownershipScore),anomaly:Number(m.anomalyScore),satellite:Number(m.satelliteScore)},
+          area:p.area_hectares }
+        if(!c.retired){
+          const [owner,l]=await Promise.all([credit.ownerOf(tokenId),market.getListing(tokenId)])
+          c.owner=owner; c.listed=l.active; c.priceRaw=l.active?l.price.toString():null; c.price=l.active?fmtQUSDC(l.price):null
+        }else{ c.retiredBy=m.retiredBy }
+        return c
+      }catch(_){ return null }
+    }))
+    _credits=results.filter(Boolean)
+    updateTabCounts(); renderMarketplace()
+    enrichNames()   // pull real project names from IPFS audits, then re-render
+  }catch(e){
+    _credits=[]; grid.innerHTML='<div class="empty-state">Backend offline. Start terraledger.py to see live credits.</div>'
+  }
+}
+async function enrichNames(){
+  let changed=false
+  await Promise.allSettled(_credits.map(async c=>{
+    if(c.name||!c.ipfsCid||c.ipfsCid==='undefined') return
+    try{ const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),5000)
+      const a=await (await fetch(IPFS_GATEWAY+c.ipfsCid,{signal:ctl.signal})).json(); clearTimeout(t)
+      if(a&&a.project_name){ c.name=a.project_name; changed=true }
+    }catch(_){}
+  }))
+  if(changed) renderMarketplace()
+}
+function tabMatch(c,tab){
+  const me=(walletAddr||'').toLowerCase()
+  switch(tab){
+    case 'sale': return !c.retired&&c.listed
+    case 'owned': return !c.retired&&!c.listed
+    case 'mine': return !c.retired&&c.owner&&c.owner.toLowerCase()===me
+    case 'retired': return c.retired
+    default: return true
+  }
+}
+function updateTabCounts(){
+  const set=(id,n)=>{const e=document.getElementById(id);if(e)e.textContent=n}
+  set('tc-all',_credits.length); set('tc-sale',_credits.filter(c=>tabMatch(c,'sale')).length)
+  set('tc-owned',_credits.filter(c=>tabMatch(c,'owned')).length); set('tc-mine',_credits.filter(c=>tabMatch(c,'mine')).length)
+  set('tc-retired',_credits.filter(c=>tabMatch(c,'retired')).length)
+}
+function setMarketTab(tab,btn){ _marketTab=tab; document.querySelectorAll('#market-tabs .filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderMarketplace() }
+function scoreBadge(c){
+  if(c.retired) return `<span class="retired-badge">RETIRED</span>`
+  const col=c.score>=85?'var(--green)':c.score>=70?'var(--amber)':'var(--red)'
+  return `<span class="ai-score-badge" title="Score read on-chain from the NFT" style="color:${col};border-color:${col}33;background:${col}14">AI ${c.score}/100 ⛓</span>`
+}
+function renderMarketplace(){
+  const grid=document.getElementById('credits-grid')
+  const me=(walletAddr||'').toLowerCase()
+  const list=_credits.filter(c=>tabMatch(c,_marketTab))
+  if(!list.length){ grid.innerHTML=`<div class="empty-state">No credits in “${_marketTab}”.</div>`; return }
+  grid.innerHTML=list.map(c=>{
+    const isMine=c.owner&&c.owner.toLowerCase()===me
+    let actions=''
+    if(c.retired){ actions=`<span style="font-size:11px;color:var(--muted)">Offset · burned</span>` }
+    else if(c.listed){
+      actions = isMine
+        ? `<button class="mini-btn ghost" onclick="unlistCredit('${c.tokenId}',this)">Unlist</button>`
+        : `<button class="mini-btn buy" onclick="buyCredit('${c.tokenId}','${c.priceRaw}',this)">Buy</button>`
+    } else if(isMine){
+      actions=`<button class="mini-btn ghost" onclick="openList('${c.tokenId}')">List</button><button class="mini-btn ghost red" onclick="openRetire('${c.tokenId}','${c.projectId}')">Retire</button>`
+    } else { actions=`<span style="font-size:11px;color:var(--muted)">Not for sale</span>` }
+    return `<div class="credit-card">
+      <div class="cc-header"><div><div class="cc-name">${c.name?c.name:('Credit #'+c.tokenId)}</div>
+        <div class="cc-id">Project ${c.projectId.slice(0,10)}…${c.projectId.slice(-4)} <span class="copy-ic" onclick="copyText('${c.projectId}','Project ID')" title="Copy full project ID">⧉</span></div></div>${scoreBadge(c)}</div>
+      <div class="cc-meta">
+        <div class="cc-meta-row"><span class="cc-meta-label">Tonnes CO₂</span><span class="cc-meta-val">${Number(c.tonnes).toLocaleString()} t</span></div>
+        <div class="cc-meta-row"><span class="cc-meta-label">Vintage</span><span class="cc-meta-val">${c.vintage}</span></div>
+        <div class="cc-meta-row"><span class="cc-meta-label">GPS / Own / Ano / Sat</span><span class="cc-meta-val">${c.sub.gps}·${c.sub.ownership}·${c.sub.anomaly}·${c.sub.satellite}</span></div>
+        ${c.listed?`<div class="cc-meta-row"><span class="cc-meta-label">Price</span><span class="cc-meta-val">${c.price} QUSDC</span></div>`:''}
+      </div>
+      <div class="cc-footer">
+        <div class="cc-links">
+          <span class="view-cred" onclick="openCredModal('${c.tokenId}','${c.projectId}','${c.ipfsCid}')">Credential ↗</span>
+          <span class="view-cred" onclick="openAuditModal('${c.tokenId}','${c.ipfsCid}')">Audit ↗</span>
+          <a class="view-cred" href="${explorerToken(c.tokenId)}" target="_blank" title="Verify this NFT on QIE Explorer">Explorer ↗</a>
+        </div>
+        <div class="cc-actions">${actions}</div>
+      </div>
+    </div>`
+  }).join('')
+}
+
+async function buyCredit(tokenId,priceRaw,btn){
+  if(!requireWallet()) return
+  const done=btnLoading(btn,'Buying…')
+  try{
+    const qusdc=new ethers.Contract(ADDRESSES.QUSDC,QUSDC_ABI,readProvider())
+    const price=ethers.BigNumber.from(priceRaw)
+    const bal=await qusdc.balanceOf(walletAddr)
+    if(bal.lt(price)){ showToast(`Need ${fmtQUSDC(price)} QUSDC.`,'error'); done(); return }
+    const allow=await qusdc.allowance(walletAddr,ADDRESSES.CarbonMarketplace)
+    if(allow.lt(price)){ showToast('Approve QUSDC in your wallet…','success'); await rawSend(ADDRESSES.QUSDC, IFACE.qusdc,'approve',[ADDRESSES.CarbonMarketplace,price],120000) }
+    showToast('Confirm the purchase in your wallet…','success')
+    await rawSend(ADDRESSES.CarbonMarketplace, IFACE.market,'buy',[tokenId],320000)
+    showToast(`Bought credit #${tokenId} ✓`,'success'); loadMarketplace()
+  }catch(e){ done(); showToast('Buy failed: '+(e.reason||e.message||e).toString().slice(0,80),'error') }
+}
+function openList(tokenId){ _listTokenId=tokenId; document.getElementById('list-price').value=''; openModal('list-modal') }
+async function confirmList(){
+  if(!requireWallet()) return
+  const priceQusdc=document.getElementById('list-price').value
+  if(!priceQusdc||Number(priceQusdc)<=0){ showToast('Enter a price','error'); return }
+  const done=btnLoading(document.getElementById('list-confirm'),'Listing…')
+  try{
+    const price=ethers.utils.parseUnits(String(priceQusdc),QUSDC_DECIMALS)
+    showToast('Approve the NFT in your wallet…','success')
+    await rawSend(ADDRESSES.CarbonCredit, IFACE.credit, 'approve', [ADDRESSES.CarbonMarketplace, _listTokenId], 150000)
+    showToast('Confirm the listing in your wallet…','success')
+    await rawSend(ADDRESSES.CarbonMarketplace, IFACE.market, 'list', [_listTokenId, price], 250000)
+    done(); closeModal('list-modal'); showToast(`Credit #${_listTokenId} listed ✓`,'success'); loadMarketplace()
+  }catch(e){ done(); showToast('List failed: '+(e.reason||e.message||e).toString().slice(0,80),'error') }
+}
+async function unlistCredit(tokenId,btn){
+  if(!requireWallet()) return
+  const done=btnLoading(btn,'…')
+  try{ await rawSend(ADDRESSES.CarbonMarketplace, IFACE.market,'unlist',[tokenId],100000); showToast('Unlisted ✓','success'); loadMarketplace() }
+  catch(e){ done(); showToast('Unlist failed: '+(e.reason||e.message||e).toString().slice(0,80),'error') }
+}
+let _retireCtx=null
+async function openRetire(tokenId,projectId){
+  if(!requireWallet()) return
+  _retireCtx={tokenId,projectId}
+  document.getElementById('retire-title').textContent=`Retire credit #${tokenId}`
+  document.getElementById('retire-beneficiary').value=''
+  document.getElementById('retire-org').value=''
+  // Pre-fill the org from the connected QIE Pass identity, if there is one.
+  try{ const pass=new ethers.Contract(ADDRESSES.QIEPass,QIEPASS_ABI,readProvider()); const id=await pass.getIdentity(walletAddr); if(id.verified){ document.getElementById('retire-org').value=id.organization||''; document.getElementById('retire-beneficiary').value=id.fullName||'' } }catch(_){}
+  openModal('retire-modal')
+}
+async function confirmRetire(){
+  if(!_retireCtx) return
+  const {tokenId,projectId}=_retireCtx
+  const beneficiary=document.getElementById('retire-beneficiary').value.trim()
+  const organization=document.getElementById('retire-org').value.trim()
+  const done=btnLoading(document.getElementById('retire-confirm'),'Retiring…')
+  try{
+    const credit=new ethers.Contract(ADDRESSES.CarbonCredit,CREDIT_ABI,readProvider())
+    const meta=await credit.credits(tokenId)
+    showToast('Confirm retirement in your wallet…','success')
+    const rcpt=await rawSend(ADDRESSES.CarbonCredit, IFACE.credit,'retire',[tokenId],200000)
+    const tx={hash:rcpt.transactionHash}
+    closeModal('retire-modal'); done()
+    showToast(`Credit #${tokenId} permanently retired ✓`,'success')
+    const form=new FormData()
+    form.append('token_id',tokenId); form.append('project_id',projectId); form.append('project_name','TerraLedger Credit #'+tokenId)
+    form.append('tonnes',meta.tonnes.toString()); form.append('vintage',meta.vintage.toString())
+    form.append('retired_by',walletAddr); form.append('retired_at',new Date().toISOString())
+    form.append('tx_hash',tx.hash); if(meta.ipfsCid) form.append('ipfs_cid',meta.ipfsCid)
+    form.append('beneficiary',beneficiary); form.append('organization',organization)
+    try{
+      const r=await fetch(`${AI_BACKEND}/retirement-certificate`,{method:'POST',body:form})
+      if(r.ok){ const blob=await r.blob(); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`terraledger_certificate_${tokenId}.pdf`; a.click(); showToast('Certificate downloaded ✓','success') }
+    }catch(_){}
+    loadMarketplace()
+  }catch(e){ done(); showToast('Retire failed: '+(e.reason||e.message||e).toString().slice(0,80),'error') }
+}
+
+async function updateQusdcBal(){
+  const el=document.getElementById('qusdc-bal'); if(!walletAddr){ el.textContent='QUSDC: connect wallet'; return }
+  try{ const q=new ethers.Contract(ADDRESSES.QUSDC,QUSDC_ABI,readProvider()); const b=await q.balanceOf(walletAddr); el.textContent='QUSDC: '+fmtQUSDC(b) }catch(_){}
+}
+async function getFaucet(){
+  if(!IS_TESTNET){ showToast('Mainnet QUSDC has no faucet — bridge USDC to get QUSDC.','error'); return }
+  if(!requireWallet()) return
+  const done=btnLoading(document.getElementById('faucet-btn'),'Requesting…')
+  try{ showToast('Requesting test QUSDC…','success'); await rawSend(ADDRESSES.QUSDC, IFACE.qusdc,'faucet',[],120000); showToast('Test QUSDC received ✓','success'); updateQusdcBal() }
+  catch(e){ showToast('Faucet failed (testnet only): '+(e.reason||e.message||e).toString().slice(0,70),'error') }
+  finally{ done() }
+}
+
+// ── Credential modal ──
+// Dedicated AI audit report viewer (opens the IPFS-pinned report cleanly)
+async function openAuditModal(tokenId,ipfsCid){
+  const body=document.getElementById('audit-modal-body')
+  document.getElementById('audit-modal-title').textContent=`AI Audit Report · Credit #${tokenId}`
+  openModal('audit-modal')
+  if(!ipfsCid||ipfsCid==='undefined'||ipfsCid===''){ body.innerHTML='<div class="kyc-status warn">No IPFS audit is linked to this credit.</div>'; return }
+  body.innerHTML='<div class="empty-state">Fetching audit from IPFS…</div>'
+  try{
+    const r=await fetch(IPFS_GATEWAY+ipfsCid); if(!r.ok) throw 0
+    const a=await r.json()
+    const rep=a.audit_report||a.report||''
+    const total=a.total_score??'—', verdict=a.verdict||''
+    if(!rep){ body.innerHTML=`<div class="kyc-status warn">Audit pinned, but no report text in the JSON.</div><div style="margin-top:10px"><a class="btn-secondary" href="${IPFS_GATEWAY+ipfsCid}" target="_blank">Open raw JSON ↗</a></div>`; return }
+    body.innerHTML=`
+      <div class="cred-scorebox" style="margin-bottom:12px">
+        <div><div class="cred-scorebox-lbl">Verdict</div><div style="font-size:18px;font-weight:700;color:${verdict==='PASS'?'var(--green)':'var(--red)'}">${verdict||'—'}</div></div>
+        <div class="cred-verdict" style="color:${total>=70?'var(--green)':'var(--amber)'};border-color:var(--border2);background:var(--surface)">${total}/100</div>
+      </div>
+      <div class="audit-text" style="max-height:54vh">${rep.replace(/</g,'&lt;')}</div>
+      <div style="margin-top:12px"><a class="btn-secondary" style="font-size:12.5px" href="${IPFS_GATEWAY+ipfsCid}" target="_blank">Open raw JSON on IPFS ↗</a></div>`
+  }catch(_){
+    body.innerHTML=`<div class="kyc-status err">Audit not reachable on the IPFS gateway.<br><span style="font-size:11px;color:var(--muted);font-family:var(--mono)">CID: ${ipfsCid}</span></div>
+      <div class="cred-section-desc" style="margin-top:10px">This usually means the credit was minted with a placeholder CID (test data). Credits submitted through Verify get a real pinned audit.</div>
+      <a class="btn-secondary" style="font-size:12.5px" href="${IPFS_GATEWAY+ipfsCid}" target="_blank">Try raw gateway ↗</a>`
+  }
+}
+
+let _credDocHash=null, _credProjectId=null
+async function openCredModal(tokenId,projectId,ipfsCid){
+  _credProjectId=projectId
+  document.getElementById('cred-title').textContent=`Credit Credential · #${tokenId}`
+  const body=document.getElementById('cred-body'); body.innerHTML='<div class="empty-state">Loading on-chain credential…</div>'
+  openModal('cred-modal')
+  const rp=readProvider()
+  const credit=new ethers.Contract(ADDRESSES.CarbonCredit,CREDIT_ABI,rp)
+  const oracle=new ethers.Contract(ADDRESSES.CarbonOracle,ORACLE_ABI,rp)
+  let m,docHash='0x',audit=null
+  try{ m=await credit.credits(tokenId) }catch(_){}
+  try{ docHash=await oracle.getDocumentHash(projectId) }catch(_){}
+  _credDocHash=(docHash&&!/^0x0+$/.test(docHash))?docHash.toLowerCase():null
+  try{ if(ipfsCid&&ipfsCid!=='undefined'){ const r=await fetch(IPFS_GATEWAY+ipfsCid); audit=await r.json() } }catch(_){}
+  const score=m?Number(m.score):0
+  const col=score>=85?'var(--green)':score>=70?'var(--amber)':'var(--red)'
+  const si=(l,v,mx)=>`<div class="cred-score-item"><div class="lbl">${l}</div><div class="val" style="color:${v>0?'var(--green)':'var(--muted)'}">${v}<span style="font-size:12px;color:var(--muted)">/${mx}</span></div></div>`
+  body.innerHTML=`
+    <div class="cred-scorebox">
+      <div>
+        <div class="cred-scorebox-lbl">AI Verification Score</div>
+        <div style="font-family:var(--mono);font-size:34px;font-weight:700;color:${col};line-height:1">${score}<span style="font-size:16px;color:var(--muted)">/100</span></div>
+      </div>
+      <div class="cred-verdict" style="color:${score>=70?'var(--green)':'var(--red)'};border-color:${score>=70?'rgba(0,229,122,0.3)':'rgba(255,69,96,0.3)'};background:${score>=70?'var(--green-glow)':'rgba(255,69,96,0.08)'}">${score>=70?'✓ AI VERIFIED<br>on-chain ⛓':'✗ BELOW<br>THRESHOLD'}</div>
+    </div>
+    <div class="cred-scores">${si('GPS duplicate',m?Number(m.gpsScore):0,30)}${si('Ownership + auth',m?Number(m.ownershipScore):0,25)}${si('Anomaly AI',m?Number(m.anomalyScore):0,25)}${si('NASA satellite',m?Number(m.satelliteScore):0,20)}</div>
+
+    <div class="cred-section">
+      <div class="cred-section-head"><div class="cred-section-ic" style="background:var(--green-glow);color:var(--green)">⛓</div><div><div class="cred-section-title">On-chain record</div><div class="cred-section-sub">Immutable data on the QIE blockchain</div></div></div>
+      <div class="cred-row"><span class="k">Token</span><span class="v">#${tokenId} · <a href="${explorerToken(tokenId)}" target="_blank">QIE Explorer ↗</a></span></div>
+      <div class="cred-row"><span class="k">Project ID</span><span class="v">${projectId.slice(0,24)}… <span class="copy-ic" onclick="copyText('${projectId}','Project ID')" title="Copy full project ID">⧉</span></span></div>
+      <div class="cred-row"><span class="k">Tonnes / Vintage</span><span class="v">${m?Number(m.tonnes).toLocaleString():'—'} t · ${m?m.vintage:'—'}</span></div>
+      <div class="cred-row"><span class="k">IPFS audit</span><span class="v">${ipfsCid&&ipfsCid!=='undefined'?`<a href="${IPFS_GATEWAY+ipfsCid}" target="_blank">raw JSON ↗</a>`:'—'}</span></div>
+      <div class="cred-row"><span class="k">Document hash</span><span class="v">${_credDocHash?_credDocHash.slice(0,22)+'…':'not recorded'}</span></div>
+    </div>
+
+    <div class="cred-section">
+      <div class="cred-section-head"><div class="cred-section-ic" style="background:rgba(79,140,255,0.12);color:var(--blue)">🛡</div><div><div class="cred-section-title">Verify document integrity</div><div class="cred-section-sub">Prove a deed matches — without exposing it</div></div></div>
+      <div class="cred-section-desc">The private deed is never exposed. Anyone holding the original can prove it's the exact verified document — we hash it locally in your browser and compare to the on-chain hash.</div>
+      <input type="file" id="cred-verify-file" accept=".pdf,.jpg,.jpeg,.png" onchange="verifyDocIntegrity(this)" ${_credDocHash?'':'disabled'} style="font-size:12px"/>
+      <div id="cred-verify-result" style="margin-top:10px;font-size:13px"></div>
+    </div>
+
+    <div class="cred-section">
+      <div class="cred-section-head"><div class="cred-section-ic" style="background:rgba(157,123,255,0.12);color:var(--purple)">🪪</div><div><div class="cred-section-title">Extended documentation</div><div class="cred-section-sub">QIE Pass-gated · verified corporate buyers</div></div></div>
+      <div class="cred-section-desc">QIE Pass-verified corporate buyers can request extended, redacted documentation. The raw deed never leaves secure storage.</div>
+      <button class="btn-secondary" style="font-size:12.5px" onclick="requestDeepDocs('${projectId}',this)">Request extended documentation →</button>
+      <div id="cred-deepdocs-result" style="margin-top:10px;font-size:13px"></div>
+    </div>
+
+    ${audit?.audit_report?`<div class="cred-section"><div class="cred-section-head"><div class="cred-section-ic" style="background:rgba(245,166,35,0.12);color:var(--amber)">📄</div><div><div class="cred-section-title">AI audit report</div><div class="cred-section-sub">Llama 3 · pinned to IPFS</div></div></div><div class="audit-text">${(audit.audit_report||'').replace(/</g,'&lt;')}</div></div>`:''}`
+}
+async function verifyDocIntegrity(input){
+  const out=document.getElementById('cred-verify-result'); if(!input.files[0]) return
+  if(!_credDocHash){ out.innerHTML='<span style="color:var(--muted)">No hash recorded on-chain.</span>'; return }
+  out.innerHTML='<span style="color:var(--muted)">Hashing locally…</span>'
+  try{
+    const buf=await input.files[0].arrayBuffer()
+    const hash=await crypto.subtle.digest('SHA-256',buf)
+    const hex='0x'+Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('')
+    out.innerHTML=hex.toLowerCase()===_credDocHash
+      ? '<span style="color:var(--green);font-weight:600">✓ Match — this is the exact document that passed verification.</span>'
+      : '<span style="color:var(--red);font-weight:600">✗ No match — not the verified document.</span>'
+  }catch(_){ out.innerHTML='<span style="color:var(--red)">Could not hash file.</span>' }
+}
+async function requestDeepDocs(projectId,btn){
+  const out=document.getElementById('cred-deepdocs-result')
+  if(!requireWallet()){ out.innerHTML='<span style="color:var(--amber)">Connect wallet first.</span>'; return }
+  const done=btnLoading(btn,'Requesting…')
+  try{
+    const passR=new ethers.Contract(ADDRESSES.QIEPass,QIEPASS_ABI,readProvider())
+    if(!(await passR.isVerified(walletAddr))){ out.innerHTML='<span style="color:var(--amber)">QIE Pass identity required — verify via the QIE Pass chip.</span>'; return }
+    const oracleR=new ethers.Contract(ADDRESSES.CarbonOracle,ORACLE_ABI,readProvider())
+    let granted=false; try{ granted=await oracleR.hasDocumentAccess(projectId,walletAddr) }catch(_){}
+    if(!granted){ out.innerHTML='<span style="color:var(--muted)">Granting on-chain access (confirm in wallet)…</span>'; await rawSend(ADDRESSES.CarbonOracle, IFACE.oracle,'requestDocumentAccess',[projectId],150000) }
+    out.innerHTML='<span style="color:var(--muted)">Fetching extended docs…</span>'
+    const r=await fetch(`${AI_BACKEND}/document-access?project_id=${encodeURIComponent(projectId)}&wallet=${walletAddr}`)
+    const data=await r.json()
+    if(!r.ok){ out.innerHTML=`<span style="color:var(--amber)">${(data.detail||'Could not fetch').toString().slice(0,110)}</span>`; return }
+    const d=data.extended_documents
+    if(!d){ out.innerHTML='<span style="color:var(--green)">✓ Access granted. No extended record stored for this project.</span>'; return }
+    out.innerHTML=`<div style="color:var(--green);font-weight:600;margin-bottom:6px">✓ Access granted</div>
+      <div class="cred-row"><span class="k">Owner (redacted)</span><span class="v">${d.owner_redacted||'—'}</span></div>
+      <div class="cred-row"><span class="k">Authenticity</span><span class="v">${d.authenticity!=null?Math.round(d.authenticity*100)+'%':'—'}</span></div>
+      <div class="cred-row"><span class="k">Doc hash</span><span class="v">${d.doc_hash?d.doc_hash.slice(0,22)+'…':'—'}</span></div>`
+  }catch(e){ out.innerHTML=`<span style="color:var(--red)">${(e.reason||e.message||e).toString().slice(0,90)}</span>` }
+  finally{ done() }
+}
+
+// ── QIE Pass — real REST identity flow + on-chain mirror ──
+let _qpRequestId=null, _qpPoll=null
+async function updateQiePassChip(){
+  const chip=document.getElementById('qiepass-chip'), st=document.getElementById('qiepass-status')
+  if(!walletAddr){ return }
+  try{ const pass=new ethers.Contract(ADDRESSES.QIEPass,QIEPASS_ABI,readProvider()); const ok=await pass.isVerified(walletAddr)
+    st.textContent=ok?'QIE Pass ✓':'QIE Pass'; chip.classList.toggle('verified',ok)
+  }catch(_){}
+}
+async function openQiePass(){
+  const body=document.getElementById('qiepass-body')
+  let apiReady=false
+  try{ const h=await(await fetch(`${AI_BACKEND}/health`)).json(); apiReady=h.dependencies?.qie_pass_api }catch(_){}
+  body.innerHTML=`
+    <div class="sub-title">Verify identity (production QIE Pass API)</div>
+    <div style="font-size:12.5px;color:var(--muted2);margin-bottom:10px;line-height:1.6">Real privacy-preserving verification via <span style="font-family:var(--mono)">pass-api.qie.digital</span>. You approve which claims to share; partner never sees full PII. ${apiReady?'<span style="color:var(--green)">API connected ✓</span>':'<span style="color:var(--amber)">Partner keys not set on backend — using testnet on-chain mode below.</span>'}</div>
+    <div class="field"><label>Wallet address or DID</label><input id="qp-id" placeholder="${walletAddr||'0x… or did:qie:…'}" value="${walletAddr||''}"/></div>
+    <button class="btn-primary" style="width:100%;margin-top:10px" ${apiReady?'':'disabled'} onclick="qpCreate(this)">Request verification →</button>
+    <div id="qp-status"></div>
+    ${IS_TESTNET ? `
+    <div class="sub-title" style="margin-top:24px">Testnet quick-verify (on-chain demo gate)</div>
+    <div style="font-size:12.5px;color:var(--muted2);margin-bottom:10px;line-height:1.6">For the testnet demo, self-attest a QIE Pass identity on-chain (MockQIEPass) to unlock corporate-buyer features like extended document access.</div>
+    <div class="form-row"><div class="field"><label>Full name</label><input id="qp-name" placeholder="Jane Auditor"/></div><div class="field"><label>Organization</label><input id="qp-org" placeholder="Acme Carbon"/></div></div>
+    <button class="btn-secondary" style="width:100%" onclick="qpOnchainVerify(this)">Verify on-chain (testnet)</button>`
+    : `<div class="kyc-status" style="margin-top:18px">On mainnet, identity comes <b>only</b> from real QIE Pass KYC above — no self-attestation. Once verified, your wallet is mirrored on-chain automatically.</div>`}`
+}
+async function qpCreate(btn){
+  const id=(document.getElementById('qp-id').value||'').trim(); const out=document.getElementById('qp-status')
+  if(!id){ out.innerHTML='<div class="kyc-status warn">Enter a wallet or DID.</div>'; return }
+  const done=btnLoading(btn,'Requesting…')
+  out.innerHTML='<div class="kyc-status">Creating verification request…</div>'
+  try{
+    const r=await fetch(`${AI_BACKEND}/qiepass/verify-request`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifier:id,claims:['firstName','lastName','age_over_21']})})
+    const d=await r.json()
+    if(!r.ok){ out.innerHTML=`<div class="kyc-status err">${(d.detail||'Request failed').toString().slice(0,120)}</div>`; return }
+    _qpRequestId=d.requestId
+    if(d.status==='pending_kyc'){
+      out.innerHTML=`<div class="kyc-status warn">Identity not yet KYC-verified.<br>Complete KYC: <a href="${d.redirectUrl}" target="_blank">open QIE Pass onboarding ↗</a><br><span style="font-size:11px;color:var(--muted)">Then click below to poll.</span></div><button class="btn-secondary" style="width:100%;margin-top:8px" onclick="qpPollOnce()">I've completed KYC — check status</button>`
+    }else{
+      out.innerHTML=`<div class="kyc-status">Status: <b>${d.status}</b> · awaiting your consent in QIE Pass…</div>`
+      qpStartPoll()
+    }
+  }catch(e){ out.innerHTML=`<div class="kyc-status err">Backend unreachable.</div>` }
+  finally{ done() }
+}
+function qpStartPoll(){ clearInterval(_qpPoll); _qpPoll=setInterval(qpPollOnce,5000) }
+async function qpPollOnce(){
+  if(!_qpRequestId) return
+  try{
+    const d=await(await fetch(`${AI_BACKEND}/qiepass/status/${_qpRequestId}`)).json()
+    const out=document.getElementById('qp-status')
+    if(d.status==='consent_given'&&d.vcMetadata?.ready){ clearInterval(_qpPoll); qpClaim() }
+    else if(d.status==='consent_rejected'){ clearInterval(_qpPoll); out.innerHTML='<div class="kyc-status err">User rejected consent.</div>' }
+    else { out.innerHTML=`<div class="kyc-status">Status: <b>${d.status}</b> · waiting…</div>` }
+  }catch(_){}
+}
+async function qpClaim(){
+  const out=document.getElementById('qp-status'); out.innerHTML='<div class="kyc-status">Claiming verified credential…</div>'
+  try{
+    const d=await(await fetch(`${AI_BACKEND}/qiepass/claim`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({request_id:_qpRequestId, wallet:walletAddr})})).json()
+    const claims=d.requestedClaims||{}
+    const badges=Object.entries(claims).map(([k,v])=>`<span class="proof-badge">${k}: ${v}</span>`).join('')
+    const att=d.onchain_attestation_tx
+    const attLine = att ? (att==='already_verified'
+        ? `<div style="font-size:11.5px;color:var(--green);margin-top:8px">⛓ Already mirrored on-chain — your wallet is QIE Pass-verified.</div>`
+        : `<div style="font-size:11.5px;color:var(--green);margin-top:8px">⛓ Verified identity mirrored on-chain · <a href="${explorerTx(att)}" target="_blank">tx ↗</a></div>`)
+      : ''
+    out.innerHTML=`<div class="kyc-status ok">✓ Identity verified — ${d.fully_valid?'proof valid (signature · not-expired · not-revoked)':'claimed'}.</div>
+      <div style="margin-top:8px">${badges}</div>${attLine}
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;font-family:var(--mono)">issuer: ${d.issuer||'did:qie:platform'}</div>`
+    updateQiePassChip()
+  }catch(e){ out.innerHTML='<div class="kyc-status err">Claim failed.</div>' }
+}
+async function qpOnchainVerify(btn){
+  if(!requireWallet()) return
+  const name=document.getElementById('qp-name').value.trim(), org=document.getElementById('qp-org').value.trim()
+  if(!name||!org){ showToast('Enter name + organization','error'); return }
+  const done=btnLoading(btn,'Verifying…')
+  try{
+    showToast('Confirm in your wallet…','success')
+    await rawSend(ADDRESSES.QIEPass, IFACE.pass,'verifyMe',[name,org],200000)
+    showToast('QIE Pass verified on-chain ✓','success'); updateQiePassChip(); closeModal('qiepass-modal')
+  }catch(e){ done(); showToast('Verify failed: '+(e.reason||e.message||e).toString().slice(0,70),'error') }
+}
+
+// ── Modals, toasts, boot ──
+function openModal(id){ document.getElementById(id).classList.add('show') }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); if(id==='qiepass-modal') clearInterval(_qpPoll) }
+
+// Promise-based replacement for window.confirm — styled, on-brand.
+let _confirmResolve=null
+function confirmDialog({title='Confirm',message='',confirmLabel='Confirm',danger=false}={}){
+  document.getElementById('confirm-title').textContent=title
+  document.getElementById('confirm-msg').textContent=message
+  const ok=document.getElementById('confirm-ok')
+  ok.textContent=confirmLabel
+  ok.className='submit-btn'+(danger?' danger':'')
+  openModal('confirm-modal')
+  return new Promise(res=>{ _confirmResolve=res })
+}
+function resolveConfirm(v){ closeModal('confirm-modal'); const r=_confirmResolve; _confirmResolve=null; if(r) r(v) }
+function toggleMobileMenu(){ document.getElementById('mobile-menu').classList.toggle('show') }
+function closeMobileMenu(){ document.getElementById('mobile-menu').classList.remove('show') }
+;['cred-modal','qiepass-modal','list-modal','audit-modal','retire-modal'].forEach(id=>{ document.getElementById(id).addEventListener('click',e=>{ if(e.target.id===id) closeModal(id) }) })
+// Click outside the confirm dialog = cancel (resolve false, don't leave it hanging)
+document.getElementById('confirm-modal').addEventListener('click',e=>{ if(e.target.id==='confirm-modal') resolveConfirm(false) })
+function showToast(msg,type='success'){ const t=document.getElementById('toast'); t.textContent=msg; t.className=`toast ${type} show`; setTimeout(()=>t.className='toast',3200) }
+function copyText(text,label){
+  const done=()=>showToast((label||'Value')+' copied ✓','success')
+  if(navigator.clipboard&&window.isSecureContext){ navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done)) }
+  else fallbackCopy(text,done)
+}
+function fallbackCopy(text,done){ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');done()}catch(_){showToast('Copy failed','error')} document.body.removeChild(ta) }
+
+// Button loading state — disables + spinner, returns a restore fn
+function btnLoading(btn,text){ if(!btn) return ()=>{}; const o=btn.innerHTML,od=btn.disabled; btn.disabled=true; btn.innerHTML=`<span class="spin"></span>${text||'Processing…'}`; return ()=>{ try{btn.disabled=od; btn.innerHTML=o}catch(_){} } }
+// Esc closes any open modal
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.show').forEach(m=>closeModal(m.id)) })
+// Wrong-network guard
+async function checkNetwork(){
+  const b=document.getElementById('net-banner')
+  if(!walletAddr||!provider){ b.classList.remove('show'); return }
+  try{
+    const net=await provider.getNetwork(); const want=parseInt(QIE_CHAIN.chainId,16)
+    const wrong = net.chainId!==want
+    if(wrong){ document.getElementById('net-banner-msg').textContent=`⚠ Wrong network — TerraLedger runs on ${QIE_CHAIN.chainName} (${want}).` }
+    b.classList.toggle('show', wrong)
+  }catch(_){ b.classList.remove('show') }
+}
+async function switchNetwork(){ try{ await ensureChain(); location.reload() }catch(_){ showToast('Network switch failed','error') } }
+// Submit live score preview (estimate; real score comes from /verify)
+function setSP(id,v,max){ const f=document.getElementById('spf-'+id),p=document.getElementById('spp-'+id); if(f)f.style.width=Math.round(v/max*100)+'%'; if(p)p.textContent=v+'/'+max }
+function updateScorePreview(){
+  const ha=parseFloat(document.getElementById('f-ha')?.value), tonnes=parseFloat(document.getElementById('f-tonnes')?.value)
+  const nlat=[...document.querySelectorAll('.gps-lat')].filter(l=>l.value).length
+  const nlon=[...document.querySelectorAll('.gps-lon')].filter(l=>l.value).length
+  const gps=Math.min(nlat,nlon)>=3?30:0
+  const own=uploadedFile?22:0
+  let ano=0; if(ha>0&&tonnes>0){ const tph=tonnes/ha; ano=(tph>=2&&tph<=300)?22:(tph<500?12:0) }
+  const sat=gps?18:0
+  setSP('gps',gps,30); setSP('own',own,25); setSP('ano',ano,25); setSP('sat',sat,20)
+  const total=gps+own+ano+sat, el=document.getElementById('sp-total')
+  if(el){ el.innerHTML=`${total}<span style="font-size:13px;color:var(--muted)">/100</span>`; el.style.color=total>=70?'var(--green)':total>=40?'var(--amber)':'var(--muted)' }
+}
+
+// Backend health banner
+;(async function(){
+  const show=(msg,color)=>{ let b=document.getElementById('backend-banner'); if(!b){ b=document.createElement('div'); b.id='backend-banner'; document.body.appendChild(b) }
+    b.style.background=color+'22'; b.style.borderTop='1px solid '+color+'55'; b.style.color=color
+    b.innerHTML=msg+` &nbsp;·&nbsp; <span style="opacity:.7">API: ${AI_BACKEND}</span> <button onclick="this.parentElement.remove()" style="margin-left:10px;background:none;border:none;color:inherit;cursor:pointer;font-size:15px">×</button>` }
+  try{ const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),4000)
+    const r=await fetch(AI_BACKEND+'/health',{signal:ctl.signal}); clearTimeout(t)
+    if(!r.ok) throw 0; const h=await r.json()
+    if(h.status==='degraded'){ const d=h.dependencies||{}; const why=!d.chain_connected?'chain not connected':!d.oracle_ready?'oracle not configured':'core not ready'; show('⚠ Backend up but degraded — '+why+'. Reads work; minting may not.','#f5a623') }
+  }catch(_){ show('⚠ AI backend unreachable — start terraledger.py, or pass ?api=https://your-backend','#ff4560') }
+})()
+
+// Restore wallet session (unless the user explicitly disconnected)
+if(window.ethereum && !localStorage.getItem('tl_wallet_off')){ window.ethereum.request({method:'eth_accounts'}).then(async a=>{ if(a.length){ provider=new ethers.providers.Web3Provider(window.ethereum); signer=provider.getSigner(); walletAddr=a[0]; setWalletBtn(); updateQusdcBal(); updateQiePassChip(); checkNetwork()
+  window.ethereum.on?.('accountsChanged',()=>location.reload()); window.ethereum.on?.('chainChanged',()=>location.reload()) } }).catch(()=>{}) }
+
+// Faucet is testnet-only — hide it on mainnet (real QUSDC has no faucet)
+if(!IS_TESTNET){ const fb=document.getElementById('faucet-btn'); if(fb) fb.style.display='none'
+  const qn=document.getElementById('qusdc-note'); if(qn) qn.style.display='block' }
+
+// Footer "verify on-chain" links → current network explorer + addresses
+;[['ft-credit','CarbonCredit'],['ft-oracle','CarbonOracle'],['ft-market','CarbonMarketplace'],['ft-registry','ProjectRegistry']]
+  .forEach(([id,key])=>{ const e=document.getElementById(id); if(e) e.href=`${EXPLORER}/address/${ADDRESSES[key]}` })
+
+// Live score preview as the submit form changes
+document.getElementById('page-submit').addEventListener('input',updateScorePreview)
+document.getElementById('page-submit').addEventListener('change',updateScorePreview)
+
+// Scroll-reveal — tag landing + footer blocks, stagger grid children, observe
+function initReveal(){
+  if(!('IntersectionObserver' in window)) return
+  const sel='#page-landing .section-title, #page-landing .section-sub, #page-landing .mission, #page-landing .stats-bar, #page-landing .problem-card, #page-landing .module-card, #page-landing .flow-step, #page-landing .aud-card, #page-landing .rm, #page-landing .disclaimer, .site-footer'
+  const els=[...document.querySelectorAll(sel)]
+  els.forEach(el=>el.classList.add('reveal'))
+  document.querySelectorAll('#page-landing .modules-grid, #page-landing .aud-grid, #page-landing .roadmap, #page-landing .diff-grid, #page-landing .two-col').forEach(g=>{
+    [...g.children].forEach((c,i)=>{ if(c.classList.contains('reveal')) c.style.transitionDelay=(i*70)+'ms' })
+  })
+  const io=new IntersectionObserver((ents)=>{ ents.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target) } }) },
+    {threshold:0.12, rootMargin:'0px 0px -6% 0px'})
+  els.forEach(el=>io.observe(el))
+}
+initReveal()
+
+// "How it works" timeline — fill the connector rail + glow the active step on scroll
+function initFlowScroll(){
+  const flow=document.querySelector('#page-landing .flow'); if(!flow) return
+  const steps=[...flow.querySelectorAll('.flow-step')]
+  let ticking=false
+  function update(){
+    ticking=false
+    const r=flow.getBoundingClientRect(), vh=window.innerHeight
+    let p=(vh*0.55 - r.top)/(r.height*0.78)           // 0→1 as the timeline scrolls through
+    p=Math.max(0,Math.min(1,p))
+    flow.style.setProperty('--progress',(p*100).toFixed(1)+'%')
+    const center=vh*0.45; let best=-1,bd=1e9
+    steps.forEach((s,i)=>{ const sr=s.getBoundingClientRect(); const c=sr.top+sr.height/2; const d=Math.abs(c-center); if(d<bd){bd=d;best=i} })
+    const visible=r.top<vh && r.bottom>0
+    steps.forEach((s,i)=>s.classList.toggle('active', visible && i===best))
+  }
+  window.addEventListener('scroll',()=>{ if(!ticking){ticking=true;requestAnimationFrame(update)} },{passive:true})
+  window.addEventListener('resize',update); update()
+}
+initFlowScroll()
+
+loadStats()
+</script>
+</body>
+</html>

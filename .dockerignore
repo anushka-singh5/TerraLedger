@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+node_modules/
+artifacts/
+cache/
+.env
+*.key
+*.pem
+.git/
+data/*.pkl
+data/*.csv
+data/generated_*
+data/reports/

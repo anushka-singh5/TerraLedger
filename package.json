@@ -1,0 +1,21 @@
+{
+  "name": "terraledger",
+  "version": "1.0.0",
+  "description": "AI-gated carbon credit verification on QIE Blockchain",
+  "private": true,
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy-all.js --network qieMainnet",
+    "deploy:local": "hardhat run scripts/deploy-all.js --network hardhat"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "form-data": "^4.0.5",
+    "hardhat": "^2.22.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}

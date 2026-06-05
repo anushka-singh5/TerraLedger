@@ -1,0 +1,96 @@
+/**
+ * Deploys and wires the whole TerraLedger contract set, then writes the
+ * resulting addresses to deployments/<chainId>.json.
+ *
+ * Order matters: the oracle needs the registry + credit addresses at
+ * construction, and both of those have to be told who their oracle is before
+ * anything can mint. The marketplace binds the credit NFT + the payment token.
+ *
+ * On mainnet (1990) we point the marketplace at the REAL QUSDC token and deploy
+ * a fresh MockQIEPass (real QIE Pass is an off-chain REST API — the on-chain
+ * mock only gates the demo document-access grant). Anywhere else (e.g. a local
+ * hardhat node) we deploy throwaway mocks for both so the script self-contains.
+ *
+ *   npx hardhat run scripts/deploy-all.js --network qieMainnet
+ */
+const { ethers } = require("hardhat");
+const fs   = require("fs");
+const path = require("path");
+require("dotenv").config();
+
+const REAL_QUSDC_MAINNET = "0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5"; // QIE-20, 6 decimals
+const mask = (a) => a.slice(0, 6) + "…" + a.slice(-4);
+const sep  = (l) => console.log(`\n── ${l} ${"─".repeat(Math.max(0, 48 - l.length))}`);
+
+async function main() {
+  const [deployer] = await ethers.getSigners();
+  const chainId   = Number((await ethers.provider.getNetwork()).chainId);
+  const isMainnet = chainId === 1990;
+
+  sep(`Context · chain ${chainId}${isMainnet ? " (MAINNET)" : ""}`);
+  console.log("  Deployer :", mask(deployer.address), "(masked)");
+  console.log("  Balance  :", ethers.formatEther(await ethers.provider.getBalance(deployer.address)),
+              isMainnet ? "QIEV3" : "ETH");
+
+  // Payment token: real QUSDC on mainnet, a throwaway mock elsewhere.
+  let QUSDC = REAL_QUSDC_MAINNET;
+  if (!isMainnet) {
+    sep("0  MockQUSDC (non-mainnet)");
+    const mock = await (await ethers.getContractFactory("MockQUSDC")).deploy();
+    await mock.waitForDeployment();
+    QUSDC = await mock.getAddress();
+  }
+  console.log("  QUSDC    :", QUSDC, isMainnet ? "(real)" : "(mock)");
+
+  sep("1  ProjectRegistry");
+  const registry = await (await ethers.getContractFactory("ProjectRegistry")).deploy(deployer.address);
+  await registry.waitForDeployment();
+  const registryAddr = await registry.getAddress();
+  console.log("  →", registryAddr);
+
+  sep("2  CarbonCredit");
+  const credit = await (await ethers.getContractFactory("CarbonCredit")).deploy(deployer.address);
+  await credit.waitForDeployment();
+  const creditAddr = await credit.getAddress();
+  console.log("  →", creditAddr);
+
+  sep("3  CarbonOracle");
+  const oracle = await (await ethers.getContractFactory("CarbonOracle")).deploy(registryAddr, creditAddr, deployer.address);
+  await oracle.waitForDeployment();
+  const oracleAddr = await oracle.getAddress();
+  console.log("  →", oracleAddr);
+
+  sep("4  Wire oracle → registry + credit");
+  await (await registry.setOracle(oracleAddr)).wait();
+  await (await credit.setOracle(oracleAddr)).wait();
+  console.log("  setOracle ×2 ✓");
+
+  sep("5  CarbonMarketplace");
+  const market = await (await ethers.getContractFactory("CarbonMarketplace")).deploy(creditAddr, QUSDC, deployer.address);
+  await market.waitForDeployment();
+  const marketAddr = await market.getAddress();
+  console.log("  →", marketAddr);
+
+  sep("6  QIE Pass (on-chain doc-access gate)");
+  const pass = await (await ethers.getContractFactory("MockQIEPass")).deploy();
+  await pass.waitForDeployment();
+  const qiePassAddr = await pass.getAddress();
+  await (await oracle.setQIEPass(qiePassAddr)).wait();
+  console.log("  →", qiePassAddr, "· oracle.setQIEPass ✓");
+
+  // deployer is intentionally left out of the record — it's public on-chain anyway.
+  const contracts = {
+    ProjectRegistry: registryAddr, CarbonCredit: creditAddr, CarbonOracle: oracleAddr,
+    CarbonMarketplace: marketAddr, QUSDC, MockQIEPass: qiePassAddr,
+  };
+  const outPath = path.join(__dirname, "..", "deployments", `${chainId}.json`);
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, JSON.stringify({
+    network: isMainnet ? "QIE Mainnet" : `chain ${chainId}`, chainId,
+    deployedAt: new Date().toISOString(), contracts,
+  }, null, 2));
+  console.log(`\n  saved deployments/${chainId}.json`);
+  console.log("\nDEPLOY_JSON=" + JSON.stringify(contracts));
+}
+
+main().catch((err) => { console.error("\n✗ Deploy failed:", err.message); process.exit(1); });

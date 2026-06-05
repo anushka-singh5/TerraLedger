@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: terraledger-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PRIVATE_KEY
+        sync: false
+      - key: ORACLE_CONTRACT_ADDRESS
+        value: "0x8A07F795Cef75350D4BE4b939F367cFC3A1ed219"
+      - key: QIE_RPC_URL
+        value: "https://rpc1mainnet.qie.digital/"
+      - key: NEXT_PUBLIC_QIE_CHAIN_ID
+        value: "1990"
+      - key: NEXT_PUBLIC_PROJECT_REGISTRY_ADDRESS
+        value: "0x9894ee26e81c19ABfe9C381168f0f1e6b5f44112"
+      - key: NEXT_PUBLIC_CARBON_CREDIT_ADDRESS
+        value: "0x78650e0B619b5ECbb4B127Cb21c319befcE2ab16"
+      - key: NEXT_PUBLIC_CARBON_ORACLE_ADDRESS
+        value: "0x8A07F795Cef75350D4BE4b939F367cFC3A1ed219"
+      - key: NEXT_PUBLIC_MARKETPLACE_ADDRESS
+        value: "0x04442AE6DCb22803A4D4Ca8bB2a49691F603c343"
+      - key: NEXT_PUBLIC_QUSDC_ADDRESS
+        value: "0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5"
+      - key: NEXT_PUBLIC_QIEPASS_ADDRESS
+        value: "0xBc05fd5617167eD6ee45a42CC3844f2484836431"
+      - key: NEXT_PUBLIC_QIE_RPC
+        value: "https://rpc1mainnet.qie.digital/"
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: NASA_FIRMS_API_KEY
+        sync: false
+      - key: PINATA_JWT
+        sync: false
+      - key: QIE_PASS_BASE_URL
+        value: "https://pass-api.qie.digital"
+      - key: QIE_PASS_PUBLIC_KEY
+        sync: false
+      - key: QIE_PASS_SECRET_KEY
+        sync: false
+      - key: OLLAMA_URL
+        value: "http://localhost:11434"
+      - key: OLLAMA_MODEL
+        value: "llama3"

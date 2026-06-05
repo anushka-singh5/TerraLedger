@@ -1,0 +1,39 @@
+# ── Secrets (NEVER commit) ────────────────────────────────────────────────────
+.env
+*.pem
+*.key
+
+# ── Python ────────────────────────────────────────────────────────────────────
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+dist/
+build/
+
+# ── ML models & data ─────────────────────────────────────────────────────────
+data/*.pkl
+data/*.csv
+data/generated_*
+data/reputation.json
+data/document_registry.json
+data/extended_documents.json
+data/reports/
+
+# ── Node / Hardhat ────────────────────────────────────────────────────────────
+node_modules/
+artifacts/
+cache/
+typechain-types/
+deployments/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
