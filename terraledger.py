@@ -102,7 +102,7 @@ BIOME_MEDIANS: Dict[str, float] = {
 # project ranges and IPCC AR6 WGIII sequestration rates (tCO2e/ha, annualised then
 # typical crediting-period scaled). Used to generate a realistic training prior so
 # the anomaly ensemble doesn't mis-flag legitimate type/biome combinations.
-# A real registry export (data/verra_projects.csv) overrides this when present.
+# A real registry export (store/verra_projects.csv) overrides this when present.
 TYPE_BIOME_MEDIANS: Dict[Tuple[str, str], float] = {
     # forest / REDD+ / afforestation — highest per-ha sequestration
     ("forest", "tropical"): 30.0, ("forest", "temperate"): 22.0,
@@ -121,9 +121,9 @@ TYPE_BIOME_MEDIANS: Dict[Tuple[str, str], float] = {
     ("other", "boreal"): 6.0,    ("other", "wetland"): 20.0,          ("other", "other"): 8.0,
 }
 
-MODEL_PATH = Path("data/isolation_forest.pkl")
-DATA_PATH  = Path("data/verra_projects.csv")
-VERRA_VOLUME_STATS_PATH = Path("data/verra_type_volume_stats.json")
+MODEL_PATH = Path("store/isolation_forest.pkl")
+DATA_PATH  = Path("store/verra_projects.csv")
+VERRA_VOLUME_STATS_PATH = Path("store/verra_type_volume_stats.json")
 
 # Real per-project-type annual credit-volume distribution, built from 1,400+ real
 # Verra registry projects (scripts/build_verra_stats.py). Used as a complementary,
@@ -138,7 +138,7 @@ def _load_verra_volume_stats() -> Dict[str, Dict]:
     return {}
 
 _VERRA_VOL_STATS = _load_verra_volume_stats()
-PDF_DIR    = Path("data/reports")
+PDF_DIR    = Path("store/reports")
 
 OLLAMA_URL   = os.getenv("OLLAMA_URL",   "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
@@ -162,7 +162,7 @@ _rl_cooldown:   Dict[str, float]       = {}                              # walle
 _rl_anomaly_q:  Dict[str, List[float]] = collections.defaultdict(list)  # for probe detection
 # Fraud strikes PERSIST across restart (a ban must not be wiped by a reboot)
 _fraud_counts:  Dict[str, int]         = collections.defaultdict(int)    # wallet → fraud count
-REPUTATION_PATH = Path("data/reputation.json")
+REPUTATION_PATH = Path("store/reputation.json")
 
 def _save_fraud_counts() -> None:
     try:
@@ -342,10 +342,10 @@ REG_NUMBER_PATTERN = (
     r"(?:no|number|#|id)?[.:\s]*([A-Z0-9][A-Z0-9\-/]{4,})"
 )
 
-DOC_REGISTRY_PATH = Path("data/document_registry.json")
+DOC_REGISTRY_PATH = Path("store/document_registry.json")
 ELA_TAMPER_THRESHOLD = 0.65   # max normalized ELA difference before flagging
 
-DOC_ACCESS_PATH = Path("data/extended_documents.json")
+DOC_ACCESS_PATH = Path("store/extended_documents.json")
 
 def _load_doc_registry() -> Dict[str, Any]:
     # load the persistent document-fingerprint registry (for reuse detection)
@@ -846,7 +846,7 @@ def _build_training_features() -> Tuple[np.ndarray, Dict[str, Dict]]:
         # space [log1p(tph), type, vintage, biome] is genuinely structured — the
         # ensemble learns that e.g. renewable+tropical ≈ 4 tCO2/ha while
         # forest+tropical ≈ 30, instead of treating tph as biome-only.
-        # A real registry CSV (data/verra_projects.csv) overrides all of this.
+        # A real registry CSV (store/verra_projects.csv) overrides all of this.
         for _ in range(1600):
             bi     = np.random.randint(0, 5)
             ti     = np.random.randint(0, 5)

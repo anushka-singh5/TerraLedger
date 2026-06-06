@@ -8,7 +8,7 @@ cache/
 *.key
 *.pem
 .git/
-data/*.pkl
-data/*.csv
-data/generated_*
-data/reports/
+store/*.pkl
+store/*.csv
+store/generated_*
+store/reports/

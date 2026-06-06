@@ -14,20 +14,20 @@ dist/
 build/
 
 # ── ML models & data ─────────────────────────────────────────────────────────
-data/*.pkl
-data/*.csv
-data/generated_*
-data/reputation.json
-data/document_registry.json
-data/extended_documents.json
-data/reports/
+store/*.pkl
+store/*.csv
+store/generated_*
+store/reputation.json
+store/document_registry.json
+store/extended_documents.json
+store/reports/
 
 # ── Node / Hardhat ────────────────────────────────────────────────────────────
 node_modules/
 artifacts/
 cache/
 typechain-types/
-deployments/
+addresses/
 
 # ── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store

@@ -1,6 +1,6 @@
 /**
  * Deploys and wires the whole TerraLedger contract set, then writes the
- * resulting addresses to deployments/<chainId>.json.
+ * resulting addresses to addresses/<chainId>.json.
  *
  * Order matters: the oracle needs the registry + credit addresses at
  * construction, and both of those have to be told who their oracle is before
@@ -83,13 +83,13 @@ async function main() {
     ProjectRegistry: registryAddr, CarbonCredit: creditAddr, CarbonOracle: oracleAddr,
     CarbonMarketplace: marketAddr, QUSDC, MockQIEPass: qiePassAddr,
   };
-  const outPath = path.join(__dirname, "..", "deployments", `${chainId}.json`);
+  const outPath = path.join(__dirname, "..", "addresses", `${chainId}.json`);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify({
     network: isMainnet ? "QIE Mainnet" : `chain ${chainId}`, chainId,
     deployedAt: new Date().toISOString(), contracts,
   }, null, 2));
-  console.log(`\n  saved deployments/${chainId}.json`);
+  console.log(`\n  saved addresses/${chainId}.json`);
   console.log("\nDEPLOY_JSON=" + JSON.stringify(contracts));
 }
 

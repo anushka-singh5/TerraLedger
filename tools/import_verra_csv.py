@@ -1,7 +1,7 @@
 """
 TerraLedger — Verra / registry CSV importer
 
-The anomaly model trains on real registry data when data/verra_projects.csv exists.
+The anomaly model trains on real registry data when store/verra_projects.csv exists.
 Verra's live registry can't be scraped reliably (JS app + bot protection), so you
 download the CSV once via the browser, then this script normalises it to the exact
 columns the trainer expects.
@@ -15,7 +15,7 @@ WHERE TO GET A REAL CSV (pick one, ~2 min):
 
 USAGE:
     python scripts/import_verra_csv.py <downloaded.csv>
-    rm -f data/isolation_forest.pkl     # clear cached model
+    rm -f store/isolation_forest.pkl     # clear cached model
     # restart backend → it trains on the real data
 
 The importer fuzzy-matches column names, so it works with either source's export.
@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pandas as pd
 
-OUT_PATH = Path("data/verra_projects.csv")
+OUT_PATH = Path("store/verra_projects.csv")
 
 # Column the trainer reads → list of possible source header names (lowercased, fuzzy)
 COLUMN_MAP = {
@@ -126,7 +126,7 @@ def main():
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(out_rows).to_csv(OUT_PATH, index=False)
     print(f"\n✓ Wrote {len(out_rows)} real projects → {OUT_PATH}")
-    print("Next: rm -f data/isolation_forest.pkl  &&  restart backend (trains on real data)")
+    print("Next: rm -f store/isolation_forest.pkl  &&  restart backend (trains on real data)")
 
 
 if __name__ == "__main__":

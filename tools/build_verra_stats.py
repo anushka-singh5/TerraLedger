@@ -7,7 +7,7 @@ feed the tCO2/hectare model directly. What it CAN give is a real-world
 distribution of annual credit volume per project type — used by the anomaly
 module as a complementary "volume realism" signal grounded in 1400+ real projects.
 
-Output: data/verra_type_volume_stats.json
+Output: store/verra_type_volume_stats.json
     { "<our_type>": {"count": N, "log_mean": x, "log_std": y, "median": m}, ... }
 
 Run:  python scripts/build_verra_stats.py ~/Downloads/pipeline.csv
@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-OUT = Path("data/verra_type_volume_stats.json")
+OUT = Path("store/verra_type_volume_stats.json")
 
 
 def map_type(project_type: str, afolu: str) -> str:

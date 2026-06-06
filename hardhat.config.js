@@ -10,6 +10,11 @@ if (!process.env.MAINNET_PRIVATE_KEY && process.env.npm_lifecycle_event === "dep
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
+  paths: {
+    sources: "./onchain",
+    tests:   "./tests",
+  },
+
   solidity: {
     version: "0.8.24",
     settings: {

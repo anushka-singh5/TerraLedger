@@ -17,7 +17,7 @@ RUN python -m spacy download en_core_web_sm
 
 COPY . .
 
-RUN mkdir -p data/reports
+RUN mkdir -p store/reports
 
 EXPOSE 8000
 

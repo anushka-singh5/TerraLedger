@@ -3,10 +3,10 @@ Dockerfile
 .dockerignore
 terraledger.py
 requirements.txt
-contracts/
-scripts/
-test/
-data/
+onchain/
+tools/
+tests/
+store/
 venv/
 node_modules/
 artifacts/

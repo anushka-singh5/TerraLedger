@@ -6,8 +6,8 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "deploy": "hardhat run scripts/deploy-all.js --network qieMainnet",
-    "deploy:local": "hardhat run scripts/deploy-all.js --network hardhat"
+    "deploy": "hardhat run tools/deploy-all.js --network qieMainnet",
+    "deploy:local": "hardhat run tools/deploy-all.js --network hardhat"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
