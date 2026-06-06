@@ -87,7 +87,7 @@ BIOME_RANGES: Dict[str, Tuple[int, int]] = {
 }
 
 # Realistic median tCO2/ha per biome (log-normal center for training data)
-BIOME_MEDIANS: Dict[str, float] = {
+BIOME_MEDIANS: dict = {
     "tropical":  28.0,
     "temperate": 22.0,
     "boreal":    15.0,
@@ -129,7 +129,7 @@ VERRA_VOLUME_STATS_PATH = Path("store/verra_type_volume_stats.json")
 # Verra registry projects (scripts/build_verra_stats.py). Used as a complementary,
 # hectare-independent "volume realism" check: a claim whose magnitude is far above
 # what real projects of its type ever produce is flagged. Loaded once at import.
-def _load_verra_volume_stats() -> Dict[str, Dict]:
+def _load_verra_volume_stats() -> dict:
     if VERRA_VOLUME_STATS_PATH.exists():
         try:
             return json.loads(VERRA_VOLUME_STATS_PATH.read_text())
@@ -152,16 +152,16 @@ GPS_PATTERNS = [
 # Anomaly ensemble — populated once at first request
 _ensemble:        List[IsolationForest] = []
 _ensemble_scaler: Optional[StandardScaler] = None
-_ensemble_stats:  Dict[str, Dict]       = {}   # per-biome {"mean": x, "std": y}
+_ensemble_stats:  dict       = {}   # per-biome {"mean": x, "std": y}
 _ensemble_ready:  bool                  = False
 
 # rate-limit state (in-memory; short windows, fine to reset on restart)
-_rl_attempts:   Dict[str, List[float]] = collections.defaultdict(list)  # wallet → timestamps
-_rl_failures:   Dict[str, List[float]] = collections.defaultdict(list)  # wallet → fail times
-_rl_cooldown:   Dict[str, float]       = {}                              # wallet → expiry ts
-_rl_anomaly_q:  Dict[str, List[float]] = collections.defaultdict(list)  # for probe detection
+_rl_attempts:   dict = collections.defaultdict(list)  # wallet → timestamps
+_rl_failures:   dict = collections.defaultdict(list)  # wallet → fail times
+_rl_cooldown:   dict       = {}                              # wallet → expiry ts
+_rl_anomaly_q:  dict = collections.defaultdict(list)  # for probe detection
 # Fraud strikes PERSIST across restart (a ban must not be wiped by a reboot)
-_fraud_counts:  Dict[str, int]         = collections.defaultdict(int)    # wallet → fraud count
+_fraud_counts:  dict         = collections.defaultdict(int)    # wallet → fraud count
 REPUTATION_PATH = Path("store/reputation.json")
 
 def _save_fraud_counts() -> None:
@@ -192,7 +192,7 @@ class VerificationResult(BaseModel):
     submitter:               str
     verdict:                 str           # "PASS" | "FAIL"
     total_score:             int
-    scores:                  Dict[str, int]
+    scores:                  dict
     flags:                   List[str]
     owner_name:              str
     gps_overlap_pct:         float
@@ -215,8 +215,8 @@ class VerificationResult(BaseModel):
 # module 1 — gps overlap detector
 def check_gps_overlap(
     new_polygon: List[List[float]],
-    registered:  List[Dict[str, Any]],
-) -> Dict[str, Any]:
+    registered:  List[dict],
+) -> dict:
     """
     Compare a new project polygon against all registered polygons on-chain.
 
@@ -257,8 +257,6 @@ def check_gps_overlap(
                 continue
             inter = new_poly.intersection(reg_poly).area
             # Measure overlap against the SMALLER polygon, not just the new one.
-            # Otherwise a fraudster drops a huge polygon over an existing small
-            # claim and the new-area ratio stays tiny — this catches that.
             smaller = min(new_poly.area, reg_poly.area) or new_poly.area
             overlap_pct = (inter / smaller) * 100 if smaller else 0.0
             if overlap_pct > WARN_OVERLAP:
@@ -347,7 +345,7 @@ ELA_TAMPER_THRESHOLD = 0.65   # max normalized ELA difference before flagging
 
 DOC_ACCESS_PATH = Path("store/extended_documents.json")
 
-def _load_doc_registry() -> Dict[str, Any]:
+def _load_doc_registry() -> dict:
     # load the persistent document-fingerprint registry (for reuse detection)
 
     if DOC_REGISTRY_PATH.exists():
@@ -357,11 +355,11 @@ def _load_doc_registry() -> Dict[str, Any]:
             pass
     return {"by_hash": {}, "by_owner": {}}
 
-def _save_extended_doc(project_id: str, project_name: str, doc_result: Dict[str, Any]) -> None:
+def _save_extended_doc(project_id: str, project_name: str, doc_result: dict) -> None:
     # persist a REDACTED extended-documentation record for a verified project
 
     try:
-        store: Dict[str, Any] = {}
+        store: dict = {}
         if DOC_ACCESS_PATH.exists():
             store = json.loads(DOC_ACCESS_PATH.read_text())
         owner = doc_result.get("owner_name", "Unknown")
@@ -384,7 +382,7 @@ def _save_extended_doc(project_id: str, project_name: str, doc_result: Dict[str,
     except Exception as exc:
         log.warning("extended-doc save failed: %s", str(exc)[:80])
 
-def _save_doc_registry(reg: Dict[str, Any]) -> None:
+def _save_doc_registry(reg: dict) -> None:
     DOC_REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
     DOC_REGISTRY_PATH.write_text(json.dumps(reg, indent=2))
 
@@ -434,7 +432,7 @@ def check_document_authenticity(
     owner:      str,
     doc_gps:    Optional[List[float]],
     project_id: str,
-) -> Dict[str, Any]:
+) -> dict:
     """
     Layer B — verify the document is genuine, not just consistent.
     Returns authenticity multiplier (0-1), hard-fail flag, and reasons.
@@ -512,10 +510,6 @@ def check_document_authenticity(
                     break
 
     # NOTE: the fingerprint is recorded ONLY after the deed actually backs a
-    # successfully-minted credit (see _record_doc_fingerprint, called from /verify
-    # on a PASS + on-chain mint). Recording here — during parsing — was a bug: a
-    # failed/rejected/transient-error submission would "consume" the deed and
-    # falsely flag a legitimate retry as DOCUMENT_REUSE.
 
     return {
         "authenticity": round(max(0.0, min(1.0, authenticity)), 2),
@@ -530,7 +524,7 @@ def parse_ownership_document(
     filename:   str,
     polygon:    List[List[float]],
     project_id: str = "unknown",
-) -> Dict[str, Any]:
+) -> dict:
     """
     Layer A (consistency) + Layer B (authenticity).
     Hard-fails on GPS mismatch OR document reuse.
@@ -581,8 +575,6 @@ def parse_ownership_document(
     auth = check_document_authenticity(file_bytes, filename, text, owner, doc_gps, project_id)
 
     # HARD FAILS — these block minting entirely:
-    #   • Reuse: same deed cannot back two projects
-    #   • Forgery: a deed produced by reportlab/Word/ChatGPT/Canva is never genuine
     if auth["is_reused"]:
         return {
             "hard_fail":  True, "score": 0, "owner_name": owner, "doc_gps": doc_gps,
@@ -766,7 +758,7 @@ def _doc_confidence(
 # layer 1 constants: ipcc physical plausibility ceilings
 # Source: IPCC AR6 WGIII, Table 7.1 — above these values is physically
 # impossible for the given biome regardless of what the ML model says.
-BIOME_HARD_CAPS: Dict[str, float] = {
+BIOME_HARD_CAPS: dict = {
     "tropical":  400.0,   # tCO2/ha
     "temperate": 250.0,
     "boreal":    180.0,
@@ -814,7 +806,7 @@ def _encode_biome(biome: str) -> int:
             return idx
     return 4
 
-def _build_training_features() -> Tuple[np.ndarray, Dict[str, Dict]]:
+def _build_training_features() -> Tuple[np.ndarray, dict]:
     # build training features and per-biome stats
 
     raw_rows: List[List[float]] = []   # raw tph — used for biome stats
@@ -842,11 +834,6 @@ def _build_training_features() -> Tuple[np.ndarray, Dict[str, Dict]]:
         np.random.seed(42)
 
         # Literature-grounded prior: each sample's tCO2/ha is drawn around the
-        # median for its (project_type × biome) combination, so the 4-feature
-        # space [log1p(tph), type, vintage, biome] is genuinely structured — the
-        # ensemble learns that e.g. renewable+tropical ≈ 4 tCO2/ha while
-        # forest+tropical ≈ 30, instead of treating tph as biome-only.
-        # A real registry CSV (store/verra_projects.csv) overrides all of this.
         for _ in range(1600):
             bi     = np.random.randint(0, 5)
             ti     = np.random.randint(0, 5)
@@ -873,10 +860,6 @@ def _build_training_features() -> Tuple[np.ndarray, Dict[str, Dict]]:
             feat_rows.append([math.log1p(tph), float(ti), vintage, float(bi)])
 
         # Fraud outliers — ONLY high-value outliers.
-        # Ghost projects (near-zero tph) are NOT included here because mixing
-        # near-zero and high-value outliers causes the ensemble to create a
-        # "horseshoe" boundary that mis-flags legitimate low-range projects too.
-        # Near-zero claims are caught by the GHOST_PROJECT explicit rule in Layer 5.
         fraud_high = [
             (390.0, 0), (340.0, 0), (310.0, 0),   # extreme tropical
             (220.0, 1), (190.0, 1),                # extreme temperate
@@ -891,7 +874,7 @@ def _build_training_features() -> Tuple[np.ndarray, Dict[str, Dict]]:
     feat_arr = np.array(feat_rows)
 
     # Per-biome stats — computed in log-space to match the log-normal distribution.
-    stats: Dict[str, Dict] = {}
+    stats: dict = {}
     for bi, bname in enumerate(BIOMES):
         mask = raw_arr[:, 1] == float(bi)
         if mask.sum() > 5:
@@ -958,7 +941,7 @@ def check_anomaly(
     project_type: str,
     vintage_year: int,
     biome:        str,
-) -> Dict[str, Any]:
+) -> dict:
     """
     Multi-layer anomaly detection. Returns score (0-25) and full audit trail
     of which layers fired, so judges can see exactly why something was flagged.
@@ -1007,9 +990,6 @@ def check_anomaly(
             votes_normal += 1
 
     # Within-range leniency: if tph sits inside the biome's defined valid range
-    # AND the log Z-score is not extreme, require only 2/5 ensemble agreement.
-    # This prevents the ensemble from penalising the valid low-tail (e.g. 4 tCO2/ha
-    # in tropical, which is rare but real). Outside the range: strict 3/5 majority.
     bstats_early = _ensemble_stats.get(biome_key, {"log_mean": math.log1p(BIOME_MEDIANS.get(biome_key, 20)), "log_std": 0.7})
     z_early      = (math.log1p(tph) - bstats_early.get("log_mean", 3.0)) / max(bstats_early.get("log_std", 0.7), 0.3)
     within_range  = (lo <= tph <= hi) and (abs(z_early) < 2.0)
@@ -1023,9 +1003,6 @@ def check_anomaly(
         deductions += 20
 
     # ── Layer 3: Log-space Z-score (biome-specific) ───────────────────────────
-    # Compute Z-score on log1p(tph) because the distribution is log-normal.
-    # Raw-space Z-scores are misleading: a value of 85 looks like +3.4σ in
-    # raw space but is only +1.7σ in log space — the correct representation.
     bstats    = _ensemble_stats.get(biome_key, {"log_mean": math.log1p(BIOME_MEDIANS.get(biome_key, 20)),
                                                  "log_std":  0.7})
     log_mean  = bstats.get("log_mean", math.log1p(BIOME_MEDIANS.get(biome_key, 20)))
@@ -1042,8 +1019,6 @@ def check_anomaly(
         deductions += 4
 
     # ── Layer 4: Ghost project — near-zero tCO2/ha ───────────────────────────
-    # Checked separately: mixing near-zero fraud into ensemble training data
-    # creates a horseshoe boundary that mis-flags legitimate low-range projects.
     if tph < 0.5:
         layer_flags.append(
             f"GHOST_PROJECT: {tph:.3f} tCO2/ha is below any real project minimum — "
@@ -1071,9 +1046,6 @@ def check_anomaly(
         deductions += 2
 
     # ── Layer 6: Real Verra volume realism (1,400+ real projects) ─────────────
-    # Hectare-independent sanity check on total claim magnitude vs. what real
-    # registered projects of this type actually produce. Deliberately conservative
-    # (>3σ in log space) so it only catches absurd volume claims, never legit ones.
     vstats = _VERRA_VOL_STATS.get(type_key)
     if vstats and tonnes_co2 > 0:
         z_vol = (math.log(tonnes_co2) - vstats["log_mean"]) / vstats["log_std"]
@@ -1134,7 +1106,7 @@ def _fetch_firms_chunk(api_key: str, bbox: str, start_date: str) -> int:
         log.warning("FIRMS chunk %s failed: %s", start_date, str(exc)[:60])
         return -1
 
-def check_nasa_firms(polygon: List[List[float]]) -> Dict[str, Any]:
+def check_nasa_firms(polygon: List[List[float]]) -> dict:
     # query real NASA FIRMS satellite data for fire / deforestation alerts in the
 
     api_key = os.getenv("NASA_FIRMS_API_KEY")
@@ -1225,7 +1197,7 @@ def check_nasa_firms(polygon: List[List[float]]) -> Dict[str, Any]:
         }
 
 # module 5 — audit report (llama 3 / ollama)
-def generate_audit_report(data: Dict[str, Any]) -> str:
+def generate_audit_report(data: dict) -> str:
     # use Llama 3 (local Ollama) to write a professional carbon audit report
 
     verdict  = "APPROVED FOR MINTING" if data["verdict"] == "PASS" else "REJECTED"
@@ -1313,7 +1285,7 @@ def generate_audit_pdf(report_text: str, project_id: str) -> Optional[Path]:
 
     return None
 
-def _fallback_report(data: Dict[str, Any]) -> str:
+def _fallback_report(data: dict) -> str:
     # deterministic report template — used when Ollama is unavailable
 
     verdict   = "APPROVED FOR MINTING" if data["verdict"] == "PASS" else "REJECTED"
@@ -1359,7 +1331,7 @@ PINATA_PIN_JSON_URL = "https://api.pinata.cloud/pinning/pinJSONToIPFS"
 def upload_to_ipfs(
     report_text: str,
     project_id:  str,
-    scores:      Dict[str, int],
+    scores:      dict,
     verdict:     str,
     total_score: int,
 ) -> Optional[str]:
@@ -1412,8 +1384,7 @@ def upload_to_ipfs(
         resp.raise_for_status()
         cid = resp.json().get("IpfsHash")
         if cid:
-            log.info("IPFS pinned via Pinata: %s", cid)
-        return cid
+            return cid
     except Exception as exc:
         log.error("Pinata IPFS upload failed: %s", exc)
         return None
@@ -1458,7 +1429,7 @@ class QIEPassClient:
             "X-Timestamp":  timestamp,
         }
 
-    def create_verification_request(self, identifier: str, claims: List[str]) -> Dict[str, Any]:
+    def create_verification_request(self, identifier: str, claims: List[str]) -> dict:
         # start an identity verification for a user (DID or wallet address)
 
         if not self.ready:
@@ -1474,7 +1445,7 @@ class QIEPassClient:
         except requests.RequestException as exc:
             raise HTTPException(status_code=502, detail=f"QIE Pass unreachable: {str(exc)[:120]}")
 
-    def get_request_status(self, request_id: str) -> Dict[str, Any]:
+    def get_request_status(self, request_id: str) -> dict:
         # poll a verification request. Status flow: pending_kyc → pending_consent → consent_given / consent_rejected
 
         if not self.ready:
@@ -1489,7 +1460,7 @@ class QIEPassClient:
         except requests.RequestException as exc:
             raise HTTPException(status_code=502, detail=f"QIE Pass unreachable: {str(exc)[:120]}")
 
-    def claim_and_verify(self, request_id: str) -> Dict[str, Any]:
+    def claim_and_verify(self, request_id: str) -> dict:
         # claim the verified credential once consent is given. Returns selective-
 
         if not self.ready:
@@ -1511,7 +1482,7 @@ class QIEPassClient:
             raise HTTPException(status_code=502, detail=f"QIE Pass unreachable: {str(exc)[:120]}")
 
     @staticmethod
-    def _unwrap(resp: "requests.Response") -> Dict[str, Any]:
+    def _unwrap(resp: "requests.Response") -> dict:
         # qIE Pass wraps payloads as {success, data|...}. Surface errors as HTTP errors
 
         try:
@@ -1693,7 +1664,6 @@ class BlockchainOracle:
                     abi=self.CREDIT_ABI,
                 )
             self._ready = True
-            log.info("BlockchainOracle ready | signer=%s…", self._account.address[:10])
         except Exception as exc:
             log.error("BlockchainOracle init failed: %s", exc)
 
@@ -1771,10 +1741,6 @@ class BlockchainOracle:
 
                 if not already_registered:
                     # Gas-min: store only the bbox on-chain (used for overlap) and a
-                    # compact polygon ref, NOT the full GeoJSON coordinate string
-                    # (string storage is the heaviest part of submitProject). The
-                    # precise polygon lives in the IPFS audit; on-chain overlap uses
-                    # the bbox below. Saves ~80–100k gas per submission.
                     geojson = "{}"
                     # Bounding box in microdegrees (lat/lng × 1e6) for the on-chain
                     # coarse overlap pre-filter (ProjectRegistry.findOverlaps).
@@ -1827,8 +1793,6 @@ class BlockchainOracle:
             return None
 
         # ── Step 3: Transfer minted NFT oracle → real project owner ───────────
-        # On a PASS the NFT was minted to the oracle (registrar). Hand it to the
-        # actual submitter so it shows up in their wallet and they can list it.
         if is_pass and recipient and self._credit is not None:
             try:
                 valid_recipient = (
@@ -1851,17 +1815,13 @@ class BlockchainOracle:
                                 gas=200_000,
                             )
                             if t_receipt and t_receipt.status == 1:
-                                log.info("NFT #%s transferred to project owner %s…",
-                                         token_id, recipient[:10])
+                                pass
             except Exception as exc:
                 log.warning("NFT transfer to owner failed (credit still minted): %s", exc)
 
         return hex_hash
 
     # QIE Pass on-chain bridge: after a REAL QIE Pass REST verification succeeds,
-    # the oracle (which owns MockQIEPass) records the verified identity on-chain so
-    # the contract gate (requestDocumentAccess → isVerified) reflects real KYC —
-    # NOT public self-attestation. issueIdentity is onlyOwner.
     QIEPASS_WRITE_ABI = [
         {"inputs": [{"name": "wallet", "type": "address"}, {"name": "fullName", "type": "string"},
                     {"name": "organization", "type": "string"}],
@@ -1995,7 +1955,7 @@ def _record_outcome(wallet: str, passed: bool, anomaly_score: float) -> None:
 
     _save_fraud_counts()   # persist strikes (survives restart)
 
-def _submitter_reputation(wallet: str) -> Dict[str, Any]:
+def _submitter_reputation(wallet: str) -> dict:
     # return this wallet's fraud history and reputation tier
 
     key        = wallet.lower()
@@ -2173,7 +2133,7 @@ app.add_middleware(
 
 # get /health
 @app.get("/health")
-async def health() -> Dict[str, Any]:
+async def health() -> dict:
     # live readiness probe. Reports each dependency's real status (not just whether
 
     # Ollama (audit LLM) — quick reachability ping
@@ -2238,7 +2198,7 @@ async def verify(
     """
     t_start = time.time()
     flags:  List[str]     = []
-    scores: Dict[str, int] = {}
+    scores: dict = {}
 
     # ── Rate limiting ─────────────────────────────────────────────────────────
     limit_error = _check_rate_limit(submitter_address)
@@ -2257,9 +2217,6 @@ async def verify(
         flags.append(f"REPEAT_OFFENDER: {rep['fraud_count']} prior fraud attempt(s) from this wallet")
 
     # ── Wallet-ownership proof ────────────────────────────────────────────────
-    # The submitter signs "TerraLedger: verify project <id> as <wallet> @ <ts>".
-    # We recover the signer and require it to match submitter_address (so a credit
-    # can't be minted to / spam-submitted for a wallet you don't control).
     if signature and signed_ts:
         try:
             from eth_account.messages import encode_defunct
@@ -2283,9 +2240,6 @@ async def verify(
         raise HTTPException(status_code=400, detail=f"Invalid JSON polygon: {exc}")
 
     # ── Module 1: GPS Overlap ─────────────────────────────────────────────────
-    # Each module is wrapped fail-closed: a transient/internal error contributes
-    # 0 points and a flag (never a false fraud accusation, never a 500) so the
-    # endpoint always returns a structured verdict even if a dependency hiccups.
     try:
         gps_result = check_gps_overlap(polygon, existing)
     except Exception as exc:
@@ -2499,9 +2453,9 @@ def _fail_response(
     project_id: str,
     submitter:  str,
     reason:     str,
-    scores:     Dict[str, int],
+    scores:     dict,
     flags:      List[str],
-    details:    Dict[str, Any],
+    details:    dict,
     t_start:    float,
     polygon:    Optional[List[List[float]]] = None,
     hectares:   int = 0,
@@ -2593,7 +2547,7 @@ async def retirement_certificate(
 
 # get /marketplace
 @app.get("/marketplace")
-async def marketplace() -> Dict[str, Any]:
+async def marketplace() -> dict:
     # return on-chain approved project data for the frontend marketplace
 
     if not _oracle._ready or not _oracle._w3:
@@ -2663,7 +2617,7 @@ _ORACLE_READ_ABI = [
 ]
 
 @app.get("/api/stats")
-async def api_stats() -> Dict[str, Any]:
+async def api_stats() -> dict:
     # public live protocol stats, read straight from the QIE testnet contracts
 
     if not _oracle._ready or not _oracle._w3:
@@ -2694,7 +2648,7 @@ async def api_stats() -> Dict[str, Any]:
         return {"error": str(exc)}
 
 @app.get("/api/credit/{token_id}")
-async def api_credit(token_id: int) -> Dict[str, Any]:
+async def api_credit(token_id: int) -> dict:
     # public credential for one credit — lets any external app verify a TerraLedger
 
     if not _oracle._ready or not _oracle._w3:
@@ -2758,7 +2712,7 @@ async def api_credit(token_id: int) -> Dict[str, Any]:
         return {"error": str(exc), "token_id": token_id}
 
 @app.get("/document-access")
-async def document_access(project_id: str, wallet: str) -> Dict[str, Any]:
+async def document_access(project_id: str, wallet: str) -> dict:
     # qIE Pass-gated deep document access (Phase 2)
 
     granted = _oracle.has_document_access(project_id, wallet)
@@ -2816,19 +2770,19 @@ class QIEPassClaimBody(BaseModel):
     wallet:     Optional[str] = None   # connected wallet to mark verified on-chain
 
 @app.post("/qiepass/verify-request")
-async def qiepass_verify_request(body: QIEPassVerifyBody) -> Dict[str, Any]:
+async def qiepass_verify_request(body: QIEPassVerifyBody) -> dict:
     # step 1 — create a QIE Pass verification request for a buyer. If they are
 
     return _qiepass.create_verification_request(body.identifier, body.claims)
 
 @app.get("/qiepass/status/{request_id}")
-async def qiepass_status(request_id: str) -> Dict[str, Any]:
+async def qiepass_status(request_id: str) -> dict:
     # step 2 — poll until status is 'consent_given' and vcMetadata.ready is true
 
     return _qiepass.get_request_status(request_id)
 
 @app.post("/qiepass/claim")
-async def qiepass_claim(body: QIEPassClaimBody) -> Dict[str, Any]:
+async def qiepass_claim(body: QIEPassClaimBody) -> dict:
     # step 3 — claim the verified credential (selective-disclosure claims + ECDSA
 
     data = _qiepass.claim_and_verify(body.request_id)

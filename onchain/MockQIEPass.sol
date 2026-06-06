@@ -3,8 +3,8 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/// @title MockQIEPass
-/// @notice The on-chain side of identity. Real QIE Pass KYC happens off-chain via
+// MockQIEPass
+// The on-chain side of identity. Real QIE Pass KYC happens off-chain via
 ///         their REST API; once the backend confirms a wallet there, it (as owner)
 ///         calls issueIdentity() to mirror that result on-chain, which is what gates
 ///         document access. verifyMe() is the self-serve shortcut we only leave open
@@ -25,7 +25,7 @@ contract MockQIEPass is Ownable {
 
     constructor() Ownable(msg.sender) {}
 
-    /// @notice Self-register an identity. Demo convenience only — the frontend hides
+    // Self-register an identity. Demo convenience only — the frontend hides
     ///         this on mainnet and routes everyone through real KYC instead.
     function verifyMe(string calldata fullName, string calldata organization) external {
         require(bytes(fullName).length > 0,     "QIEPass: name required");
@@ -43,7 +43,7 @@ contract MockQIEPass is Ownable {
         emit IdentityVerified(msg.sender, fullName, organization);
     }
 
-    /// @notice The bridge: backend calls this after real QIE Pass KYC clears a wallet.
+    // The bridge: backend calls this after real QIE Pass KYC clears a wallet.
     function issueIdentity(address wallet, string calldata fullName, string calldata organization)
         external onlyOwner
     {

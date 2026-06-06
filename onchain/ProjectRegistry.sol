@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/// @title ProjectRegistry
-/// @notice The land book. Holds each project's polygon + bounding box and its
+// ProjectRegistry
+// The land book. Holds each project's polygon + bounding box and its
 ///         status. The backend reads polygons out of here to run overlap checks;
 ///         the on-chain bbox gives anyone a cheap, trustless duplicate-land guard.
 contract ProjectRegistry is Ownable {
@@ -56,7 +56,7 @@ contract ProjectRegistry is Ownable {
         oracle = newOracle;
     }
 
-    /// @notice Register a project. Anyone can submit; the bbox is microdegrees so
+    // Register a project. Anyone can submit; the bbox is microdegrees so
     ///         findOverlaps() stays float-free. Status starts Pending until the
     ///         oracle rules on it.
     function submitProject(
@@ -109,7 +109,7 @@ contract ProjectRegistry is Ownable {
         emit ProjectRejected(id, projects[id].owner, reason);
     }
 
-    /// @notice Mark a project as fraud. One-way — there's no un-flag, on purpose.
+    // Mark a project as fraud. One-way — there's no un-flag, on purpose.
     function flagFraud(bytes32 id, string calldata reason) external onlyOracle {
         require(projects[id].submittedAt != 0, "ProjectRegistry: unknown project");
         projects[id].status = ProjectStatus.FraudFlagged;
@@ -125,12 +125,12 @@ contract ProjectRegistry is Ownable {
         return projects[id].polygonGeoJSON;
     }
 
-    /// @notice Every project ID, any status — the backend pulls polygons from here.
+    // Every project ID, any status — the backend pulls polygons from here.
     function getAllProjectIds() external view returns (bytes32[] memory) {
         return _allIds;
     }
 
-    /// @notice Just the approved ones, i.e. land that's actually claimed.
+    // Just the approved ones, i.e. land that's actually claimed.
     function getApprovedProjectIds() external view returns (bytes32[] memory) {
         uint256 count;
         for (uint256 i = 0; i < _allIds.length; i++) {
@@ -157,10 +157,9 @@ contract ProjectRegistry is Ownable {
         return (p.minLat, p.minLng, p.maxLat, p.maxLng);
     }
 
-    /// @notice Approved projects whose bbox touches the query box. A hit is only a
+    // Approved projects whose bbox touches the query box. A hit is only a
     ///         *candidate* duplicate — Shapely makes the final call off-chain — but
     ///         anyone can run this without trusting us, which is the whole value.
-    /// @dev Two axis-aligned boxes intersect iff they overlap on both axes.
     function findOverlaps(int64 minLat, int64 minLng, int64 maxLat, int64 maxLng)
         external view returns (bytes32[] memory)
     {

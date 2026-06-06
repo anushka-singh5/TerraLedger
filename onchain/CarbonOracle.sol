@@ -5,13 +5,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ProjectRegistry.sol";
 import "./CarbonCredit.sol";
 
-/// @notice All we need from QIE Pass on-chain. Real impl is MockQIEPass.
+// All we need from QIE Pass on-chain. Real impl is MockQIEPass.
 interface IQIEPass {
     function isVerified(address wallet) external view returns (bool);
 }
 
-/// @title CarbonOracle
-/// @notice Where the off-chain AI checks become an on-chain decision. The backend
+// CarbonOracle
+// Where the off-chain AI checks become an on-chain decision. The backend
 ///         wallet calls submitVerification() with the five module scores; this
 ///         contract then mints (pass), flags fraud forever (hard-fail), or rejects
 ///         (score < 70). The score weights below mirror the backend exactly — if
@@ -136,7 +136,7 @@ contract CarbonOracle is Ownable {
         emit OracleAuthorized(oracle);
     }
 
-    /// @notice Revoke an oracle. Refuses if it would leave fewer oracles than the threshold.
+    // Revoke an oracle. Refuses if it would leave fewer oracles than the threshold.
     function removeOracle(address oracle) external onlyOwner {
         require(authorizedOracles[oracle], "CarbonOracle: not authorized");
         require(_oracleList.length - 1 >= attestationThreshold, "CarbonOracle: would break threshold");
@@ -151,14 +151,14 @@ contract CarbonOracle is Ownable {
         emit OracleRevoked(oracle);
     }
 
-    /// @notice How many oracles must agree before a project finalises. 1..oracleCount.
+    // How many oracles must agree before a project finalises. 1..oracleCount.
     function setAttestationThreshold(uint256 threshold) external onlyOwner {
         require(threshold >= 1 && threshold <= _oracleList.length, "CarbonOracle: bad threshold");
         attestationThreshold = threshold;
         emit AttestationThresholdUpdated(threshold);
     }
 
-    /// @notice Kept around so older tooling that called setTrustedBackend still works —
+    // Kept around so older tooling that called setTrustedBackend still works —
     ///         it just authorizes the wallet as an oracle.
     function setTrustedBackend(address newBackend) external onlyOwner {
         require(newBackend != address(0), "CarbonOracle: zero backend");
@@ -184,7 +184,7 @@ contract CarbonOracle is Ownable {
         emit QIEPassUpdated(qiePass_);
     }
 
-    /// @notice A KYC'd buyer asks for the extended docs on a verified project. We
+    // A KYC'd buyer asks for the extended docs on a verified project. We
     ///         only record the grant here; the backend serves the redacted files.
     function requestDocumentAccess(bytes32 projectId) external {
         require(address(qiePass) != address(0), "CarbonOracle: QIE Pass not set");
@@ -194,7 +194,7 @@ contract CarbonOracle is Ownable {
         emit DocumentAccessGranted(projectId, msg.sender, block.timestamp);
     }
 
-    /// @notice One oracle's attestation of a project's verification result. The
+    // One oracle's attestation of a project's verification result. The
     ///         backend calls this after running the five modules. docHash is the
     ///         SHA-256 of the deed (proof, not the deed); the two *HardFail flags
     ///         are the gates that zero the score regardless of the points.
@@ -254,8 +254,6 @@ contract CarbonOracle is Ownable {
             _finalize(projectId, project.owner, gpsHardFail, ownershipHardFail, flags, vintage, tonnes);
         }
     }
-
-    /// @dev Fires once threshold is reached. Everyone who got us here committed to
     ///      the same resultHash, so reading scores back from storage is safe.
     function _finalize(
         bytes32           projectId,
@@ -364,7 +362,7 @@ contract CarbonOracle is Ownable {
         return verifications[projectId].docHash;
     }
 
-    /// @notice Prove a deed is the exact one that passed, without revealing it:
+    // Prove a deed is the exact one that passed, without revealing it:
     ///         hash your copy and compare against what we stored.
     function verifyDocument(bytes32 projectId, bytes32 candidateHash)
         external view returns (bool)
@@ -373,7 +371,7 @@ contract CarbonOracle is Ownable {
         return stored != bytes32(0) && stored == candidateHash;
     }
 
-    /// @notice Every project ever flagged as a fraud attempt. On-chain forever —
+    // Every project ever flagged as a fraud attempt. On-chain forever —
     ///         that permanence is half the point.
     function getFraudAttempts() external view returns (bytes32[] memory) {
         uint256 count;

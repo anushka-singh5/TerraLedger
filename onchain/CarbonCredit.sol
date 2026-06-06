@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-/// @title CarbonCredit
-/// @notice One token = one verified batch of CO2 tonnes. Only the oracle can mint
+// CarbonCredit
+// One token = one verified batch of CO2 tonnes. Only the oracle can mint
 ///         (it's the thing that ran the AI checks). retire() burns the token but
 ///         keeps the record. Metadata is fully on-chain + links the IPFS audit, so
 ///         a buyer never has to trust our server to see why a credit passed.
@@ -72,7 +72,7 @@ contract CarbonCredit is ERC721, Ownable {
         oracle = newOracle;
     }
 
-    /// @notice Mint a credit. Oracle-only; it calls this once the backend clears a
+    // Mint a credit. Oracle-only; it calls this once the backend clears a
     ///         project (score >= 70 and no hard-fail). The 70 cutoff is enforced
     ///         off-chain — by the time we're here, the decision is already made.
     function mint(
@@ -114,7 +114,7 @@ contract CarbonCredit is ERC721, Ownable {
         emit CreditMinted(tokenId, projectId, to, tonnes, ipfsCid);
     }
 
-    /// @notice Retire a credit: burn the token so the offset can't be double-counted.
+    // Retire a credit: burn the token so the offset can't be double-counted.
     ///         We burn but deliberately keep the CreditData around — credits[id] and
     ///         tokenURI(id) still resolve, which is what makes the retirement provable.
     function retire(uint256 tokenId) external {
@@ -130,7 +130,7 @@ contract CarbonCredit is ERC721, Ownable {
         emit CreditRetired(tokenId, c.projectId, msg.sender, c.tonnes, block.timestamp);
     }
 
-    /// @notice On-chain JSON metadata, works for live and retired tokens alike —
+    // On-chain JSON metadata, works for live and retired tokens alike —
     ///         a retired token has no owner but its proof should never 404.
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         CreditData memory c = credits[tokenId];

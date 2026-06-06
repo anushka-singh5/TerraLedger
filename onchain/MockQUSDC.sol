@@ -3,8 +3,8 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-/// @title MockQUSDC
-/// @notice Throwaway QUSDC for tests and local runs — real QUSDC is on mainnet.
+// MockQUSDC
+// Throwaway QUSDC for tests and local runs — real QUSDC is on mainnet.
 ///         6 decimals to match it exactly, so the marketplace code (written against
 ///         plain IERC20) doesn't know or care which one it's talking to. Has a
 ///         faucet so a local wallet can actually buy something.
@@ -26,7 +26,7 @@ contract MockQUSDC is ERC20 {
         return DECIMALS;
     }
 
-    /// @notice 1,000 QUSDC per wallet, once an hour.
+    // 1,000 QUSDC per wallet, once an hour.
     function faucet() external {
         require(
             block.timestamp - lastFaucet[msg.sender] >= FAUCET_COOLDOWN,
