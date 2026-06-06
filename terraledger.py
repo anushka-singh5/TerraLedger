@@ -1,19 +1,6 @@
-"""
-TerraLedger verification backend.
+# TerraLedger backend — FastAPI + 5 AI verification modules + on-chain oracle signer
 
-FastAPI service that runs the five-module AI checks on a submitted carbon project
-and, on a pass, drives the on-chain oracle to mint the credit. Single process —
-no queue/DB — which is plenty for the demo and keeps ops simple.
-
-Quick start:
-    python3 -m venv venv && source venv/bin/activate
-    pip install -r requirements.txt
-    python -m spacy download en_core_web_sm
-    brew install tesseract ollama && ollama pull llama3 && ollama serve &
-    python terraledger.py            # serves on :8000, docs at /docs
-"""
-
-# ─── Standard library ─────────────────────────────────────────────────────────
+# standard library
 import collections
 import csv
 import hashlib
@@ -32,7 +19,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-# ─── Third-party ──────────────────────────────────────────────────────────────
+# third-party
 from fastapi.responses import FileResponse
 import numpy as np
 import pandas as pd
@@ -50,7 +37,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 import uvicorn
 
-# ─── Optional: spaCy NLP ──────────────────────────────────────────────────────
+# optional: spacy nlp
 try:
     import spacy as _spacy
     _nlp = _spacy.load("en_core_web_sm")
@@ -59,7 +46,7 @@ except Exception:
     _nlp = None
     SPACY_AVAILABLE = False
 
-# ─── Optional: web3 for on-chain oracle calls ─────────────────────────────────
+# optional: web3 for on-chain oracle calls
 try:
     from web3 import Web3
     from eth_account import Account as EthAccount
@@ -69,16 +56,14 @@ except ImportError:
 
 load_dotenv()
 
-# ─── Logging ──────────────────────────────────────────────────────────────────
+# logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)-8s | %(name)s | %(message)s",
 )
 log = logging.getLogger("terraledger")
 
-
-# ── Constants & tunables ──────────────────────────────────────────────────────
-
+# constants & tunables
 MIN_SCORE          = 70
 HARD_FAIL_OVERLAP  = 20.0       # GPS overlap % that triggers hard-fail
 WARN_OVERLAP       = 5.0        # GPS overlap % that adds a flag
@@ -110,7 +95,7 @@ BIOME_MEDIANS: Dict[str, float] = {
     "other":     12.0,
 }
 
-# ── Literature-grounded median tCO2/ha by (project type × biome) ──────────────
+# literature-grounded median tco2/ha by (project type × biome)
 # Project type matters as much as biome: a REDD+ forest, an agroforestry plot and
 # a renewable-energy avoidance project have very different per-hectare profiles.
 # Values are credit-yield medians derived from published Verra/Gold Standard
@@ -170,7 +155,7 @@ _ensemble_scaler: Optional[StandardScaler] = None
 _ensemble_stats:  Dict[str, Dict]       = {}   # per-biome {"mean": x, "std": y}
 _ensemble_ready:  bool                  = False
 
-# ── Rate-limit state (in-memory; short windows, fine to reset on restart) ─────
+# rate-limit state (in-memory; short windows, fine to reset on restart)
 _rl_attempts:   Dict[str, List[float]] = collections.defaultdict(list)  # wallet → timestamps
 _rl_failures:   Dict[str, List[float]] = collections.defaultdict(list)  # wallet → fail times
 _rl_cooldown:   Dict[str, float]       = {}                              # wallet → expiry ts
@@ -201,9 +186,7 @@ FAIL_WINDOW    = 600    # 10 min window for failure tracking
 FAIL_COOLDOWN  = 1800   # 30 min cooldown after repeated failures
 PROBE_WINDOW   = 5      # last N anomaly scores checked for boundary probing
 
-
-# ── Request / response models ─────────────────────────────────────────────────
-
+# request / response models
 class VerificationResult(BaseModel):
     project_id:              str
     submitter:               str
@@ -229,9 +212,7 @@ class VerificationResult(BaseModel):
     submitter_fraud_history: int           # past fraud count for this wallet
     rate_limit_remaining:    int           # submissions left this hour
 
-
-# ── Module 1 — GPS overlap detector ───────────────────────────────────────────
-
+# module 1 — gps overlap detector
 def check_gps_overlap(
     new_polygon: List[List[float]],
     registered:  List[Dict[str, Any]],
@@ -321,8 +302,7 @@ def check_gps_overlap(
         ),
     }
 
-
-# ── Module 2 — ownership doc parser + forensics ──────────────────────────────
+# module 2 — ownership doc parser + forensics
 # Two passes. First "is it consistent?" — owner name + GPS present, and the GPS
 # actually matches where the project says it is. Then the harder question, "is it
 # real?", which is four separate checks:
@@ -365,12 +345,11 @@ REG_NUMBER_PATTERN = (
 DOC_REGISTRY_PATH = Path("data/document_registry.json")
 ELA_TAMPER_THRESHOLD = 0.65   # max normalized ELA difference before flagging
 
-
 DOC_ACCESS_PATH = Path("data/extended_documents.json")
 
-
 def _load_doc_registry() -> Dict[str, Any]:
-    """Load the persistent document-fingerprint registry (for reuse detection)."""
+    # load the persistent document-fingerprint registry (for reuse detection)
+
     if DOC_REGISTRY_PATH.exists():
         try:
             return json.loads(DOC_REGISTRY_PATH.read_text())
@@ -378,13 +357,9 @@ def _load_doc_registry() -> Dict[str, Any]:
             pass
     return {"by_hash": {}, "by_owner": {}}
 
-
 def _save_extended_doc(project_id: str, project_name: str, doc_result: Dict[str, Any]) -> None:
-    """
-    Persist a REDACTED extended-documentation record for a verified project.
-    Served off-chain via /document-access only to QIE Pass holders who hold an
-    on-chain access grant. The raw deed is never stored — only redacted fields.
-    """
+    # persist a REDACTED extended-documentation record for a verified project
+
     try:
         store: Dict[str, Any] = {}
         if DOC_ACCESS_PATH.exists():
@@ -409,18 +384,13 @@ def _save_extended_doc(project_id: str, project_name: str, doc_result: Dict[str,
     except Exception as exc:
         log.warning("extended-doc save failed: %s", str(exc)[:80])
 
-
 def _save_doc_registry(reg: Dict[str, Any]) -> None:
     DOC_REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
     DOC_REGISTRY_PATH.write_text(json.dumps(reg, indent=2))
 
-
 def _record_doc_fingerprint(doc_hash: str, owner: str, doc_gps, project_id: str) -> None:
-    """
-    Record a deed's fingerprint for future reuse detection — ONLY after it has
-    backed a successfully-minted credit. A failed/rejected submission must NOT
-    consume the deed (otherwise legitimate retries falsely fail as DOCUMENT_REUSE).
-    """
+    # record a deed's fingerprint for future reuse detection — ONLY after it has
+
     if not doc_hash:
         return
     try:
@@ -439,14 +409,9 @@ def _record_doc_fingerprint(doc_hash: str, owner: str, doc_gps, project_id: str)
     except Exception as exc:
         log.warning("doc fingerprint record failed: %s", str(exc)[:80])
 
-
 def _error_level_analysis(image_bytes: bytes) -> float:
-    """
-    Error Level Analysis: re-compress the image at known JPEG quality and
-    measure the difference. Digitally edited regions compress differently
-    from the rest of the image, producing high-difference hotspots.
-    Returns a normalized 0-1 score (higher = more likely tampered).
-    """
+    # error Level Analysis: re-compress the image at known JPEG quality and
+
     try:
         from PIL import Image, ImageChops
         orig = Image.open(io.BytesIO(image_bytes)).convert("RGB")
@@ -461,7 +426,6 @@ def _error_level_analysis(image_bytes: bytes) -> float:
     except Exception as exc:
         log.warning("ELA failed: %s", exc)
         return 0.0
-
 
 def check_document_authenticity(
     file_bytes: bytes,
@@ -560,7 +524,6 @@ def check_document_authenticity(
         "doc_hash":     doc_hash[:16],
         "flags":        flags,
     }
-
 
 def parse_ownership_document(
     file_bytes: bytes,
@@ -665,9 +628,9 @@ def parse_ownership_document(
         "reason":       ". ".join(parts),
     }
 
-
 def _extract_text(file_bytes: bytes, filename: str) -> str:
-    """Extract plain text from a PDF or image file."""
+    # extract plain text from a PDF or image file
+
     fname = (filename or "").lower()
 
     if fname.endswith(".pdf"):
@@ -687,9 +650,9 @@ def _extract_text(file_bytes: bytes, filename: str) -> str:
         log.warning("OCR extraction failed: %s", exc)
         return ""
 
-
 def _extract_owner(text: str) -> str:
-    """Extract the land owner name using spaCy NER or regex fallback."""
+    # extract the land owner name using spaCy NER or regex fallback
+
     if SPACY_AVAILABLE and _nlp:
         doc     = _nlp(text[:5_000])
         persons = [ent.text for ent in doc.ents if ent.label_ == "PERSON"]
@@ -716,9 +679,9 @@ def _extract_owner(text: str) -> str:
     )
     return match.group(1).strip() if match else "Unknown"
 
-
 def _extract_gps_from_text(text: str) -> Optional[List[float]]:
-    """Try each GPS regex pattern and return [lat, lon] on first match."""
+    # try each GPS regex pattern and return [lat, lon] on first match
+
     for pattern in GPS_PATTERNS:
         match = re.search(pattern, text, re.IGNORECASE)
         if not match:
@@ -738,15 +701,15 @@ def _extract_gps_from_text(text: str) -> Optional[List[float]]:
             continue
     return None
 
-
 def _dms_to_decimal(deg: str, mins: str, secs: str, direction: str) -> float:
-    """Convert degrees-minutes-seconds + hemisphere to decimal degrees."""
+    # convert degrees-minutes-seconds + hemisphere to decimal degrees
+
     value = int(deg) + int(mins) / 60 + int(secs) / 3600
     return -value if direction.upper() in ("S", "W") else value
 
-
 def _polygon_centroid(polygon: List[List[float]]) -> Optional[List[float]]:
-    """Return the arithmetic centroid [lat, lon] of a polygon."""
+    # return the arithmetic centroid [lat, lon] of a polygon
+
     if not polygon:
         return None
     return [
@@ -754,9 +717,9 @@ def _polygon_centroid(polygon: List[List[float]]) -> Optional[List[float]]:
         sum(p[1] for p in polygon) / len(polygon),
     ]
 
-
 def _haversine(point_a: List[float], point_b: List[float]) -> float:
-    """Return great-circle distance in kilometres between two [lat, lon] points."""
+    # return great-circle distance in kilometres between two [lat, lon] points
+
     R    = 6_371
     lat1 = math.radians(point_a[0])
     lon1 = math.radians(point_a[1])
@@ -766,7 +729,6 @@ def _haversine(point_a: List[float], point_b: List[float]) -> float:
     dlon = lon2 - lon1
     a    = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
     return R * 2 * math.asin(math.sqrt(a))
-
 
 def _doc_confidence(
     owner: str,
@@ -787,8 +749,7 @@ def _doc_confidence(
         score = min(score + 0.1, 1.0)
     return score
 
-
-# ── Module 3 — anomaly detector (multi-layer) ────────────────────────────────
+# module 3 — anomaly detector (multi-layer)
 # One IsolationForest has exactly one decision boundary, and anyone who studies
 # the training data can park their numbers just inside the safe zone and farm the
 # 25 points every time. So we stack five layers and make a claim clear all of them:
@@ -802,7 +763,7 @@ def _doc_confidence(
 #   5. Cross-feature sanity — type/biome combos that don't make sense, e.g. a
 #      renewable-energy project in a wetland.
 
-# ── Layer 1 constants: IPCC physical plausibility ceilings ────────────────────
+# layer 1 constants: ipcc physical plausibility ceilings
 # Source: IPCC AR6 WGIII, Table 7.1 — above these values is physically
 # impossible for the given biome regardless of what the ML model says.
 BIOME_HARD_CAPS: Dict[str, float] = {
@@ -813,7 +774,7 @@ BIOME_HARD_CAPS: Dict[str, float] = {
     "other":     350.0,
 }
 
-# ── Layer 2 constants: ensemble configs ───────────────────────────────────────
+# layer 2 constants: ensemble configs
 # Varying seeds + contamination. Features are log-transformed + StandardScaled
 # before fitting, so scale differences between tph and categorical features
 # don't skew the isolation trees.
@@ -826,19 +787,18 @@ ENSEMBLE_CONFIGS: List[Dict] = [
 ]
 ENSEMBLE_MAJORITY = 3   # need ≥3/5 models to vote "normal"
 
-# ── Layer 4 constant ──────────────────────────────────────────────────────────
+# layer 4 constant
 # IsolationForest.decision_function() near 0 = boundary. Legitimate projects
 # should be comfortably inside normal territory (large positive value).
 BOUNDARY_ZONE = 0.04   # tighter — only truly edge-hugging claims trigger this
 
-# ── Layer 5: type/biome combinations that make no physical sense ──────────────
+# layer 5: type/biome combinations that make no physical sense
 IMPLAUSIBLE_COMBOS: List[Tuple[str, str]] = [
     ("renewable", "tropical"),    # solar/wind farm inside a tropical forest?
     ("renewable", "boreal"),
     ("methane",   "boreal"),
     ("methane",   "temperate"),
 ]
-
 
 def _encode_project_type(project_type: str) -> int:
     lower = project_type.lower()
@@ -847,7 +807,6 @@ def _encode_project_type(project_type: str) -> int:
             return idx
     return 4
 
-
 def _encode_biome(biome: str) -> int:
     lower = biome.lower()
     for idx, b in enumerate(BIOMES):
@@ -855,21 +814,9 @@ def _encode_biome(biome: str) -> int:
             return idx
     return 4
 
-
 def _build_training_features() -> Tuple[np.ndarray, Dict[str, Dict]]:
-    """
-    Build training features and per-biome stats.
+    # build training features and per-biome stats
 
-    Feature vector (per sample):
-        [log1p(tph), type_enc, vintage_norm, biome_idx]
-
-    Using log1p(tph) instead of raw tph is critical:
-      - Raw tph has range 0–700+; type/biome have range 0–4.
-      - Without log transform, IsolationForest isolation trees split almost
-        exclusively on tph, ignoring the categorical features entirely.
-      - log1p compresses the tph scale to ~0–7, making all 4 features
-        comparable after StandardScaling.
-    """
     raw_rows: List[List[float]] = []   # raw tph — used for biome stats
     feat_rows: List[List[float]] = []  # log1p(tph) — fed to IsolationForest
 
@@ -961,9 +908,9 @@ def _build_training_features() -> Tuple[np.ndarray, Dict[str, Dict]]:
 
     return feat_arr, stats
 
-
 def _load_ensemble() -> None:
-    """Train or load the 5-model ensemble + StandardScaler (once on first request)."""
+    # train or load the 5-model ensemble + StandardScaler (once on first request)
+
     global _ensemble, _ensemble_scaler, _ensemble_stats, _ensemble_ready
     if _ensemble_ready:
         return
@@ -1004,7 +951,6 @@ def _load_ensemble() -> None:
     _ensemble_stats  = stats
     _ensemble_ready  = True
     log.info("Ensemble trained on %d samples, %d models.", len(feats), len(models))
-
 
 def check_anomaly(
     tonnes_co2:   float,
@@ -1171,14 +1117,10 @@ def check_anomaly(
         "reason":             reason,
     }
 
-
-# ── Module 4 — NASA FIRMS satellite check ─────────────────────────────────────
-
+# module 4 — nasa firms satellite check
 def _fetch_firms_chunk(api_key: str, bbox: str, start_date: str) -> int:
-    """
-    Fetch one 5-day FIRMS window. Returns the fire-alert count for that window,
-    or -1 on error (so the caller can distinguish "no fires" from "request failed").
-    """
+    # fetch one 5-day FIRMS window. Returns the fire-alert count for that window,
+
     url = f"{NASA_BASE_URL}/{api_key}/{NASA_SOURCE}/{bbox}/{NASA_CHUNK_DAYS}/{start_date}"
     try:
         resp = requests.get(url, timeout=12)
@@ -1192,18 +1134,9 @@ def _fetch_firms_chunk(api_key: str, bbox: str, start_date: str) -> int:
         log.warning("FIRMS chunk %s failed: %s", start_date, str(exc)[:60])
         return -1
 
-
 def check_nasa_firms(polygon: List[List[float]]) -> Dict[str, Any]:
-    """
-    Query real NASA FIRMS satellite data for fire / deforestation alerts in the
-    project area over the past 90 days.
+    # query real NASA FIRMS satellite data for fire / deforestation alerts in the
 
-    The FIRMS free API caps each request at 5 days, so we fetch eighteen 5-day
-    windows concurrently and aggregate the alert counts. This gives genuine
-    90-day fire coverage instead of mock data.
-
-    Returns score (0-20) and permanence risk.
-    """
     api_key = os.getenv("NASA_FIRMS_API_KEY")
     lats    = [p[0] for p in polygon]
     lons    = [p[1] for p in polygon]
@@ -1291,14 +1224,10 @@ def check_nasa_firms(polygon: List[List[float]]) -> Dict[str, Any]:
             "reason": f"{total_fires} fire alerts in {days_covered} days — HIGH permanence risk. Forest likely degraded.",
         }
 
-
-# ── Module 5 — audit report (Llama 3 / Ollama) ────────────────────────────────
-
+# module 5 — audit report (llama 3 / ollama)
 def generate_audit_report(data: Dict[str, Any]) -> str:
-    """
-    Use Llama 3 (local Ollama) to write a professional carbon audit report.
-    Falls back to a deterministic template if Ollama is unreachable.
-    """
+    # use Llama 3 (local Ollama) to write a professional carbon audit report
+
     verdict  = "APPROVED FOR MINTING" if data["verdict"] == "PASS" else "REJECTED"
     flags_str = ", ".join(data["flags"]) if data["flags"] else "None"
 
@@ -1346,9 +1275,9 @@ Write: executive summary, per-module findings, and a recommendation."""
 
     return _fallback_report(data)
 
-
 def generate_audit_pdf(report_text: str, project_id: str) -> Optional[Path]:
-    """Render audit report text to a PDF file using ReportLab."""
+    # render audit report text to a PDF file using ReportLab
+
     try:
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import getSampleStyleSheet
@@ -1384,9 +1313,9 @@ def generate_audit_pdf(report_text: str, project_id: str) -> Optional[Path]:
 
     return None
 
-
 def _fallback_report(data: Dict[str, Any]) -> str:
-    """Deterministic report template — used when Ollama is unavailable."""
+    # deterministic report template — used when Ollama is unavailable
+
     verdict   = "APPROVED FOR MINTING" if data["verdict"] == "PASS" else "REJECTED"
     flags_str = ", ".join(data["flags"]) if data["flags"] else "None"
     scores    = data["scores"]
@@ -1424,11 +1353,8 @@ def _fallback_report(data: Dict[str, Any]) -> str:
         + f"\n\n─ TerraLedger · QIE Blockchain · {datetime.utcnow().year} ─"
     )
 
-
-# ── IPFS uploader (Pinata) ────────────────────────────────────────────────────
-
+# ipfs uploader (pinata)
 PINATA_PIN_JSON_URL = "https://api.pinata.cloud/pinning/pinJSONToIPFS"
-
 
 def upload_to_ipfs(
     report_text: str,
@@ -1492,8 +1418,7 @@ def upload_to_ipfs(
         log.error("Pinata IPFS upload failed: %s", exc)
         return None
 
-
-# ── QIE Pass REST client (real identity verification) ─────────────────────────
+# qie pass rest client (real identity verification)
 # Worth being clear: real QIE Pass is a REST API, not an on-chain isVerified().
 # The on-chain MockQIEPass is just the on-chain mirror. The actual partner flow is
 # three calls — create a verification request, poll until the user consents, then
@@ -1502,7 +1427,6 @@ def upload_to_ipfs(
 # the client reports "not configured" and we fall back to the MockQIEPass path.
 
 QIE_PASS_BASE_URL = os.getenv("QIE_PASS_BASE_URL", "https://pass-api.qie.digital").rstrip("/")
-
 
 class QIEPassClient:
     """Partner-side client for QIE Pass privacy-preserving identity verification."""
@@ -1518,7 +1442,8 @@ class QIEPassClient:
             log.warning("QIE Pass API keys not set — falling back to on-chain MockQIEPass demo mode.")
 
     def _headers(self) -> Dict[str, str]:
-        """HMAC-SHA256 signed headers. Signature = HMAC(secret, publicKey + timestamp)."""
+        # hMAC-SHA256 signed headers. Signature = HMAC(secret, publicKey + timestamp)
+
         timestamp = str(int(time.time() * 1000))          # unix ms
         message   = self.public_key + timestamp
         signature = hmac.new(
@@ -1534,11 +1459,8 @@ class QIEPassClient:
         }
 
     def create_verification_request(self, identifier: str, claims: List[str]) -> Dict[str, Any]:
-        """
-        Start an identity verification for a user (DID or wallet address).
-        Returns the request record. If the user is not yet KYC-verified the
-        response carries status 'pending_kyc' + a redirectUrl for onboarding.
-        """
+        # start an identity verification for a user (DID or wallet address)
+
         if not self.ready:
             raise HTTPException(status_code=503, detail="QIE Pass API not configured (set QIE_PASS_PUBLIC_KEY / QIE_PASS_SECRET_KEY).")
         try:
@@ -1553,7 +1475,8 @@ class QIEPassClient:
             raise HTTPException(status_code=502, detail=f"QIE Pass unreachable: {str(exc)[:120]}")
 
     def get_request_status(self, request_id: str) -> Dict[str, Any]:
-        """Poll a verification request. Status flow: pending_kyc → pending_consent → consent_given / consent_rejected."""
+        # poll a verification request. Status flow: pending_kyc → pending_consent → consent_given / consent_rejected
+
         if not self.ready:
             raise HTTPException(status_code=503, detail="QIE Pass API not configured.")
         try:
@@ -1567,11 +1490,8 @@ class QIEPassClient:
             raise HTTPException(status_code=502, detail=f"QIE Pass unreachable: {str(exc)[:120]}")
 
     def claim_and_verify(self, request_id: str) -> Dict[str, Any]:
-        """
-        Claim the verified credential once consent is given. Returns selective-
-        disclosure claims + an ECDSA proof. Single-use (VC deleted after claim),
-        valid for a 30-minute window. We also re-check the proof flags.
-        """
+        # claim the verified credential once consent is given. Returns selective-
+
         if not self.ready:
             raise HTTPException(status_code=503, detail="QIE Pass API not configured.")
         try:
@@ -1592,7 +1512,8 @@ class QIEPassClient:
 
     @staticmethod
     def _unwrap(resp: "requests.Response") -> Dict[str, Any]:
-        """QIE Pass wraps payloads as {success, data|...}. Surface errors as HTTP errors."""
+        # qIE Pass wraps payloads as {success, data|...}. Surface errors as HTTP errors
+
         try:
             body = resp.json()
         except Exception:
@@ -1603,15 +1524,11 @@ class QIEPassClient:
                                 detail=f"QIE Pass: {err}")
         return body.get("data", body)
 
-
 # Module-level singleton — initialised once at import
 _qiepass = QIEPassClient()
 
-
-# ── Blockchain oracle client ──────────────────────────────────────────────────
-
+# blockchain oracle client
 _TX_LOCK = threading.Lock()   # serialize oracle-wallet tx sending (nonce safety)
-
 
 class BlockchainOracle:
     """
@@ -1781,13 +1698,8 @@ class BlockchainOracle:
             log.error("BlockchainOracle init failed: %s", exc)
 
     def _send_tx(self, func_call, gas: int = 600_000) -> Optional[Any]:
-        """
-        Sign and send a contract function call from the oracle wallet.
-        Estimates gas (with a 1.5x buffer) so the tx never runs out; if the
-        estimate itself reverts, the call would revert on-chain too, so we
-        surface that early instead of burning gas on a doomed transaction.
-        Returns the transaction receipt, or None on failure.
-        """
+        # sign and send a contract function call from the oracle wallet
+
         # Pre-flight: estimate gas — reverts here if the call would revert
         try:
             est = func_call.estimate_gas({"from": self._account.address})
@@ -1959,7 +1871,8 @@ class BlockchainOracle:
     ]
 
     def attest_identity(self, wallet: str, full_name: str, organization: str) -> Optional[str]:
-        """Record a real-QIE-Pass-verified wallet on-chain (oracle owns MockQIEPass)."""
+        # record a real-QIE-Pass-verified wallet on-chain (oracle owns MockQIEPass)
+
         if not self._ready:
             return None
         qiepass_addr = os.getenv("NEXT_PUBLIC_QIEPASS_ADDRESS")
@@ -1983,10 +1896,8 @@ class BlockchainOracle:
         return None
 
     def has_document_access(self, project_id: str, wallet: str) -> Optional[bool]:
-        """
-        Read the on-chain QIE Pass-gated document access grant for (project, wallet).
-        Returns True/False, or None if the chain is unreachable.
-        """
+        # read the on-chain QIE Pass-gated document access grant for (project, wallet)
+
         if not self._ready or self._contract is None:
             return None
         try:
@@ -2000,22 +1911,19 @@ class BlockchainOracle:
 
     @staticmethod
     def _str_to_bytes32(s: str) -> bytes:
-        """
-        Convert a project ID string to a bytes32 value.
-        Strings longer than 32 bytes are SHA-256 hashed first.
-        """
+        # convert a project ID string to a bytes32 value
+
         encoded = s.encode("utf-8")
         if len(encoded) > 32:
             return hashlib.sha256(encoded).digest()
         return encoded.ljust(32, b"\x00")
 
-
 # Module-level singleton — initialised once at import
 _oracle = BlockchainOracle()
 
-
 def _chain_id() -> int:
-    """Live chain id — ask the node first, fall back to env, then mainnet."""
+    # live chain id — ask the node first, fall back to env, then mainnet
+
     try:
         if _oracle._w3:
             return _oracle._w3.eth.chain_id
@@ -2026,30 +1934,19 @@ def _chain_id() -> int:
     except Exception:
         return 1990
 
-
 def _network_label() -> str:
     cid = _chain_id()
     return f"QIE {'Mainnet' if cid == 1990 else 'Testnet'} ({cid})"
 
-
 def _explorer_base() -> str:
-    """Explorer origin for the current chain — mainnet vs testnet are different hosts."""
+    # explorer origin for the current chain — mainnet vs testnet are different hosts
+
     return "https://mainnet.qie.digital" if _chain_id() == 1990 else "https://testnet.qie.digital"
 
-
-# ── Rate limiting (in-memory, per wallet) ─────────────────────────────────────
-
+# rate limiting (in-memory, per wallet)
 def _check_rate_limit(wallet: str) -> Optional[str]:
-    """
-    Enforce per-wallet submission limits and detect boundary probing.
-    Returns an error string if blocked, None if allowed.
+    # enforce per-wallet submission limits and detect boundary probing
 
-    Rules:
-      - Max 5 submissions / hour / wallet
-      - 30-min cooldown after ≥2 failures in 10 minutes
-      - Boundary-probing flag if 4+ of last 5 anomaly scores are in the ±0.15
-        window around the pass/fail threshold (attacker calibrating their claim)
-    """
     key = wallet.lower()
     now = time.time()
 
@@ -2076,9 +1973,9 @@ def _check_rate_limit(wallet: str) -> Optional[str]:
     _rl_attempts[key].append(now)
     return None
 
-
 def _record_outcome(wallet: str, passed: bool, anomaly_score: float) -> None:
-    """Update rate-limit state after a verification completes."""
+    # update rate-limit state after a verification completes
+
     key = wallet.lower()
     if not passed:
         _rl_failures[key].append(time.time())
@@ -2098,16 +1995,9 @@ def _record_outcome(wallet: str, passed: bool, anomaly_score: float) -> None:
 
     _save_fraud_counts()   # persist strikes (survives restart)
 
-
 def _submitter_reputation(wallet: str) -> Dict[str, Any]:
-    """
-    Return this wallet's fraud history and reputation tier.
+    # return this wallet's fraud history and reputation tier
 
-    Tiers:
-      clean   → 0 past fraud attempts  — full scoring available
-      flagged → 1-2 past fraud attempts — anomaly score cap applied
-      banned  → 3+ past fraud attempts  — immediate reject
-    """
     key        = wallet.lower()
     count      = _fraud_counts[key]
     reputation = "clean" if count == 0 else ("flagged" if count < 3 else "banned")
@@ -2120,9 +2010,7 @@ def _submitter_reputation(wallet: str) -> Dict[str, Any]:
         "remaining":     remaining,
     }
 
-
-# ── Retirement certificate generator ──────────────────────────────────────────
-
+# retirement certificate generator
 def _build_retirement_pdf(
     token_id:     int,
     project_id:   str,
@@ -2251,9 +2139,7 @@ def _build_retirement_pdf(
     doc.build(story)
     return out
 
-
-# ── FastAPI application ───────────────────────────────────────────────────────
-
+# fastapi application
 app = FastAPI(
     title       = "TerraLedger AI Verification API",
     version     = "1.0.0",
@@ -2285,16 +2171,11 @@ app.add_middleware(
     allow_headers  = ["*"],
 )
 
-
-# ── GET /health ───────────────────────────────────────────────────────────────
-
+# get /health
 @app.get("/health")
 async def health() -> Dict[str, Any]:
-    """
-    Live readiness probe. Reports each dependency's real status (not just whether
-    a key is configured) so you can spot a broken demo dependency before going on
-    stage. Every check is fail-soft — a down dependency never crashes /health.
-    """
+    # live readiness probe. Reports each dependency's real status (not just whether
+
     # Ollama (audit LLM) — quick reachability ping
     ollama_up = False
     try:
@@ -2334,9 +2215,7 @@ async def health() -> Dict[str, Any]:
         "hard_fail_overlap": HARD_FAIL_OVERLAP,
     }
 
-
-# ── POST /verify ──────────────────────────────────────────────────────────────
-
+# post /verify
 @app.post("/verify", response_model=VerificationResult)
 async def verify(
     project_id:          str            = Form(...),
@@ -2616,7 +2495,6 @@ async def verify(
         rate_limit_remaining    = rep["remaining"] - 1,
     )
 
-
 def _fail_response(
     project_id: str,
     submitter:  str,
@@ -2678,9 +2556,7 @@ def _fail_response(
         rate_limit_remaining    = max(0, MAX_HOURLY - len(_rl_attempts.get(submitter.lower(), []))),
     )
 
-
-# ── POST /retirement-certificate ──────────────────────────────────────────────
-
+# post /retirement-certificate
 @app.post("/retirement-certificate")
 async def retirement_certificate(
     token_id:     int            = Form(...),
@@ -2715,16 +2591,11 @@ async def retirement_certificate(
         log.error("Certificate generation failed: %s", exc)
         raise HTTPException(status_code=500, detail=f"Certificate error: {exc}")
 
-
-# ── GET /marketplace ──────────────────────────────────────────────────────────
-
+# get /marketplace
 @app.get("/marketplace")
 async def marketplace() -> Dict[str, Any]:
-    """
-    Return on-chain approved project data for the frontend marketplace.
-    Reads from ProjectRegistry on QIE testnet.
-    Falls back to empty list if oracle not configured.
-    """
+    # return on-chain approved project data for the frontend marketplace
+
     if not _oracle._ready or not _oracle._w3:
         return {"credits": [], "source": "oracle_not_configured"}
 
@@ -2766,9 +2637,7 @@ async def marketplace() -> Dict[str, Any]:
         log.error("Marketplace query failed: %s", exc)
         return {"credits": [], "source": "error", "error": str(exc)}
 
-
-# ── Developer read API (for third-party integrations) ─────────────────────────
-
+# developer read api (for third-party integrations)
 # Minimal ABIs reused by the public read endpoints
 _CREDIT_READ_ABI = [
     {"inputs": [], "name": "totalMinted", "outputs": [{"type": "uint256"}],
@@ -2793,10 +2662,10 @@ _ORACLE_READ_ABI = [
      "stateMutability": "view", "type": "function"},
 ]
 
-
 @app.get("/api/stats")
 async def api_stats() -> Dict[str, Any]:
-    """Public live protocol stats, read straight from the QIE testnet contracts."""
+    # public live protocol stats, read straight from the QIE testnet contracts
+
     if not _oracle._ready or not _oracle._w3:
         return {"error": "oracle not configured"}
     from web3 import Web3
@@ -2824,13 +2693,10 @@ async def api_stats() -> Dict[str, Any]:
     except Exception as exc:
         return {"error": str(exc)}
 
-
 @app.get("/api/credit/{token_id}")
 async def api_credit(token_id: int) -> Dict[str, Any]:
-    """
-    Public credential for one credit — lets any external app verify a TerraLedger
-    credit: on-chain metadata + AI audit (from IPFS) + document-integrity hash.
-    """
+    # public credential for one credit — lets any external app verify a TerraLedger
+
     if not _oracle._ready or not _oracle._w3:
         return {"error": "oracle not configured"}
     from web3 import Web3
@@ -2891,22 +2757,10 @@ async def api_credit(token_id: int) -> Dict[str, Any]:
     except Exception as exc:
         return {"error": str(exc), "token_id": token_id}
 
-
 @app.get("/document-access")
 async def document_access(project_id: str, wallet: str) -> Dict[str, Any]:
-    """
-    QIE Pass-gated deep document access (Phase 2).
+    # qIE Pass-gated deep document access (Phase 2)
 
-    Returns REDACTED extended documentation for a verified credit, but only to a
-    wallet that holds an on-chain access grant (CarbonOracle.requestDocumentAccess,
-    which itself requires a QIE Pass identity). The raw private deed is never
-    served — only redacted, PII-minimised fields plus the tamper-proof doc hash.
-
-    Flow for a corporate buyer:
-      1. Verify identity on QIE Pass (MockQIEPass.verifyMe)
-      2. Call CarbonOracle.requestDocumentAccess(projectId)  → on-chain grant
-      3. Call this endpoint → receive redacted extended docs
-    """
     granted = _oracle.has_document_access(project_id, wallet)
     if granted is None:
         raise HTTPException(
@@ -2946,8 +2800,7 @@ async def document_access(project_id: str, wallet: str) -> Dict[str, Any]:
         "network":             _network_label(),
     }
 
-
-# ── QIE Pass — real identity verification (REST API partner flow) ───────────────
+# qie pass — real identity verification (rest api partner flow)
 # These drive the production QIE Pass flow (pass-api.qie.digital). The frontend
 # calls them to verify a corporate buyer's real identity (with consent + ZK/
 # selective disclosure) instead of the testnet on-chain MockQIEPass self-attest.
@@ -2958,40 +2811,26 @@ class QIEPassVerifyBody(BaseModel):
     # lastName, age_over_21 (country/email/fullName are NOT valid claim names).
     claims:     List[str] = ["firstName", "lastName", "age_over_21"]
 
-
 class QIEPassClaimBody(BaseModel):
     request_id: str
     wallet:     Optional[str] = None   # connected wallet to mark verified on-chain
 
-
 @app.post("/qiepass/verify-request")
 async def qiepass_verify_request(body: QIEPassVerifyBody) -> Dict[str, Any]:
-    """
-    Step 1 — create a QIE Pass verification request for a buyer. If they are
-    already KYC-verified the response is 'pending_consent'; otherwise it carries
-    'pending_kyc' + a redirectUrl to QIE's KYC onboarding.
-    """
-    return _qiepass.create_verification_request(body.identifier, body.claims)
+    # step 1 — create a QIE Pass verification request for a buyer. If they are
 
+    return _qiepass.create_verification_request(body.identifier, body.claims)
 
 @app.get("/qiepass/status/{request_id}")
 async def qiepass_status(request_id: str) -> Dict[str, Any]:
-    """Step 2 — poll until status is 'consent_given' and vcMetadata.ready is true."""
-    return _qiepass.get_request_status(request_id)
+    # step 2 — poll until status is 'consent_given' and vcMetadata.ready is true
 
+    return _qiepass.get_request_status(request_id)
 
 @app.post("/qiepass/claim")
 async def qiepass_claim(body: QIEPassClaimBody) -> Dict[str, Any]:
-    """
-    Step 3 — claim the verified credential (selective-disclosure claims + ECDSA
-    proof). `fully_valid` is true only if signature + notExpired + notRevoked all
-    hold. TerraLedger uses the returned identity (org/name/country) on the
-    retirement certificate and to gate corporate-buyer document access.
+    # step 3 — claim the verified credential (selective-disclosure claims + ECDSA
 
-    On a cryptographically valid claim, the verified identity is mirrored on-chain
-    (oracle calls MockQIEPass.issueIdentity) so the contract document-access gate
-    reflects REAL QIE Pass KYC — never public self-attestation.
-    """
     data = _qiepass.claim_and_verify(body.request_id)
     if data.get("fully_valid") and body.wallet:
         claims = data.get("requestedClaims") or {}
@@ -3000,9 +2839,7 @@ async def qiepass_claim(body: QIEPassClaimBody) -> Dict[str, Any]:
         data["onchain_attestation_tx"] = _oracle.attest_identity(body.wallet, name, org)
     return data
 
-
-# ── Entry point ───────────────────────────────────────────────────────────────
-
+# entry point
 if __name__ == "__main__":
     print()
     print("  TerraLedger AI Backend")

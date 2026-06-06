@@ -22,7 +22,7 @@ html{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15
 body{min-height:100vh;overflow-x:hidden}
 a{color:var(--blue);text-decoration:none}
 
-/* NAV */
+/* nav */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
   padding:0 28px;height:60px;background:rgba(4,5,7,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
 .nav-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.02em;cursor:pointer}
@@ -55,11 +55,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .wm-item.danger{color:var(--red)}
 .wm-item.danger:hover{background:rgba(255,69,96,0.08)}
 
-/* PAGES */
+/* pages */
 .page{display:none;padding-top:60px;min-height:100vh}
 .page.active{display:block}
 
-/* LANDING */
+/* landing */
 .hero{text-align:center;padding:90px 24px 70px;background:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,229,122,0.08) 0%, transparent 70%)}
 .hero-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;border:1px solid rgba(0,229,122,0.25);
   background:rgba(0,229,122,0.06);font-size:12px;font-weight:500;color:var(--green);margin-bottom:26px;font-family:var(--mono);letter-spacing:.02em}
@@ -109,7 +109,7 @@ h1 span{color:var(--green)}
 .mc-desc{font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:12px}
 .mc-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;background:var(--surface2);color:var(--muted2);border:1px solid var(--border);font-family:var(--mono)}
 
-/* FORMS */
+/* forms */
 .submit-layout,.verify-layout{max-width:760px;margin:0 auto;padding:40px 24px}
 .market-layout{max-width:1140px;margin:0 auto;padding:40px 24px}
 .page-header{margin-bottom:28px}
@@ -152,7 +152,7 @@ input[type=file]{display:none}
 .submit-btn.danger:hover{background:var(--red);filter:brightness(1.12)}
 .lbl-opt{color:var(--muted);font-weight:400;font-size:.85em}
 
-/* VERIFY */
+/* verify */
 .processing-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:34px 28px;text-align:center;margin-bottom:20px}
 .processing-ring{width:68px;height:68px;border-radius:50%;margin:0 auto 18px;border:3px solid var(--border);border-top-color:var(--green);animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -223,7 +223,7 @@ button:disabled{opacity:.6;cursor:wait}
 .tx-link{color:var(--blue);cursor:pointer;font-size:11px;white-space:nowrap}
 .report-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--muted2);max-height:240px;overflow-y:auto;margin-top:14px;white-space:pre-wrap}
 
-/* MARKETPLACE */
+/* marketplace */
 .market-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:16px}
 .market-tabs{display:flex;gap:8px;flex-wrap:wrap}
 .filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;transition:all .15s;font-family:var(--font)}
@@ -257,7 +257,7 @@ button:disabled{opacity:.6;cursor:wait}
 .view-cred{font-size:11px;color:var(--blue);cursor:pointer}
 .empty-state{grid-column:1/-1;text-align:center;color:var(--muted);padding:50px 20px;font-size:14px}
 
-/* MODALS */
+/* modals */
 .modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(4,5,7,0.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.show{display:flex;animation:fadeIn .2s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -887,11 +887,9 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
 <div class="toast" id="toast"></div>
 
 <script>
-// ── PRODUCTION: set this to your Render backend URL after deploying ───────────
+// production: set this to your render backend url after deploying
 window.TERRALEDGER_API = 'https://terraledger-kl54.onrender.com'
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ── Config — QIE Mainnet (chain 1990). Addresses come from deployments/1990.json. ──
+// // ── config — qie mainnet (chain 1990). addresses come from deployments/1990.json.
 const AI_BACKEND = (() => {
   const strip = u => u.replace(/\/+$/,'')
   try {
@@ -961,7 +959,7 @@ const QIEPASS_ABI = [
   'function getIdentity(address wallet) view returns (string fullName, string organization, uint256 verifiedAt, bool verified)',
 ]
 
-// ── State ──
+// state
 let provider = null, signer = null, walletAddr = null
 let uploadedFile = null, verificationResult = null
 let _credits = [], _marketTab = 'all', _listTokenId = null
@@ -995,7 +993,7 @@ const explorerTx = h => `${EXPLORER}/tx/${h}`
 const explorerToken = t => `${EXPLORER}/token/${ADDRESSES.CarbonCredit}?a=${t}`
 const fmtQUSDC = raw => Number(ethers.utils.formatUnits(raw, QUSDC_DECIMALS)).toLocaleString(undefined,{maximumFractionDigits:2})
 
-// ── Nav ──
+// nav
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
   document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'))
@@ -1023,7 +1021,7 @@ function startPipeAnim(){
 function stopPipeAnim(){ clearInterval(_pipeTimer); _pipeTimer=null
   document.querySelectorAll('#verify-empty .pipe-step,#verify-empty .pipe-ind').forEach(x=>x.classList.remove('scan')) }
 
-// ── Wallet connect ──
+// wallet connect
 async function connectWallet(){
   if(!window.ethereum){ showToast('No wallet found. Install MetaMask / QIE Wallet.','error'); return }
   localStorage.removeItem('tl_wallet_off')   // clear disconnect flag up front
@@ -1080,7 +1078,7 @@ function disconnectWallet(){
 // close wallet menu on outside click
 document.addEventListener('click',e=>{ const w=document.querySelector('.wallet-wrap'); const m=document.getElementById('wallet-menu'); if(m&&m.classList.contains('show')&&w&&!w.contains(e.target)) m.classList.remove('show') })
 
-// ── Live stats ──
+// live stats
 function countUp(el,target,fmt){
   if(target==null||isNaN(target)){ el.textContent='—'; return }
   const dur=1000, t0=performance.now()
@@ -1099,7 +1097,7 @@ async function loadStats(){
   }catch(_){}
 }
 
-// ── Project submission ──
+// project submission
 function addGpsPoint(){
   const c=document.getElementById('gps-coords'); const n=c.querySelectorAll('.coord-row').length+1
   const row=document.createElement('div'); row.className='coord-row'
@@ -1281,7 +1279,7 @@ function renderBlocked(status, detail){
   showToast(banned?'Wallet banned — too many fraud strikes':'Wallet rate-limited — cooldown active','error')
 }
 
-// ── Marketplace ──
+// marketplace
 async function loadMarketplace(){
   const grid=document.getElementById('credits-grid')
   grid.innerHTML=Array(6).fill('<div class="skel-card"><div class="skel" style="height:18px;width:55%;margin-bottom:16px"></div><div class="skel" style="height:11px;width:100%;margin-bottom:9px"></div><div class="skel" style="height:11px;width:85%;margin-bottom:9px"></div><div class="skel" style="height:11px;width:70%;margin-bottom:22px"></div><div class="skel" style="height:30px;width:100%"></div></div>').join('')
@@ -1474,7 +1472,7 @@ async function getFaucet(){
   finally{ done() }
 }
 
-// ── Credential modal ──
+// credential modal
 // Dedicated AI audit report viewer (opens the IPFS-pinned report cleanly)
 async function openAuditModal(tokenId,ipfsCid){
   const body=document.getElementById('audit-modal-body')
@@ -1591,7 +1589,7 @@ async function requestDeepDocs(projectId,btn){
   finally{ done() }
 }
 
-// ── QIE Pass — real REST identity flow + on-chain mirror ──
+// qie pass — real rest identity flow + on-chain mirror
 let _qpRequestId=null, _qpPoll=null
 async function updateQiePassChip(){
   const chip=document.getElementById('qiepass-chip'), st=document.getElementById('qiepass-status')
@@ -1676,7 +1674,7 @@ async function qpOnchainVerify(btn){
   }catch(e){ done(); showToast('Verify failed: '+(e.reason||e.message||e).toString().slice(0,70),'error') }
 }
 
-// ── Modals, toasts, boot ──
+// modals, toasts, boot
 function openModal(id){ document.getElementById(id).classList.add('show') }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); if(id==='qiepass-modal') clearInterval(_qpPoll) }
 
