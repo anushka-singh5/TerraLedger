@@ -106,8 +106,6 @@ test_docs/           sample deeds for testing
 addresses/           deployed contract addresses
 ```
 
-## Notes
+## misc
 
-- Backend holds the oracle key, never user funds
-- Wallet ownership proved via EIP-191 signed message on /verify
-- `.env` is gitignored — rotate keys after hackathon
+backend never touches user funds, only the oracle key for minting. wallet ownership check is EIP-191 on `/verify`. don't commit `.env`.
