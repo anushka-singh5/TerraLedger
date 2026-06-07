@@ -129,14 +129,14 @@ RPC: `https://rpc1mainnet.qie.digital/` · Explorer: `https://mainnet.qie.digita
 | TCCMarketplace (per-listing projectId) | `0x0b75BeDf2026A060187D3C8D6d68a8E7dd161f7e` |
 | RetirementCertificate (TLRET — soulbound) | `0x39A7AeBBaA5d159Cc20bBE27c1B1ea55162FE123` |
 
-### Historical txns (v6 contracts)
+### Live txns (v7 contracts)
 
-| | tx |
+| Action | tx |
 |---|---|
-| Mint #0 (score 97) | `0x820092c9e6153da88f8662d00f697340cc0d1a9628d2a49ab651d9f7aa17bd1d` |
-| TCC listed on marketplace | `0x507686319d2e4eb91e5fabb740a3f8c36489711348929a7f4116c971a321b471` |
-| TCC purchased | `0x317714cc2c6553e522da815bb902e61647804c0b3cf0a1d66183b689759fccc0` |
-| TCC retired · TLRET cert #3 minted | `0x4f132bf93af8bbb7ed09206a5fb07977b27b6f44ab5d6f326e67e06463a65e62` |
+| Mint Credit #0 (AI score 98 · 25,000 TCC) | `0xe8c94ded7ec96daf4a708733616967d706df8d6bc6d4107b4e6ee2de4b514eac` |
+| List TCC on marketplace | `0x7bb6cd83b63c3a8d6ad060be1506688ae132b285894351807ded955b4079be76` |
+| Buy 500 TCC from marketplace | `0x3eec35c3495217af9b8a5fbc244e426b9bf28a7d8fa1c5b86f97520286762e92` |
+| Retire 24,500 TCC · TLRET cert issued | `0x5a0057dbe846ca3b8da144719969dc664c608633048add6670d08dfb86c30192` |
 
 ---
 

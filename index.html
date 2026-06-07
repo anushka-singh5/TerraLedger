@@ -855,32 +855,32 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
     <div class="section-title">Live on-chain — verify yourself</div>
     <p class="section-sub">Real transactions on QIE Mainnet · anyone can check these hashes</p>
     <div class="proof-grid">
-      <a class="proof-txn mint" href="https://mainnet.qie.digital/tx/0x820092c9e6153da88f8662d00f697340cc0d1a9628d2a49ab651d9f7aa17bd1d" target="_blank" rel="noopener">
+      <a class="proof-txn mint" href="https://mainnet.qie.digital/tx/0xe8c94ded7ec96daf4a708733616967d706df8d6bc6d4107b4e6ee2de4b514eac" target="_blank" rel="noopener">
         <span class="ptag mint">Mint ✓</span>
-        <span class="pdesc">Credit #0 · AI score 97/100</span>
-        <span class="phash">0x820092…bd1d</span>
+        <span class="pdesc">Credit #0 · AI score 98/100 · 25,000 TCC</span>
+        <span class="phash">0xe8c94d…4eac</span>
         <span class="plink">QIE Explorer ↗</span>
       </a>
-      <a class="proof-txn list" href="https://mainnet.qie.digital/tx/0x507686319d2e4eb91e5fabb740a3f8c36489711348929a7f4116c971a321b471" target="_blank" rel="noopener">
+      <a class="proof-txn list" href="https://mainnet.qie.digital/tx/0x7bb6cd83b63c3a8d6ad060be1506688ae132b285894351807ded955b4079be76" target="_blank" rel="noopener">
         <span class="ptag list">Listed ◈</span>
-        <span class="pdesc">200 TCC listed on marketplace</span>
-        <span class="phash">0x507686…b471</span>
+        <span class="pdesc">TCC listed on marketplace</span>
+        <span class="phash">0x7bb6cd…be76</span>
         <span class="plink">QIE Explorer ↗</span>
       </a>
-      <a class="proof-txn buy" href="https://mainnet.qie.digital/tx/0x317714cc2c6553e522da815bb902e61647804c0b3cf0a1d66183b689759fccc0" target="_blank" rel="noopener">
+      <a class="proof-txn buy" href="https://mainnet.qie.digital/tx/0x3eec35c3495217af9b8a5fbc244e426b9bf28a7d8fa1c5b86f97520286762e92" target="_blank" rel="noopener">
         <span class="ptag buy">Bought ✦</span>
-        <span class="pdesc">TCC purchased from marketplace</span>
-        <span class="phash">0x317714…ccc0</span>
+        <span class="pdesc">500 TCC purchased from marketplace</span>
+        <span class="phash">0x3eec35…2e92</span>
         <span class="plink">QIE Explorer ↗</span>
       </a>
-      <a class="proof-txn retire" href="https://mainnet.qie.digital/tx/0x4f132bf93af8bbb7ed09206a5fb07977b27b6f44ab5d6f326e67e06463a65e62" target="_blank" rel="noopener">
+      <a class="proof-txn retire" href="https://mainnet.qie.digital/tx/0x5a0057dbe846ca3b8da144719969dc664c608633048add6670d08dfb86c30192" target="_blank" rel="noopener">
         <span class="ptag retire">Retired ⊘</span>
-        <span class="pdesc">TCC burned · TLRET cert #3 issued</span>
-        <span class="phash">0x4f132b…5e62</span>
+        <span class="pdesc">24,500 TCC burned · TLRET cert issued</span>
+        <span class="phash">0x5a0057…0192</span>
         <span class="plink">QIE Explorer ↗</span>
       </a>
     </div>
-    <div class="gate-line" style="margin-top:28px">This is the complete on-chain history of TerraLedger on QIE Mainnet. <strong>1 credit minted · TCC listed · TCC purchased · TCC retired + TLRET cert issued.</strong> Every action is permanent and publicly verifiable.</div>
+    <div class="gate-line" style="margin-top:28px">This is the complete on-chain history of TerraLedger on QIE Mainnet. <strong>25,000 TCC minted · listed · 500 purchased · 25,000 t CO₂ fully retired.</strong> Every action is permanent and publicly verifiable.</div>
   </div>
 
   <!-- FRAUD ACTIVITY LOG -->
@@ -1273,6 +1273,11 @@ const TCC_MKT_ABI = [
   'function totalVolume() view returns (uint256)',
   'function totalSales() view returns (uint256)',
   'function listings(uint256) view returns (address seller, uint256 amountLeft, uint256 pricePerTonne, bytes32 projectId, bool active)',
+]
+const TLRET_ABI = [
+  'function getWalletCerts(address wallet) view returns (uint256[])',
+  'function retirements(uint256 tokenId) view returns (address retiredBy, uint256 amount, bytes32 projectId, uint256 timestamp)',
+  'function totalMinted() view returns (uint256)',
 ]
 
 let provider = null, signer = null, walletAddr = null
@@ -1806,9 +1811,75 @@ function scoreBadge(c){
   const col=c.score>=85?'var(--green)':c.score>=70?'var(--amber)':'var(--red)'
   return `<span class="ai-score-badge" title="Score read on-chain from the NFT" style="color:${col};border-color:${col}33;background:${col}14">AI ${c.score}/100 ⛓</span>`
 }
+async function renderRetiredTab(){
+  const grid=document.getElementById('credits-grid')
+  grid.style.display=''
+  document.getElementById('tcc-market-panel').style.display='none'
+
+  // TLCERT cards that are retired or fully offset
+  const tlcertCards=_credits.filter(c=>c.retired||c.fullyOffset)
+
+  // TLRET soulbound certs owned by connected wallet
+  let tlretCards=[]
+  if(walletAddr){
+    try{
+      const rp=readProvider()
+      const rc=new ethers.Contract(ADDRESSES.RetirementCertificate,TLRET_ABI,rp)
+      const tokenIds=await rc.getWalletCerts(walletAddr)
+      tlretCards=await Promise.all(tokenIds.map(async id=>{
+        const r=await rc.retirements(id)
+        return {tokenId:Number(id),amount:Number(r.amount),projectId:r.projectId,timestamp:Number(r.timestamp)}
+      }))
+    }catch(_){}
+  }
+
+  if(!tlcertCards.length&&!tlretCards.length){
+    grid.innerHTML=`<div class=”empty-state”>No retired certificates. Retire TCC to get your offset certificate.</div>`
+    return
+  }
+
+  const tlcertHtml=tlcertCards.map(c=>{
+    const statusCls=c.retired?'retired':'fully-offset'
+    const statusTxt=c.retired?'RETIRED ⊘':'FULLY OFFSET ✓'
+    return `<div class=”credit-card”>
+      <div class=”cc-header”><div><div class=”cc-name”>${c.name?c.name:('Credit #'+c.tokenId)}</div>
+        <div class=”cc-id”>Project ${c.projectId.slice(0,10)}…${c.projectId.slice(-4)}</div>
+        <div class=”cc-status ${statusCls}”>${statusTxt}</div></div>${scoreBadge(c)}</div>
+      <div class=”cc-meta”>
+        <div class=”cc-meta-row”><span class=”cc-meta-label”>Tonnes CO₂</span><span class=”cc-meta-val”>${Number(c.tonnes).toLocaleString()} t</span></div>
+        <div class=”cc-meta-row”><span class=”cc-meta-label”>Vintage</span><span class=”cc-meta-val”>${c.vintage}</span></div>
+      </div>
+      <div class=”cc-footer”><div class=”cc-links”>
+        <span class=”view-cred” onclick=”openCredModal('${c.tokenId}','${c.projectId}','${c.ipfsCid}')”>Credential ↗</span>
+        <a class=”view-cred” href=”${explorerToken(c.tokenId)}” target=”_blank”>Explorer ↗</a>
+      </div></div></div>`
+  }).join('')
+
+  const tlretHtml=tlretCards.map(r=>{
+    const date=r.timestamp?new Date(r.timestamp*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):''
+    const pid=r.projectId?r.projectId.slice(0,10)+'…'+r.projectId.slice(-4):''
+    return `<div class=”credit-card”>
+      <div class=”cc-header”><div>
+        <div class=”cc-name”>Retirement Cert #${r.tokenId}</div>
+        <div class=”cc-id”>Project ${pid}</div>
+        <div class=”cc-status retired”>CO₂ OFFSET ⊘</div>
+      </div><span class=”ai-score-badge” style=”color:var(--blue);border-color:#4f8cff33;background:#4f8cff14”>TLRET #${r.tokenId}</span></div>
+      <div class=”cc-meta”>
+        <div class=”cc-meta-row”><span class=”cc-meta-label”>Tonnes Retired</span><span class=”cc-meta-val”>${Number(r.amount).toLocaleString()} t CO₂</span></div>
+        <div class=”cc-meta-row”><span class=”cc-meta-label”>Date</span><span class=”cc-meta-val”>${date}</span></div>
+      </div>
+      <div class=”cc-footer”><div class=”cc-links”>
+        <span style=”font-size:11px;color:var(--muted)”>Soulbound · non-transferable</span>
+      </div></div></div>`
+  }).join('')
+
+  grid.innerHTML=tlcertHtml+tlretHtml
+}
+
 function renderMarketplace(){
   const grid=document.getElementById('credits-grid')
   if(_marketTab==='tcc'){ loadTCCMarketplace(); return }
+  if(_marketTab==='retired'){ renderRetiredTab(); return }
   grid.style.display=''
   document.getElementById('tcc-market-panel').style.display='none'
   const me=(walletAddr||'').toLowerCase()
