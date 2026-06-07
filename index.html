@@ -1813,13 +1813,10 @@ function scoreBadge(c){
 }
 async function renderRetiredTab(){
   const grid=document.getElementById('credits-grid')
-  grid.style.display=''
+  grid.style.display='block'
   document.getElementById('tcc-market-panel').style.display='none'
 
-  // TLCERT cards that are retired or fully offset
   const tlcertCards=_credits.filter(c=>c.retired||c.fullyOffset)
-
-  // TLRET soulbound certs owned by connected wallet
   let tlretCards=[]
   if(walletAddr){
     try{
@@ -1881,7 +1878,25 @@ async function renderRetiredTab(){
       </div></div>`
   }).join('')
 
-  grid.innerHTML=tlcertHtml+tlretHtml
+  const sectionHead=(label,sub,isFirst)=>`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px${isFirst?'':';margin-top:36px'}">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${label}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${sub}</div>
+      </div>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>`
+
+  let html=''
+  if(tlcertCards.length){
+    html+=sectionHead('Project Certificates','TLCERT — one per verified project · flips to Fully Offset when all TCC retire',true)
+    html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px">${tlcertHtml}</div>`
+  }
+  if(tlretCards.length){
+    html+=sectionHead('My Offset Records','TLRET — soulbound proof of retirement · one cert per retire() call',!tlcertCards.length)
+    html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px">${tlretHtml}</div>`
+  }
+  grid.innerHTML=html
 }
 
 function renderMarketplace(){
