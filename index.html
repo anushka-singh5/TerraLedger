@@ -1149,7 +1149,6 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 <script>
 // production: set this to your render backend url after deploying
 window.TERRALEDGER_API = 'https://terraledger-kl54.onrender.com'
-// config — QIE Mainnet (chain 1990)
 const AI_BACKEND = (() => {
   const strip = u => u.replace(/\/+$/,'')
   try {
@@ -1258,7 +1257,6 @@ const TCC_MKT_ABI = [
   'function listings(uint256) view returns (address seller, uint256 amountLeft, uint256 pricePerTonne, bytes32 projectId, bool active)',
 ]
 
-// state
 let provider = null, signer = null, walletAddr = null
 let uploadedFile = null, verificationResult = null
 let _credits = [], _marketTab = 'all', _listTokenId = null
@@ -1303,7 +1301,6 @@ const explorerTx = h => `${EXPLORER}/tx/${h}`
 const explorerToken = t => `${EXPLORER}/token/${ADDRESSES.CarbonCredit}?a=${t}`
 const fmtQUSDC = raw => Number(ethers.utils.formatUnits(raw, QUSDC_DECIMALS)).toLocaleString(undefined,{maximumFractionDigits:2})
 
-// nav
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
   document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'))
@@ -1331,7 +1328,6 @@ function startPipeAnim(){
 function stopPipeAnim(){ clearInterval(_pipeTimer); _pipeTimer=null
   document.querySelectorAll('#verify-empty .pipe-step,#verify-empty .pipe-ind').forEach(x=>x.classList.remove('scan')) }
 
-// wallet connect
 async function connectWallet(){
   if(!window.ethereum){ showToast('No wallet found. Install MetaMask / QIE Wallet.','error'); return }
   localStorage.removeItem('tl_wallet_off')   // clear disconnect flag up front
@@ -1391,7 +1387,6 @@ function disconnectWallet(){
 // close wallet menu on outside click
 document.addEventListener('click',e=>{ const w=document.querySelector('.wallet-wrap'); const m=document.getElementById('wallet-menu'); if(m&&m.classList.contains('show')&&w&&!w.contains(e.target)) m.classList.remove('show') })
 
-// live stats
 function countUp(el,target,fmt){
   if(target==null||isNaN(target)){ el.textContent='—'; return }
   const dur=1000, t0=performance.now()
@@ -1437,7 +1432,6 @@ async function loadFraudLog(){
     const oracle=new ethers.Contract(ADDRESSES.CarbonOracle,ORACLE_ABI,readProvider())
     const log=await oracle.getFraudLog()
     if(!log||log.length===0){ el.innerHTML='<div class="fraud-empty">No hard-fail fraud attempts on-chain yet.</div>'; return }
-    // Show newest first
     const sorted=[...log].reverse()
     el.innerHTML=sorted.map(fr=>{
       const wallet=fr.wallet||'unknown'
@@ -1459,16 +1453,12 @@ async function loadFraudLog(){
   }
 }
 
-// project submission
 function resetSubmitForm(){
-  // Clear all text/number/select fields
   ['f-name','f-id','f-ha','f-tonnes','f-vintage','f-country'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''})
   const type=document.getElementById('f-type'); if(type) type.value='forest'
   const biome=document.getElementById('f-biome'); if(biome) biome.value='tropical'
-  // Reset GPS rows back to 3 blank rows
   const gc=document.getElementById('gps-coords')
   if(gc){ gc.innerHTML=['P1','P2','P3'].map(l=>`<div class="coord-row"><span class="coord-label">${l}</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>`).join('') }
-  // Clear file upload
   uploadedFile=null
   const ua=document.getElementById('upload-area'); if(ua) ua.classList.remove('has-file')
   const fn=document.getElementById('upload-filename'); if(fn) fn.textContent=''
@@ -1680,7 +1670,6 @@ function renderBlocked(status, detail){
   showToast(banned?'Wallet banned — too many fraud strikes':'Wallet rate-limited — cooldown active','error')
 }
 
-// marketplace
 async function loadMarketplace(){
   // Default to TCC tab — that's the real carbon credit view
   if(_marketTab==='all'||_marketTab==='tcc'||!_marketTab){
@@ -1917,12 +1906,10 @@ async function confirmRetire(){
 async function updateQusdcBal(){
   const el=document.getElementById('qusdc-bal'); if(!walletAddr){ el.textContent='QUSDC: connect wallet'; return }
   try{ const q=new ethers.Contract(ADDRESSES.QUSDC,QUSDC_ABI,readProvider()); const b=await q.balanceOf(walletAddr); el.textContent='QUSDC: '+fmtQUSDC(b) }catch(_){}
-  // TCC balance
   const tel=document.getElementById('tcc-bal'); if(!tel) return
   try{ const t=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,readProvider()); const b=await t.balanceOf(walletAddr); tel.textContent='TCC: '+Number(b).toLocaleString()+' t CO₂' }catch(_){ tel.textContent='TCC: —' }
 }
 
-// ── TCC Credit Marketplace ──────────────────────────────────────────────────
 async function loadTCCMarketplace(){
   const panel=document.getElementById('tcc-market-content')
   panel.innerHTML='<div class="empty-state">Loading TCC listings…</div>'
@@ -2054,7 +2041,6 @@ async function openRetireModal(projectId){
   const ZERO32='0x'+('0'.repeat(64))
   const pidOk = projectId && projectId!=='undefined' && projectId!=='' && projectId!==ZERO32
   const active=_credits.filter(c=>!c.retired&&!c.fullyOffset)
-  // Load per-project caps so we can enforce retire limits
   await _loadProjectCaps(active.map(c=>c.projectId))
   const sel=document.getElementById('tcc-retire-project')
   const field=document.getElementById('tcc-retire-project-field')
@@ -2106,7 +2092,6 @@ async function confirmRetireTCC(){
     showToast(`${qty.toLocaleString()} t CO₂ retired ✓ · generating PDF certificate…`,'success')
     updateQusdcBal(); loadTCCMarketplace(); loadMarketplace()
 
-    // Parse TLRET token ID from receipt logs
     let tlretTokenId=0
     try{
       const TLRET_EVENT_ABI=['event RetirementCertMinted(uint256 indexed tokenId,address indexed retiredBy,uint256 amount,bytes32 indexed projectId)']
@@ -2115,12 +2100,10 @@ async function confirmRetireTCC(){
       if(log) tlretTokenId=Number(iface.parseLog(log).args.tokenId)
     }catch(_){}
 
-    // Find project name + vintage from loaded certificates
     const proj=_credits.find(c=>c.projectId===_tccRetireProjectId)||{}
     const projectName=proj.name||bytes32ToStr(_tccRetireProjectId)||('Project '+(_tccRetireProjectId.slice(0,10)+'…'))
     const vintage=proj.vintage||new Date().getFullYear()
 
-    // Call backend to generate PDF offset certificate
     try{
       const form=new FormData()
       form.append('token_id',String(tlretTokenId))
@@ -2233,8 +2216,6 @@ async function getFaucet(){
   finally{ done() }
 }
 
-// credential modal
-// Dedicated AI audit report viewer (opens the IPFS-pinned report cleanly)
 async function openAuditModal(tokenId,ipfsCid){
   const body=document.getElementById('audit-modal-body')
   document.getElementById('audit-modal-title').textContent=`AI Audit Report · Credit #${tokenId}`
@@ -2350,7 +2331,6 @@ async function requestDeepDocs(projectId,btn){
   finally{ done() }
 }
 
-// qie pass — real rest identity flow + on-chain mirror
 let _qpRequestId=null, _qpPoll=null
 async function updateQiePassChip(){
   const chip=document.getElementById('qiepass-chip'), st=document.getElementById('qiepass-status')
@@ -2435,7 +2415,6 @@ async function qpOnchainVerify(btn){
   }catch(e){ done(); showToast('Verify failed: '+(e.reason||e.message||e).toString().slice(0,70),'error') }
 }
 
-// modals, toasts, boot
 function openModal(id){ document.getElementById(id).classList.add('show') }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); if(id==='qiepass-modal') clearInterval(_qpPoll) }
 
@@ -2566,10 +2545,6 @@ function initFlowScroll(){
   window.addEventListener('resize',update); update()
 }
 initFlowScroll()
-
-// ═══════════════════════════════════════════════════════════════
-// VISUAL ENHANCEMENTS — particles · nav · stagger · stat flash
-// ═══════════════════════════════════════════════════════════════
 
 // Nav scroll shadow
 window.addEventListener('scroll', () => {
