@@ -61,7 +61,7 @@ contract ProjectRegistry is Ownable {
         int64 maxLat,
         int64 maxLng
     ) external {
-        require(projects[id].submittedAt == 0, "ProjectRegistry: ID already exists");
+        require(projects[id].submittedAt == 0, "project ID already registered");
         require(bytes(polygonGeoJSON).length > 0, "ProjectRegistry: empty polygon");
         require(areaHectares > 0, "ProjectRegistry: zero area");
         require(claimedTonnes > 0, "ProjectRegistry: zero tonnes");

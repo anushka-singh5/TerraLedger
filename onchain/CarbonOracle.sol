@@ -119,9 +119,9 @@ contract CarbonOracle is Ownable {
     constructor(address registry_, address creditContract_, address backend_)
         Ownable(msg.sender)
     {
-        require(registry_       != address(0), "CarbonOracle: zero registry");
+        require(registry_ != address(0), "CarbonOracle: zero registry");
         require(creditContract_ != address(0), "CarbonOracle: zero credit contract");
-        require(backend_        != address(0), "CarbonOracle: zero backend");
+        require(backend_ != address(0), "CarbonOracle: zero backend");
 
         registry       = ProjectRegistry(registry_);
         creditContract = CarbonCredit(creditContract_);
@@ -209,12 +209,12 @@ contract CarbonOracle is Ownable {
         uint256           tonnes,
         bytes32           docHash
     ) external onlyAuthorizedOracle {
-        require(!finalized[projectId],                "CarbonOracle: already finalized");
-        require(!hasAttested[projectId][msg.sender],  "CarbonOracle: oracle already attested");
-        require(gpsScore       <= MAX_GPS,            "CarbonOracle: gpsScore out of range");
-        require(ownershipScore <= MAX_OWNERSHIP,      "CarbonOracle: ownershipScore out of range");
-        require(anomalyScore   <= MAX_ANOMALY,        "CarbonOracle: anomalyScore out of range");
-        require(satelliteScore <= MAX_SATELLITE,      "CarbonOracle: satelliteScore out of range");
+        require(!finalized[projectId], "CarbonOracle: already finalized");
+        require(!hasAttested[projectId][msg.sender], "CarbonOracle: already attested");
+        require(gpsScore <= MAX_GPS, "CarbonOracle: gpsScore out of range");
+        require(ownershipScore <= MAX_OWNERSHIP, "CarbonOracle: ownershipScore out of range");
+        require(anomalyScore <= MAX_ANOMALY, "CarbonOracle: anomalyScore out of range");
+        require(satelliteScore <= MAX_SATELLITE, "CarbonOracle: satelliteScore out of range");
 
         ProjectRegistry.Project memory project = registry.getProject(projectId);
         require(project.submittedAt != 0, "CarbonOracle: project not in registry");

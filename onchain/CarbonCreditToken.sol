@@ -67,7 +67,7 @@ contract CarbonCreditToken is ERC20, Ownable {
         require(amount > 0, "TCC: zero amount");
 
         _burn(msg.sender, amount);
-        _totalRetiredTonnes        += amount;
+        _totalRetiredTonnes += amount;
         retiredByProject[projectId] += amount;
 
         _retirements.push(RetirementRecord({

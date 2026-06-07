@@ -81,7 +81,7 @@ contract CarbonCredit is ERC721, Ownable {
         internal override returns (address)
     {
         address from = _ownerOf(tokenId);
-        require(from == address(0), "CarbonCredit: certificate is soulbound - non-transferable");
+        require(from == address(0), "CarbonCredit: soulbound - no transfers");
         return super._update(to, tokenId, auth);
     }
 
@@ -160,6 +160,7 @@ contract CarbonCredit is ERC721, Ownable {
     function totalMinted() external view returns (uint256) { return _nextTokenId; }
     function totalRetired() external view returns (uint256) { return _retiredCount; }
 
+    // TODO: add pagination if this gets called on a large registry
     function tokensOfOwner(address owner_) external view returns (uint256[] memory) {
         require(owner_ != address(0), "CarbonCredit: zero address");
         uint256 total = _nextTokenId;

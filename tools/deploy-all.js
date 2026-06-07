@@ -6,8 +6,8 @@ const path = require("path");
 require("dotenv").config();
 
 const REAL_QUSDC_MAINNET = "0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5"; // QIE-20, 6 decimals
-const mask = (a) => a.slice(0, 6) + "…" + a.slice(-4);
-const sep  = (l) => console.log(`\n── ${l} ${"─".repeat(Math.max(0, 48 - l.length))}`);
+const mask = a => a.slice(0,6) + "..." + a.slice(-4);
+const sep  = l => console.log("\n---", l);
 
 async function main() {
   const [deployer] = await ethers.getSigners();

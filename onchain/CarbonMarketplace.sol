@@ -83,9 +83,9 @@ contract CarbonMarketplace is Ownable, ReentrancyGuard, ERC721Holder {
 
     function buy(uint256 tokenId) external nonReentrant {
         Listing memory item = listings[tokenId];
-        require(item.active, "Marketplace: not listed");
+        require(item.active, "listing not active");
         require(creditNFT.ownerOf(tokenId) == item.seller, "Marketplace: seller no longer owns NFT");
-        require(msg.sender != item.seller, "Marketplace: cannot buy own listing");
+        require(msg.sender != item.seller, "can't buy your own listing");
 
         listings[tokenId].active = false;
 

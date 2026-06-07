@@ -61,10 +61,10 @@ contract TCCMarketplace is Ownable, ReentrancyGuard {
 
     function buy(uint256 listingId, uint256 amount) external nonReentrant {
         Listing storage item = listings[listingId];
-        require(item.active,              "TCCMkt: not active");
-        require(amount > 0,               "TCCMkt: zero amount");
-        require(amount <= item.amountLeft,"TCCMkt: exceeds available");
-        require(msg.sender != item.seller,"TCCMkt: cannot buy own listing");
+        require(item.active, "TCCMkt: not active");
+        require(amount > 0, "TCCMkt: zero amount");
+        require(amount <= item.amountLeft, "TCCMkt: not enough TCC left");
+        require(msg.sender != item.seller, "TCCMkt: cannot buy own listing");
 
         uint256 totalCost = amount * item.pricePerTonne;
         uint256 fee       = (totalCost * feeBps) / 10_000;
