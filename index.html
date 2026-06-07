@@ -1071,6 +1071,12 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
   <div class="modal" style="max-width:460px">
     <div class="modal-head"><div class="modal-title">Retire TCC Credits</div><button class="modal-x" onclick="closeModal('tcc-retire-modal')">×</button></div>
     <div class="modal-sub">Permanently burns TCC and mints a soulbound Retirement Certificate (TLRET) on-chain. A signed PDF offset certificate is also generated and downloaded automatically.</div>
+    <div class="field" id="tcc-retire-project-field">
+      <label>Project <span style="color:var(--muted);font-weight:400;font-size:12px">— which project are you retiring against?</span></label>
+      <select id="tcc-retire-project" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px">
+        <option value="">Select project…</option>
+      </select>
+    </div>
     <div class="field">
       <label>Quantity to retire (TCC) <span id="tcc-retire-bal-hint" style="color:var(--muted);font-weight:400;font-size:12px"></span></label>
       <input type="number" id="tcc-retire-qty" placeholder="e.g. 100" min="1" step="1" style="width:100%"/>
@@ -2018,23 +2024,19 @@ async function openRetireModal(projectId){
   const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
   _tccRetireBal=Number(await tcc.balanceOf(walletAddr).catch(()=>0))
   if(_tccRetireBal<1){ showToast('No TCC to retire','error'); return }
-  // Use provided projectId (from TLCERT card or buy flow).
-  // bytes32(0) from a listing means it was stored without a project — treat same as missing.
+  // Populate project dropdown — show all active (non-fully-offset) projects.
+  // bytes32(0) is treated as missing — not a valid projectId.
   const ZERO32='0x'+('0'.repeat(64))
   const pidOk = projectId && projectId!=='undefined' && projectId!=='' && projectId!==ZERO32
-  if(pidOk){
-    _tccRetireProjectId = projectId
-  } else {
-    // Prefer the caller's own TLCERT; if they're a third-party buyer (no TLCERT), fall back
-    // to any active project in _credits so the certificate links to the real project.
-    const mine=_credits.filter(c=>c.owner&&c.owner.toLowerCase()===walletAddr.toLowerCase()&&!c.retired&&!c.fullyOffset)
-    if(mine.length>0){
-      _tccRetireProjectId = mine[0].projectId
-    } else {
-      const active=_credits.filter(c=>!c.retired&&!c.fullyOffset)
-      _tccRetireProjectId = active.length>0 ? active[0].projectId : ZERO32
-    }
-  }
+  const active=_credits.filter(c=>!c.retired&&!c.fullyOffset)
+  const sel=document.getElementById('tcc-retire-project')
+  const field=document.getElementById('tcc-retire-project-field')
+  sel.innerHTML='<option value="">Select project…</option>'
+  active.forEach(c=>{ const o=document.createElement('option'); o.value=c.projectId; o.textContent=(c.name||('Credit #'+c.tokenId))+' · '+c.projectId.slice(0,10)+'…'; sel.appendChild(o) })
+  // Hide the dropdown when there's only one option (auto-select it silently)
+  if(active.length<=1){ field.style.display='none'; sel.value=active.length===1?active[0].projectId:'' }
+  else { field.style.display=''; sel.value = pidOk ? projectId : (active[0]?.projectId||'') }
+  _tccRetireProjectId = sel.value || ZERO32
   document.getElementById('tcc-retire-bal-hint').textContent=`— you have ${_tccRetireBal.toLocaleString()} TCC`
   document.getElementById('tcc-retire-qty').value=''
   document.getElementById('tcc-retire-qty').max=_tccRetireBal
@@ -2047,6 +2049,9 @@ async function openRetireModal(projectId){
 async function confirmRetireTCC(){
   const qty=parseInt(document.getElementById('tcc-retire-qty').value,10)
   if(!qty||qty<1||qty>_tccRetireBal){ showToast(`Enter a quantity between 1 and ${_tccRetireBal.toLocaleString()}`, 'error'); return }
+  const selVal=document.getElementById('tcc-retire-project').value
+  if(selVal) _tccRetireProjectId=selVal
+  if(!_tccRetireProjectId||_tccRetireProjectId==='0x'+('0'.repeat(64))){ showToast('Select the project to retire against','error'); return }
   const beneficiary=(document.getElementById('tcc-retire-beneficiary').value||'').trim()
   const organization=(document.getElementById('tcc-retire-org').value||'').trim()
   const btn=document.getElementById('tcc-retire-confirm'); const done=btnLoading(btn,'Retiring…')
