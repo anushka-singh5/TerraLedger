@@ -1816,16 +1816,38 @@ async function renderRetiredTab(){
   grid.style.display='block'
   document.getElementById('tcc-market-panel').style.display='none'
 
-  const tlcertCards=_credits.filter(c=>c.retired||c.fullyOffset)
+  const rp=readProvider()
+  // enrich TLCERT cards with mint tx hash via Transfer-from-0x0 event
+  const tlcertCards=await Promise.all(_credits.filter(c=>c.retired||c.fullyOffset).map(async c=>{
+    const mintTx=await rp.getLogs({
+      address:ADDRESSES.CarbonCredit,
+      topics:[
+        ethers.utils.id('Transfer(address,address,uint256)'),
+        ethers.utils.hexZeroPad(ethers.constants.AddressZero,32),
+        null,
+        ethers.utils.hexZeroPad(ethers.BigNumber.from(c.tokenId).toHexString(),32)
+      ],fromBlock:0,toBlock:'latest'
+    }).then(l=>l[0]?.transactionHash).catch(()=>null)
+    return {...c,mintTx}
+  }))
+
   let tlretCards=[]
   if(walletAddr){
     try{
-      const rp=readProvider()
       const rc=new ethers.Contract(ADDRESSES.RetirementCertificate,TLRET_ABI,rp)
       const tokenIds=await rc.getWalletCerts(walletAddr)
       tlretCards=await Promise.all(tokenIds.map(async id=>{
-        const r=await rc.retirements(id)
-        return {tokenId:Number(id),amount:Number(r.amount),projectId:r.projectId,timestamp:Number(r.timestamp)}
+        const [r,retireLogs]=await Promise.all([
+          rc.retirements(id),
+          rp.getLogs({
+            address:ADDRESSES.RetirementCertificate,
+            topics:[
+              ethers.utils.id('RetirementCertMinted(uint256,address,uint256,bytes32)'),
+              ethers.utils.hexZeroPad(ethers.BigNumber.from(id).toHexString(),32)
+            ],fromBlock:0,toBlock:'latest'
+          }).catch(()=>[])
+        ])
+        return {tokenId:Number(id),amount:Number(r.amount),projectId:r.projectId,timestamp:Number(r.timestamp),retireTx:retireLogs[0]?.transactionHash||null}
       }))
     }catch(_){}
   }
@@ -1847,8 +1869,8 @@ async function renderRetiredTab(){
         <div style=”display:flex;justify-content:space-between;font-size:12px”><span style=”color:var(--muted)”>Vintage</span><span style=”color:var(--muted2);font-family:var(--mono)”>${c.vintage}</span></div>
       </div>
       <div class=”cc-footer”><div class=”cc-links”>
-        <span class=”view-cred” onclick=”openCredModal('${c.tokenId}','${c.projectId}','${c.ipfsCid}')”>Credential ↗</span>
-        <a class=”view-cred” href=”${explorerToken(c.tokenId)}” target=”_blank”>Explorer ↗</a>
+        <a class=”view-cred” href=”#” onclick=”event.preventDefault();openCredModal('${c.tokenId}','${c.projectId}','${c.ipfsCid}')”>Credential ↗</a>
+        <a class=”view-cred” href=”${c.mintTx?explorerTx(c.mintTx):EXPLORER+'/address/'+ADDRESSES.CarbonCredit}” target=”_blank”>Explorer ↗</a>
       </div></div></div>`
   }).join('')
 
@@ -1873,7 +1895,7 @@ async function renderRetiredTab(){
         <span style=”color:var(--muted2);font-family:var(--mono)”>${date}</span>
       </div>
       <div style=”display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border);margin-top:12px;gap:10px;flex-wrap:wrap”>
-        <a class=”view-cred” href=”${EXPLORER}/address/${ADDRESSES.RetirementCertificate}” target=”_blank”>Explorer ↗</a>
+        <a class=”view-cred” href=”${r.retireTx?explorerTx(r.retireTx):EXPLORER+'/address/'+ADDRESSES.RetirementCertificate}” target=”_blank”>Explorer ↗</a>
         <span style=”font-size:10px;color:var(--muted)”>Soulbound · non-transferable</span>
       </div></div>`
   }).join('')
