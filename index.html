@@ -1817,7 +1817,10 @@ async function renderRetiredTab(){
   document.getElementById('tcc-market-panel').style.display='none'
 
   const rp=readProvider()
-  // enrich TLCERT cards with mint tx hash via Transfer-from-0x0 event
+  // QIE RPC max block range is 10000 — fetch current block first, scan last 9000 blocks
+  const curBlock=await rp.getBlockNumber().catch(()=>9999)
+  const fromBlock=Math.max(0,curBlock-9000)
+
   const tlcertCards=await Promise.all(_credits.filter(c=>c.retired||c.fullyOffset).map(async c=>{
     const mintTx=await rp.getLogs({
       address:ADDRESSES.CarbonCredit,
@@ -1826,7 +1829,7 @@ async function renderRetiredTab(){
         ethers.utils.hexZeroPad(ethers.constants.AddressZero,32),
         null,
         ethers.utils.hexZeroPad(ethers.BigNumber.from(c.tokenId).toHexString(),32)
-      ],fromBlock:0,toBlock:'latest'
+      ],fromBlock,toBlock:'latest'
     }).then(l=>l[0]?.transactionHash).catch(()=>null)
     return {...c,mintTx}
   }))
@@ -1844,7 +1847,7 @@ async function renderRetiredTab(){
             topics:[
               ethers.utils.id('RetirementCertMinted(uint256,address,uint256,bytes32)'),
               ethers.utils.hexZeroPad(ethers.BigNumber.from(id).toHexString(),32)
-            ],fromBlock:0,toBlock:'latest'
+            ],fromBlock,toBlock:'latest'
           }).catch(()=>[])
         ])
         return {tokenId:Number(id),amount:Number(r.amount),projectId:r.projectId,timestamp:Number(r.timestamp),retireTx:retireLogs[0]?.transactionHash||null}
