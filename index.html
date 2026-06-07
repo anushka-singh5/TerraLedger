@@ -1858,19 +1858,27 @@ async function renderRetiredTab(){
   const tlretHtml=tlretCards.map(r=>{
     const date=r.timestamp?new Date(r.timestamp*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):''
     const pid=r.projectId?r.projectId.slice(0,10)+'…'+r.projectId.slice(-4):''
-    return `<div class=”credit-card”>
-      <div class=”cc-header”><div>
-        <div class=”cc-name”>Retirement Cert #${r.tokenId}</div>
-        <div class=”cc-id”>Project ${pid}</div>
-        <div class=”cc-status retired”>CO₂ OFFSET ⊘</div>
-      </div><span class=”ai-score-badge” style=”color:var(--blue);border-color:#4f8cff33;background:#4f8cff14”>TLRET #${r.tokenId}</span></div>
-      <div class=”cc-meta”>
-        <div class=”cc-meta-row”><span class=”cc-meta-label”>Tonnes Retired</span><span class=”cc-meta-val”>${Number(r.amount).toLocaleString()} t CO₂</span></div>
-        <div class=”cc-meta-row”><span class=”cc-meta-label”>Date</span><span class=”cc-meta-val”>${date}</span></div>
+    return `<div class=”credit-card” style=”border-color:rgba(0,229,122,0.3);background:linear-gradient(145deg,var(--surface) 60%,rgba(0,229,122,0.05) 100%)”>
+      <div class=”cc-header”>
+        <div>
+          <div class=”cc-name”>Retirement Cert #${r.tokenId}</div>
+          <div class=”cc-id”>Project ${pid}</div>
+          <div class=”cc-status fully-offset”>PERMANENTLY RETIRED ✓</div>
+        </div>
+        <span class=”ai-score-badge” style=”color:var(--green);border-color:#00e57a33;background:#00e57a14”>TLRET #${r.tokenId}</span>
       </div>
-      <div class=”cc-footer”><div class=”cc-links”>
-        <span style=”font-size:11px;color:var(--muted)”>Soulbound · non-transferable</span>
-      </div></div></div>`
+      <div style=”text-align:center;padding:12px 0 16px;border-bottom:1px solid var(--border)”>
+        <div style=”font-size:32px;font-weight:700;color:var(--green);font-family:var(--mono);line-height:1”>${Number(r.amount).toLocaleString()}</div>
+        <div style=”font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.04em”>tonnes CO₂ permanently retired</div>
+      </div>
+      <div class=”cc-meta” style=”margin-top:14px”>
+        <div class=”cc-meta-row”><span class=”cc-meta-label”>Project</span><span class=”cc-meta-val” style=”font-size:10px”>${pid}</span></div>
+        <div class=”cc-meta-row”><span class=”cc-meta-label”>Retired on</span><span class=”cc-meta-val”>${date}</span></div>
+      </div>
+      <div class=”cc-footer”>
+        <a class=”view-cred” href=”${EXPLORER}/token/${ADDRESSES.RetirementCertificate}?a=${r.tokenId}” target=”_blank”>Explorer ↗</a>
+        <span style=”font-size:10px;color:var(--muted)”>Soulbound · non-transferable</span>
+      </div></div>`
   }).join('')
 
   grid.innerHTML=tlcertHtml+tlretHtml
