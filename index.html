@@ -2103,7 +2103,7 @@ async function openListTCCModal(){
   // Populate project selector from user's own TLCERT certs
   const sel=document.getElementById('tcc-list-project')
   sel.innerHTML='<option value="">Select project…</option>'
-  const myProjects=_credits.filter(c=>c.owner&&c.owner.toLowerCase()===walletAddr.toLowerCase()&&!c.retired)
+  const myProjects=_credits.filter(c=>c.owner&&c.owner.toLowerCase()===walletAddr.toLowerCase()&&!c.retired&&!c.fullyOffset)
   myProjects.forEach(c=>{ const o=document.createElement('option'); o.value=c.projectId; o.textContent=(c.name||('Credit #'+c.tokenId))+' · '+c.projectId.slice(0,10)+'…'; sel.appendChild(o) })
   if(myProjects.length===1) sel.value=myProjects[0].projectId  // auto-select if only one
   const btn=document.getElementById('tcc-list-confirm'); btn.disabled=false; btn.textContent='List for Sale'
