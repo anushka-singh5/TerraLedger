@@ -1265,6 +1265,7 @@ let _credits = [], _marketTab = 'all', _listTokenId = null
 
 const readProvider = () => new ethers.providers.JsonRpcProvider(QIE_CHAIN.rpcUrls[0])
 const short = a => a ? a.slice(0,6)+'…'+a.slice(-4) : ''
+const bytes32ToStr = h => { try{ let s=''; const b=h.replace(/^0x/,''); for(let i=0;i<b.length;i+=2){ const c=parseInt(b.substr(i,2),16); if(!c) break; s+=String.fromCharCode(c) } return s||null }catch(_){ return null } }
 
 // Pre-built ABI interfaces for encoding tx data
 const IFACE = {
@@ -2073,7 +2074,7 @@ async function openRetireModal(projectId){
   active.forEach(c=>{
     const cap=_projectCaps[c.projectId]||{}
     const o=document.createElement('option'); o.value=c.projectId
-    o.textContent=(c.name||('Credit #'+c.tokenId))+' · '+(cap.outstanding||0).toLocaleString()+' t remaining'
+    o.textContent=(c.name||bytes32ToStr(c.projectId)||('Credit #'+c.tokenId))+' · '+(cap.outstanding||0).toLocaleString()+' t remaining'
     sel.appendChild(o)
   })
   if(active.length<=1){ field.style.display='none'; sel.value=active.length===1?active[0].projectId:'' }
@@ -2116,7 +2117,7 @@ async function confirmRetireTCC(){
 
     // Find project name + vintage from loaded certificates
     const proj=_credits.find(c=>c.projectId===_tccRetireProjectId)||{}
-    const projectName=proj.name||('Project '+(_tccRetireProjectId.slice(0,10)+'…'))
+    const projectName=proj.name||bytes32ToStr(_tccRetireProjectId)||('Project '+(_tccRetireProjectId.slice(0,10)+'…'))
     const vintage=proj.vintage||new Date().getFullYear()
 
     // Call backend to generate PDF offset certificate
@@ -2178,7 +2179,7 @@ async function openListTCCModal(){
   myProjects.forEach(c=>{
     const cap=_projectCaps[c.projectId]||{}
     const o=document.createElement('option'); o.value=c.projectId
-    o.textContent=(c.name||('Credit #'+c.tokenId))+' · '+(cap.listable||0).toLocaleString()+' t available'
+    o.textContent=(c.name||bytes32ToStr(c.projectId)||('Credit #'+c.tokenId))+' · '+(cap.listable||0).toLocaleString()+' t available'
     if((cap.listable||0)===0) o.disabled=true
     sel.appendChild(o)
   })
