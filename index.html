@@ -1321,7 +1321,7 @@ async function rawSend(to, iface, method, args, gas){
   return rcpt
 }
 const explorerTx = h => `${EXPLORER}/tx/${h}`
-const explorerToken = t => `${EXPLORER}/token/${ADDRESSES.CarbonCredit}?a=${t}`
+const explorerToken = t => `${EXPLORER}/address/${ADDRESSES.CarbonCredit}`
 const fmtQUSDC = raw => Number(ethers.utils.formatUnits(raw, QUSDC_DECIMALS)).toLocaleString(undefined,{maximumFractionDigits:2})
 
 function showPage(id){
@@ -1876,7 +1876,7 @@ async function renderRetiredTab(){
         <span style=”color:var(--muted2);font-family:var(--mono)”>${date}</span>
       </div>
       <div style=”display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border);margin-top:12px;gap:10px;flex-wrap:wrap”>
-        <a class=”view-cred” href=”${EXPLORER}/token/${ADDRESSES.RetirementCertificate}?a=${r.tokenId}” target=”_blank”>Explorer ↗</a>
+        <a class=”view-cred” href=”${EXPLORER}/address/${ADDRESSES.RetirementCertificate}” target=”_blank”>Explorer ↗</a>
         <span style=”font-size:10px;color:var(--muted)”>Soulbound · non-transferable</span>
       </div></div>`
   }).join('')
