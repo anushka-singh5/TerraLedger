@@ -1,8 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "",
   "outputDirectory": ".",
-  "installCommand": "",
   "framework": null,
   "routes": [
     { "src": "/assets/(.*)", "dest": "/assets/$1" },

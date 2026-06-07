@@ -14,3 +14,10 @@ cache/
 hardhat.config.js
 package.json
 package-lock.json
+addresses/
+__pycache__/
+test_docs/
+.env
+*.pem
+*.key
+setup.md
