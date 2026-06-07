@@ -2156,8 +2156,9 @@ async function openListTCCModal(){
   if(_tccListBal<1){ showToast('No TCC to list','error'); return }
   document.getElementById('tcc-list-price').value=''
   document.getElementById('tcc-list-total').textContent=''
-  // Populate project selector — only user's own TLCERT projects, non-fully-offset
-  const myProjects=_credits.filter(c=>c.owner&&c.owner.toLowerCase()===walletAddr.toLowerCase()&&!c.retired&&!c.fullyOffset)
+  // Show all active projects — a TCC buyer doesn't own the TLCERT but still needs
+  // to list against the project their tokens came from.
+  const myProjects=_credits.filter(c=>!c.retired&&!c.fullyOffset)
   // Load per-project caps to enforce: can't list more than outstanding - already listed
   await _loadProjectCaps(myProjects.map(c=>c.projectId))
   const sel=document.getElementById('tcc-list-project')
