@@ -2412,16 +2412,24 @@ function updateScorePreview(){
   if(el){ el.innerHTML=`${total}<span style="font-size:13px;color:var(--muted)">/100</span>`; el.style.color=total>=70?'var(--green)':total>=40?'var(--amber)':'var(--muted)' }
 }
 
-// Backend health banner
+// Backend health banner — handles Render free-tier cold starts (can take 30-60s)
 ;(async function(){
-  const show=(msg,color)=>{ let b=document.getElementById('backend-banner'); if(!b){ b=document.createElement('div'); b.id='backend-banner'; document.body.appendChild(b) }
+  const show=(msg,color,spinner)=>{ let b=document.getElementById('backend-banner'); if(!b){ b=document.createElement('div'); b.id='backend-banner'; document.body.appendChild(b) }
     b.style.background=color+'22'; b.style.borderTop='1px solid '+color+'55'; b.style.color=color
-    b.innerHTML=msg+` &nbsp;·&nbsp; <span style="opacity:.7">API: ${AI_BACKEND}</span> <button onclick="this.parentElement.remove()" style="margin-left:10px;background:none;border:none;color:inherit;cursor:pointer;font-size:15px">×</button>` }
-  try{ const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),4000)
-    const r=await fetch(AI_BACKEND+'/health',{signal:ctl.signal}); clearTimeout(t)
-    if(!r.ok) throw 0; const h=await r.json()
-    if(h.status==='degraded'){ const d=h.dependencies||{}; const why=!d.chain_connected?'chain not connected':!d.oracle_ready?'oracle not configured':'core not ready'; show('⚠ Backend up but degraded — '+why+'. Reads work; minting may not.','#f5a623') }
-  }catch(_){ show('⚠ AI backend unreachable — start terraledger.py, or pass ?api=https://your-backend','#ff4560') }
+    const spin=spinner?`<span style="display:inline-block;animation:spin 1s linear infinite;margin-right:6px">⟳</span>`:'⚠ '
+    b.innerHTML=spin+msg+` &nbsp;·&nbsp; <span style="opacity:.7">API: ${AI_BACKEND}</span> <button onclick="this.parentElement.remove()" style="margin-left:10px;background:none;border:none;color:inherit;cursor:pointer;font-size:15px">×</button>` }
+  const hide=()=>{ const b=document.getElementById('backend-banner'); if(b) b.remove() }
+  const tryFetch=ms=>{ const ctl=new AbortController(); setTimeout(()=>ctl.abort(),ms); return fetch(AI_BACKEND+'/health',{signal:ctl.signal}) }
+  const check=async h=>{ if(!h.ok) throw 0; const j=await h.json()
+    if(j.status==='degraded'){ const d=j.dependencies||{}; const why=!d.chain_connected?'chain not connected':!d.oracle_ready?'oracle not configured':'core not ready'; show('Backend up but degraded — '+why+'. Reads work; minting may not.','#f5a623',false) }
+    else hide() }
+  try{ await check(await tryFetch(5000)) }
+  catch(_){
+    // First attempt timed out or failed — likely Render cold start, retry with 60s window
+    show('Backend waking up — this takes ~30s on first load…','#f5a623',true)
+    try{ await check(await tryFetch(60000)) }
+    catch(__){ show('AI backend unreachable — start terraledger.py, or pass ?api=https://your-backend','#ff4560',false) }
+  }
 })()
 
 // Restore wallet session (unless the user explicitly disconnected)
