@@ -1243,6 +1243,7 @@ const TCC_ABI = [
   'function allowance(address owner, address spender) view returns (uint256)',
   'function isFullyRetired(bytes32 projectId) view returns (bool)',
   'function issuedByProject(bytes32 projectId) view returns (uint256)',
+  'function retiredByProject(bytes32 projectId) view returns (uint256)',
   'function getRetirements() view returns (tuple(address retiredBy, uint256 amount, bytes32 projectId, uint256 timestamp)[])',
   'function getRetirementsByWallet(address wallet) view returns (tuple(address retiredBy, uint256 amount, bytes32 projectId, uint256 timestamp)[])',
 ]
@@ -2017,6 +2018,31 @@ async function unlistTCC(listingId){
   showToast('Unlisted ✓','success'); loadTCCMarketplace()
 }
 
+// Per-project caps: issued, retired, activeListed, outstanding (=issued-retired), listable (=outstanding-activeListed)
+// Refreshed each time a list/retire modal opens. Prevents cross-project over-retirement and cross-listing.
+let _projectCaps={}
+async function _loadProjectCaps(pids){
+  if(!pids||!pids.length){ _projectCaps={}; return }
+  const rp=readProvider()
+  const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
+  const mkt=new ethers.Contract(ADDRESSES.TCCMarketplace,TCC_MKT_ABI,rp)
+  const [listData,...perProj]=await Promise.all([
+    mkt.getActiveListings().catch(()=>[[],[],[],[],[]]),
+    ...pids.map(pid=>Promise.all([
+      tcc.issuedByProject(pid).catch(()=>ethers.BigNumber.from(0)),
+      tcc.retiredByProject(pid).catch(()=>ethers.BigNumber.from(0))
+    ]).then(([iss,ret])=>({pid,issued:Number(iss),retired:Number(ret)})))
+  ])
+  const listedMap={}
+  const listAmts=listData[2]||[], listPids=listData[4]||[]
+  for(let i=0;i<listPids.length;i++) listedMap[listPids[i]]=(listedMap[listPids[i]]||0)+Number(listAmts[i])
+  _projectCaps={}
+  for(const {pid,issued,retired} of perProj){
+    const listed=listedMap[pid]||0
+    _projectCaps[pid]={issued,retired,listed,outstanding:issued-retired,listable:Math.max(0,issued-retired-listed)}
+  }
+}
+
 let _tccRetireBal=0, _tccRetireProjectId='0x'+('0'.repeat(64))
 async function openRetireModal(projectId){
   if(!requireWallet()) return
@@ -2024,22 +2050,36 @@ async function openRetireModal(projectId){
   const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
   _tccRetireBal=Number(await tcc.balanceOf(walletAddr).catch(()=>0))
   if(_tccRetireBal<1){ showToast('No TCC to retire','error'); return }
-  // Populate project dropdown — show all active (non-fully-offset) projects.
-  // bytes32(0) is treated as missing — not a valid projectId.
   const ZERO32='0x'+('0'.repeat(64))
   const pidOk = projectId && projectId!=='undefined' && projectId!=='' && projectId!==ZERO32
   const active=_credits.filter(c=>!c.retired&&!c.fullyOffset)
+  // Load per-project caps so we can enforce retire limits
+  await _loadProjectCaps(active.map(c=>c.projectId))
   const sel=document.getElementById('tcc-retire-project')
   const field=document.getElementById('tcc-retire-project-field')
+  const _updateRetireCap=()=>{
+    const pid=sel.value; if(!pid) return
+    const cap=_projectCaps[pid]||{}
+    const maxQ=Math.min(_tccRetireBal, cap.outstanding||_tccRetireBal)
+    const qtyEl=document.getElementById('tcc-retire-qty')
+    qtyEl.max=maxQ
+    if(Number(qtyEl.value)>maxQ) qtyEl.value=maxQ
+    document.getElementById('tcc-retire-bal-hint').textContent=
+      `— you have ${_tccRetireBal.toLocaleString()} TCC · ${(cap.outstanding||0).toLocaleString()} t outstanding for this project`
+    _tccRetireProjectId=pid
+  }
+  sel.onchange=_updateRetireCap
   sel.innerHTML='<option value="">Select project…</option>'
-  active.forEach(c=>{ const o=document.createElement('option'); o.value=c.projectId; o.textContent=(c.name||('Credit #'+c.tokenId))+' · '+c.projectId.slice(0,10)+'…'; sel.appendChild(o) })
-  // Hide the dropdown when there's only one option (auto-select it silently)
+  active.forEach(c=>{
+    const cap=_projectCaps[c.projectId]||{}
+    const o=document.createElement('option'); o.value=c.projectId
+    o.textContent=(c.name||('Credit #'+c.tokenId))+' · '+(cap.outstanding||0).toLocaleString()+' t remaining'
+    sel.appendChild(o)
+  })
   if(active.length<=1){ field.style.display='none'; sel.value=active.length===1?active[0].projectId:'' }
-  else { field.style.display=''; sel.value = pidOk ? projectId : (active[0]?.projectId||'') }
-  _tccRetireProjectId = sel.value || ZERO32
-  document.getElementById('tcc-retire-bal-hint').textContent=`— you have ${_tccRetireBal.toLocaleString()} TCC`
+  else { field.style.display=''; sel.value=pidOk?projectId:(active[0]?.projectId||'') }
+  _updateRetireCap()
   document.getElementById('tcc-retire-qty').value=''
-  document.getElementById('tcc-retire-qty').max=_tccRetireBal
   document.getElementById('tcc-retire-beneficiary').value=''
   document.getElementById('tcc-retire-org').value=''
   const btn=document.getElementById('tcc-retire-confirm'); btn.disabled=false; btn.textContent='Retire permanently'
@@ -2047,11 +2087,15 @@ async function openRetireModal(projectId){
   setTimeout(()=>document.getElementById('tcc-retire-qty').focus(),100)
 }
 async function confirmRetireTCC(){
-  const qty=parseInt(document.getElementById('tcc-retire-qty').value,10)
-  if(!qty||qty<1||qty>_tccRetireBal){ showToast(`Enter a quantity between 1 and ${_tccRetireBal.toLocaleString()}`, 'error'); return }
   const selVal=document.getElementById('tcc-retire-project').value
   if(selVal) _tccRetireProjectId=selVal
   if(!_tccRetireProjectId||_tccRetireProjectId==='0x'+('0'.repeat(64))){ showToast('Select the project to retire against','error'); return }
+  const cap=_projectCaps[_tccRetireProjectId]||{}
+  const maxRetire=Math.min(_tccRetireBal, cap.outstanding!=null?cap.outstanding:_tccRetireBal)
+  const qty=parseInt(document.getElementById('tcc-retire-qty').value,10)
+  if(!qty||qty<1){ showToast('Enter a quantity of at least 1','error'); return }
+  if(qty>_tccRetireBal){ showToast(`You only have ${_tccRetireBal.toLocaleString()} TCC`,'error'); return }
+  if(cap.outstanding!=null&&qty>cap.outstanding){ showToast(`Only ${cap.outstanding.toLocaleString()} t outstanding for this project — can't retire more than was issued`,'error'); return }
   const beneficiary=(document.getElementById('tcc-retire-beneficiary').value||'').trim()
   const organization=(document.getElementById('tcc-retire-org').value||'').trim()
   const btn=document.getElementById('tcc-retire-confirm'); const done=btnLoading(btn,'Retiring…')
@@ -2110,16 +2154,35 @@ async function openListTCCModal(){
   const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
   _tccListBal=Number(await tcc.balanceOf(walletAddr).catch(()=>0))
   if(_tccListBal<1){ showToast('No TCC to list','error'); return }
-  document.getElementById('tcc-list-bal-hint').textContent=`— you have ${_tccListBal.toLocaleString()} TCC`
-  document.getElementById('tcc-list-qty').value=''; document.getElementById('tcc-list-qty').max=_tccListBal
   document.getElementById('tcc-list-price').value=''
   document.getElementById('tcc-list-total').textContent=''
-  // Populate project selector from user's own TLCERT certs
-  const sel=document.getElementById('tcc-list-project')
-  sel.innerHTML='<option value="">Select project…</option>'
+  // Populate project selector — only user's own TLCERT projects, non-fully-offset
   const myProjects=_credits.filter(c=>c.owner&&c.owner.toLowerCase()===walletAddr.toLowerCase()&&!c.retired&&!c.fullyOffset)
-  myProjects.forEach(c=>{ const o=document.createElement('option'); o.value=c.projectId; o.textContent=(c.name||('Credit #'+c.tokenId))+' · '+c.projectId.slice(0,10)+'…'; sel.appendChild(o) })
-  if(myProjects.length===1) sel.value=myProjects[0].projectId  // auto-select if only one
+  // Load per-project caps to enforce: can't list more than outstanding - already listed
+  await _loadProjectCaps(myProjects.map(c=>c.projectId))
+  const sel=document.getElementById('tcc-list-project')
+  const _updateListCap=()=>{
+    const pid=sel.value; if(!pid) return
+    const cap=_projectCaps[pid]||{}
+    const maxQ=Math.min(_tccListBal, cap.listable!=null?cap.listable:_tccListBal)
+    const qtyEl=document.getElementById('tcc-list-qty')
+    qtyEl.max=maxQ
+    if(Number(qtyEl.value)>maxQ) qtyEl.value=maxQ
+    document.getElementById('tcc-list-bal-hint').textContent=
+      `— you have ${_tccListBal.toLocaleString()} TCC · ${(cap.listable||0).toLocaleString()} t available to list for this project`
+    _updateListTotal()
+  }
+  sel.onchange=_updateListCap
+  sel.innerHTML='<option value="">Select project…</option>'
+  myProjects.forEach(c=>{
+    const cap=_projectCaps[c.projectId]||{}
+    const o=document.createElement('option'); o.value=c.projectId
+    o.textContent=(c.name||('Credit #'+c.tokenId))+' · '+(cap.listable||0).toLocaleString()+' t available'
+    if((cap.listable||0)===0) o.disabled=true
+    sel.appendChild(o)
+  })
+  if(myProjects.length===1){ sel.value=myProjects[0].projectId; _updateListCap() }
+  document.getElementById('tcc-list-qty').value=''
   const btn=document.getElementById('tcc-list-confirm'); btn.disabled=false; btn.textContent='List for Sale'
   openModal('tcc-list-modal')
   setTimeout(()=>sel.focus(),100)
@@ -2136,7 +2199,11 @@ async function confirmListTCC(){
   const priceStr=document.getElementById('tcc-list-price').value
   const projectId=document.getElementById('tcc-list-project').value
   if(!projectId){ showToast('Select the project these TCC came from','error'); return }
-  if(!qty||qty<1||qty>_tccListBal){ showToast(`Enter a quantity between 1 and ${_tccListBal.toLocaleString()}`, 'error'); return }
+  if(!qty||qty<1||qty>_tccListBal){ showToast(`You only have ${_tccListBal.toLocaleString()} TCC`,'error'); return }
+  const lcap=_projectCaps[projectId]||{}
+  if(lcap.listable!=null&&qty>lcap.listable){
+    showToast(`Only ${lcap.listable.toLocaleString()} t available to list for this project — can't exceed outstanding supply`,'error'); return
+  }
   if(!priceStr||isNaN(priceStr)||Number(priceStr)<=0){ showToast('Enter a valid QUSDC price per tonne','error'); return }
   const amt=qty, priceRaw=ethers.utils.parseUnits(String(Number(priceStr).toFixed(6)),6)
   const btn=document.getElementById('tcc-list-confirm'); const done=btnLoading(btn,'Listing…')
