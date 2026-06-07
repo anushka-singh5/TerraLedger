@@ -113,32 +113,30 @@ After AI verification + oracle mint, the form still showed old GPS rows, uploade
 
 ---
 
-## Mainnet (chain 1990)
+## Mainnet (chain 1990) — v7 deployment
 
 RPC: `https://rpc1mainnet.qie.digital/` · Explorer: `https://mainnet.qie.digital/`
 
 | Contract | Address |
 |---|---|
-| ProjectRegistry | `0xC780b1C96175e59B559315c0Df00B0E8c06750dc` |
-| CarbonCredit (TLCERT — soulbound) | `0x7Bb8999aa1163bD9438e3efcf40CE28a73d8677C` |
-| CarbonOracle | `0x606b15fD35DcaD1e0104b6e6c1E783BB84252f55` |
-| CarbonMarketplace | `0xCf994675A919892AcD43D6E285127b3743402B58` |
+| ProjectRegistry | `0x4Ad9378bf710F2F21bbB1884D0F6bBeF7C27Ae05` |
+| CarbonCredit (TLCERT — soulbound) | `0xdFfB3a6892D77C16b77c0d7cf640A48fb4f86a45` |
+| CarbonOracle | `0x7550320b313b4c0Cf1AB1ecDeA2EB601cea0DAAE` |
+| CarbonMarketplace | `0x8B5a31BaC85f9803b78C407B528C8758f58854bC` |
 | QUSDC | `0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5` |
-| MockQIEPass | `0x5D41F203BaFF1CBb503394E6C9fD9F0C95696b7D` |
-| **CarbonCreditToken (TCC — 1 token = 1 tonne CO₂)** | `0x54b96be03e161C12B1e07b013CdFdFF69490c624` |
-| **TCCMarketplace v2 (with per-listing projectId)** | `0x7E61D69115dd4f1c2823B4d0a28bE71060424691` |
-| **RetirementCertificate (TLRET — soulbound)** | `0xb87140fcb58B4Aa8f8a3796B3a961Ec2D0F100F2` |
+| MockQIEPass | `0x2aDBb3c3a840f154f9C4518e60FA389A193F7D00` |
+| CarbonCreditToken (TCC — 1 token = 1 tonne CO₂, decimals=0) | `0x649979124d8938BBf31Cd2d24F6C460Ea768369a` |
+| TCCMarketplace (per-listing projectId) | `0x0b75BeDf2026A060187D3C8D6d68a8E7dd161f7e` |
+| RetirementCertificate (TLRET — soulbound) | `0x39A7AeBBaA5d159Cc20bBE27c1B1ea55162FE123` |
 
-### Historical txns (v1 contracts)
+### Historical txns (v6 contracts)
 
 | | tx |
 |---|---|
-| Mint #0 (score 97) | `0x635573a19df602a84a32fe1f4a6b143869281d22f7b794ac513930c633879fda` |
-| Mint #1 (score 100) | `0x1c42a7b338da98daa3d2301f29645fa664e1075dd9913cb69e0273406c4e5fc0` |
-| Mint #2 (score 97) | `0x2fb4a75e3c4b3e2d9abc0fd9aff405ae98feb65a86fae44f1f63e50aa583ab50` |
-| Fraud blocked | `0x6d3ae3181e1c2ba236fae30bb1ae3a10ce3b2fb5c488724690a17b1a974bc6c8` |
-| Fraud blocked | `0xf7693b8e88da0960fb859faee82255489516eef30dadfde027ee14413f4e1cb6` |
-| Retire #2 | `0x8d301c40b6280123f7e6cf99ef06a02326c7af5b34ca097dc7a81979d045dec4` |
+| Mint #0 (score 97) | `0x820092c9e6153da88f8662d00f697340cc0d1a9628d2a49ab651d9f7aa17bd1d` |
+| TCC listed on marketplace | `0x507686319d2e4eb91e5fabb740a3f8c36489711348929a7f4116c971a321b471` |
+| TCC purchased | `0x317714cc2c6553e522da815bb902e61647804c0b3cf0a1d66183b689759fccc0` |
+| TCC retired · TLRET cert #3 minted | `0x4f132bf93af8bbb7ed09206a5fb07977b27b6f44ab5d6f326e67e06463a65e62` |
 
 ---
 
@@ -165,7 +163,7 @@ npm install && npx hardhat compile && npx hardhat test
 npm run deploy   # needs MAINNET_PRIVATE_KEY in .env
 ```
 
-After deploy: update contract addresses in `.env` and `index.html` (`ADDRESSES` object), then `addOracle(<backend wallet>)` on CarbonOracle.
+After deploy: the script auto-patches `index.html` ADDRESSES and prints the 4 env vars to update on Render. No manual address editing needed.
 
 ## Project layout
 
