@@ -2019,12 +2019,21 @@ async function openRetireModal(projectId){
   _tccRetireBal=Number(await tcc.balanceOf(walletAddr).catch(()=>0))
   if(_tccRetireBal<1){ showToast('No TCC to retire','error'); return }
   // Use provided projectId (from TLCERT card or buy flow).
-  // If none given, auto-detect from the user's own certificates in _credits.
-  if(projectId && projectId!=='undefined' && projectId!==''){
+  // bytes32(0) from a listing means it was stored without a project — treat same as missing.
+  const ZERO32='0x'+('0'.repeat(64))
+  const pidOk = projectId && projectId!=='undefined' && projectId!=='' && projectId!==ZERO32
+  if(pidOk){
     _tccRetireProjectId = projectId
   } else {
+    // Prefer the caller's own TLCERT; if they're a third-party buyer (no TLCERT), fall back
+    // to any active project in _credits so the certificate links to the real project.
     const mine=_credits.filter(c=>c.owner&&c.owner.toLowerCase()===walletAddr.toLowerCase()&&!c.retired&&!c.fullyOffset)
-    _tccRetireProjectId = mine.length>0 ? mine[0].projectId : '0x'+('0'.repeat(64))
+    if(mine.length>0){
+      _tccRetireProjectId = mine[0].projectId
+    } else {
+      const active=_credits.filter(c=>!c.retired&&!c.fullyOffset)
+      _tccRetireProjectId = active.length>0 ? active[0].projectId : ZERO32
+    }
   }
   document.getElementById('tcc-retire-bal-hint').textContent=`— you have ${_tccRetireBal.toLocaleString()} TCC`
   document.getElementById('tcc-retire-qty').value=''
