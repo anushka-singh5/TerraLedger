@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -189,7 +189,7 @@ contract CarbonCredit is ERC721, Ownable {
             '{"name":"TerraLedger \xe2\x80\x94 Verified Carbon Credits",',
             '"description":"AI-verified carbon credits on QIE Blockchain. Five AI modules gate every mint: GPS duplicate detection, ownership forensics (OCR+ELA), anomaly AI (IsolationForest), NASA FIRMS satellite, and Llama-3 audit. Fraudulent credit cannot be created in the first place. Every score and fraud attempt is on-chain forever.",',
             '"image":"', imageUri, '",',
-            '"external_link":"https://terra-ledger-plum.vercel.app",',
+            '"external_link":"https://terraledger.vercel.app",',
             '"seller_fee_basis_points":0,',
             '"fee_recipient":"0x0000000000000000000000000000000000000000"}'
         ));

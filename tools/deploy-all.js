@@ -131,6 +131,34 @@ async function main() {
     deployedAt: new Date().toISOString(), contracts,
   }, null, 2));
   console.log(`\n  saved addresses/${chainId}.json`);
+
+  sep("12 Auto-patch index.html ADDRESSES");
+  const htmlPath = path.join(__dirname, "..", "index.html");
+  let html = fs.readFileSync(htmlPath, "utf8");
+  const newBlock = `const ADDRESSES = {
+  ProjectRegistry:      '${contracts.ProjectRegistry}',
+  CarbonCredit:         '${contracts.CarbonCredit}',
+  CarbonOracle:         '${contracts.CarbonOracle}',
+  CarbonMarketplace:    '${contracts.CarbonMarketplace}',
+  QUSDC:                '${contracts.QUSDC}',
+  QIEPass:              '${contracts.MockQIEPass}',
+  CarbonCreditToken:    '${contracts.CarbonCreditToken}',
+  TCCMarketplace:       '${contracts.TCCMarketplace}',
+  RetirementCertificate:'${contracts.RetirementCertificate}',
+}`;
+  html = html.replace(/const ADDRESSES = \{[\s\S]*?\}/, newBlock);
+  fs.writeFileSync(htmlPath, html);
+  console.log("  index.html ADDRESSES patched ✓");
+
+  sep("13 Backend env vars to update on Render.com");
+  console.log(`  ORACLE_CONTRACT_ADDRESS              = ${contracts.CarbonOracle}`);
+  console.log(`  NEXT_PUBLIC_PROJECT_REGISTRY_ADDRESS = ${contracts.ProjectRegistry}`);
+  console.log(`  NEXT_PUBLIC_CARBON_CREDIT_ADDRESS    = ${contracts.CarbonCredit}`);
+  console.log(`  NEXT_PUBLIC_QIEPASS_ADDRESS          = ${contracts.MockQIEPass}`);
+  console.log(`  NEXT_PUBLIC_TCC_ADDRESS              = ${contracts.CarbonCreditToken}`);
+  console.log(`  NEXT_PUBLIC_TCC_MARKETPLACE_ADDRESS  = ${contracts.TCCMarketplace}`);
+  console.log(`  NEXT_PUBLIC_RET_CERT_ADDRESS         = ${contracts.RetirementCertificate}`);
+
   console.log("\nDEPLOY_JSON=" + JSON.stringify(contracts));
 }
 
