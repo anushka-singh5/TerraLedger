@@ -5,65 +5,88 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ProjectRegistry.sol";
 import "./CarbonCredit.sol";
 
-// All we need from QIE Pass on-chain. Real impl is MockQIEPass.
 interface IQIEPass {
     function isVerified(address wallet) external view returns (bool);
 }
 
-// CarbonOracle
-// Where the off-chain AI checks become an on-chain decision. The backend
+interface ICarbonCreditToken {
+    function issue(address to, uint256 amount, bytes32 projectId) external;
+}
+
+/// @title CarbonOracle
+/// @notice Where the off-chain AI checks become an on-chain decision. The backend
 ///         wallet calls submitVerification() with the five module scores; this
-///         contract then mints (pass), flags fraud forever (hard-fail), or rejects
-///         (score < 70). The score weights below mirror the backend exactly — if
-///         you change one, change the other.
+///         contract mints (pass), flags fraud forever (hard-fail), or rejects
+///         (score < 70). Score weights mirror the backend exactly.
+///         The fraud log is public and permanent — every blocked attempt is
+///         queryable by wallet, timestamp, and reason.
 contract CarbonOracle is Ownable {
-    uint256 public constant MIN_SCORE    = 70;
-    uint256 public constant MAX_GPS      = 30;
+    uint256 public constant MIN_SCORE     = 70;
+    uint256 public constant MAX_GPS       = 30;
     uint256 public constant MAX_OWNERSHIP = 25;
-    uint256 public constant MAX_ANOMALY  = 25;
+    uint256 public constant MAX_ANOMALY   = 25;
     uint256 public constant MAX_SATELLITE = 20;
 
-    ProjectRegistry public immutable registry;
-    CarbonCredit    public immutable creditContract;
+    ProjectRegistry    public immutable registry;
+    CarbonCredit       public immutable creditContract;
+    ICarbonCreditToken public creditToken;   // TCC ERC-20 — set after deploy via setCreditToken()
 
-    // The trust model is M-of-N, not one all-powerful backend. Any oracle in this
-    // set can attest a result, but a project only finalises once `threshold`
-    // distinct oracles attest the *same* result. Threshold 1 with a single oracle
-    // is the degenerate "just trust the backend" case; bump both to remove the SPOF.
+    // M-of-N oracle set. Any oracle in this set can attest a result, but a
+    // project only finalises once `threshold` distinct oracles attest the *same*
+    // result. Threshold 1 with a single oracle is the degenerate "trust the backend"
+    // case; bump both to add more decentralisation without redeploying.
     mapping(address => bool) public authorizedOracles;
     address[] private _oracleList;
     uint256 public attestationThreshold;
 
     // Attestation bookkeeping.
-    mapping(bytes32 => bool) public finalized;                              // reached threshold, done
-    mapping(bytes32 => mapping(address => bool)) public hasAttested;        // one vote per oracle per project
-    mapping(bytes32 => mapping(bytes32 => uint256)) public attestationCount;// project => resultHash => votes
+    mapping(bytes32 => bool)                          public finalized;
+    mapping(bytes32 => mapping(address => bool))      public hasAttested;
+    mapping(bytes32 => mapping(bytes32 => uint256))   public attestationCount;
 
-    // QIE Pass-gated document access. We store the *grant* on-chain, never the deed
-    // itself — the backend hands out the redacted docs off-chain once it sees the
-    // requester holds a grant here.
+    // QIE Pass-gated document access. We store the *grant* on-chain, never the
+    // deed itself — the backend serves redacted files off-chain once it sees a grant.
     IQIEPass public qiePass;
     mapping(bytes32 => mapping(address => bool)) public hasDocumentAccess;
 
+    // ── Verification records ────────────────────────────────────────────────
+
     struct VerificationRecord {
         bytes32   projectId;
-        address   submitter;       // project owner at time of verification
-        uint256   totalScore;      // 0 when hard-fail triggered
+        address   submitter;
+        uint256   totalScore;
         uint256   gpsScore;
         uint256   ownershipScore;
         uint256   anomalyScore;
         uint256   satelliteScore;
         bool      passed;
-        bool      fraudAttempt;    // true when a hard-fail rule triggered
-        string    reportIpfsCid;   // AI audit report on IPFS
-        bytes32   docHash;         // SHA-256 of ownership document (integrity proof)
-        string[]  flags;           // human-readable rejection reasons
-        uint256   mintedTokenId;   // populated on success; 0 means not minted
+        bool      fraudAttempt;
+        string    reportIpfsCid;
+        bytes32   docHash;
+        string[]  flags;
+        uint256   mintedTokenId;
         uint256   timestamp;
     }
 
     bytes32[] private _allVerifiedIds;
     mapping(bytes32 => VerificationRecord) public verifications;
+
+    // ── Fraud log ───────────────────────────────────────────────────────────
+
+    /// @notice One entry per hard-fail fraud block. Public and permanent.
+    struct FraudRecord {
+        bytes32  projectId;
+        address  wallet;      // wallet that submitted the fraudulent project
+        string   reason;      // hard-fail reason, human-readable
+        string[] flags;       // AI module flags e.g. GPS_OVERLAP, OWNERSHIP_GPS_MISMATCH
+        uint256  score;       // total score (0 on hard-fail)
+        uint256  timestamp;
+    }
+
+    FraudRecord[] private _fraudLog;
+    uint256 private _fraudsBlocked;
+
+    // ── Events ──────────────────────────────────────────────────────────────
 
     event BackendUpdated(address indexed previous, address indexed next);
     event OracleAuthorized(address indexed oracle);
@@ -82,13 +105,13 @@ contract CarbonOracle is Ownable {
         address indexed requester,
         uint256 grantedAt
     );
-
+    /// @notice Emitted whenever a hard-fail fraud attempt is blocked and logged.
     event FraudAttemptLogged(
         bytes32 indexed projectId,
-        address indexed submitter,
-        uint256 totalScore,
+        address indexed wallet,
+        string  reason,
         string[] flags,
-        string reportIpfsCid,
+        string  reportIpfsCid,
         uint256 timestamp
     );
     event CreditApproved(
@@ -96,7 +119,7 @@ contract CarbonOracle is Ownable {
         address indexed recipient,
         uint256 indexed tokenId,
         uint256 totalScore,
-        string reportIpfsCid
+        string  reportIpfsCid
     );
     event VerificationFailed(
         bytes32 indexed projectId,
@@ -105,16 +128,18 @@ contract CarbonOracle is Ownable {
         string[] flags
     );
 
+    // ── Modifiers ───────────────────────────────────────────────────────────
+
     modifier onlyAuthorizedOracle() {
         require(authorizedOracles[msg.sender], "CarbonOracle: not authorized oracle");
         _;
     }
 
-    constructor(
-        address registry_,
-        address creditContract_,
-        address backend_
-    ) Ownable(msg.sender) {
+    // ── Constructor ─────────────────────────────────────────────────────────
+
+    constructor(address registry_, address creditContract_, address backend_)
+        Ownable(msg.sender)
+    {
         require(registry_       != address(0), "CarbonOracle: zero registry");
         require(creditContract_ != address(0), "CarbonOracle: zero credit contract");
         require(backend_        != address(0), "CarbonOracle: zero backend");
@@ -124,10 +149,13 @@ contract CarbonOracle is Ownable {
 
         authorizedOracles[backend_] = true;
         _oracleList.push(backend_);
-        attestationThreshold = 1;   // start single-oracle; raise once more come online
+        attestationThreshold = 1;
         emit OracleAuthorized(backend_);
     }
 
+    // ── Oracle management ───────────────────────────────────────────────────
+
+    /// @notice Authorize a new oracle wallet.
     function addOracle(address oracle) external onlyOwner {
         require(oracle != address(0), "CarbonOracle: zero oracle");
         require(!authorizedOracles[oracle], "CarbonOracle: already authorized");
@@ -136,7 +164,7 @@ contract CarbonOracle is Ownable {
         emit OracleAuthorized(oracle);
     }
 
-    // Revoke an oracle. Refuses if it would leave fewer oracles than the threshold.
+    /// @notice Revoke an oracle. Refuses if it would drop the active set below threshold.
     function removeOracle(address oracle) external onlyOwner {
         require(authorizedOracles[oracle], "CarbonOracle: not authorized");
         require(_oracleList.length - 1 >= attestationThreshold, "CarbonOracle: would break threshold");
@@ -151,15 +179,14 @@ contract CarbonOracle is Ownable {
         emit OracleRevoked(oracle);
     }
 
-    // How many oracles must agree before a project finalises. 1..oracleCount.
+    /// @notice How many oracles must agree before a project finalises (1..oracleCount).
     function setAttestationThreshold(uint256 threshold) external onlyOwner {
         require(threshold >= 1 && threshold <= _oracleList.length, "CarbonOracle: bad threshold");
         attestationThreshold = threshold;
         emit AttestationThresholdUpdated(threshold);
     }
 
-    // Kept around so older tooling that called setTrustedBackend still works —
-    ///         it just authorizes the wallet as an oracle.
+    /// @notice Backwards-compat alias — authorizes a wallet as an oracle.
     function setTrustedBackend(address newBackend) external onlyOwner {
         require(newBackend != address(0), "CarbonOracle: zero backend");
         if (!authorizedOracles[newBackend]) {
@@ -170,22 +197,26 @@ contract CarbonOracle is Ownable {
         emit BackendUpdated(address(0), newBackend);
     }
 
-    function getOracles() external view returns (address[] memory) {
-        return _oracleList;
-    }
-
-    function oracleCount() external view returns (uint256) {
-        return _oracleList.length;
-    }
-
     function setQIEPass(address qiePass_) external onlyOwner {
         require(qiePass_ != address(0), "CarbonOracle: zero QIE Pass");
         qiePass = IQIEPass(qiePass_);
         emit QIEPassUpdated(qiePass_);
     }
 
-    // A KYC'd buyer asks for the extended docs on a verified project. We
-    ///         only record the grant here; the backend serves the redacted files.
+    /// @notice Wire the TCC ERC-20 token. Once set, every approved project also
+    ///         gets `tonnes` TCC minted to the project owner (1 TCC = 1 tonne CO₂).
+    function setCreditToken(address token_) external onlyOwner {
+        require(token_ != address(0), "CarbonOracle: zero token");
+        creditToken = ICarbonCreditToken(token_);
+    }
+
+    function getOracles() external view returns (address[] memory) { return _oracleList; }
+    function oracleCount() external view returns (uint256) { return _oracleList.length; }
+
+    // ── Document access ─────────────────────────────────────────────────────
+
+    /// @notice A KYC-verified buyer requests extended doc access for a project.
+    ///         We only record the grant here; the backend serves redacted files.
     function requestDocumentAccess(bytes32 projectId) external {
         require(address(qiePass) != address(0), "CarbonOracle: QIE Pass not set");
         require(qiePass.isVerified(msg.sender), "CarbonOracle: QIE Pass identity required");
@@ -194,10 +225,11 @@ contract CarbonOracle is Ownable {
         emit DocumentAccessGranted(projectId, msg.sender, block.timestamp);
     }
 
-    // One oracle's attestation of a project's verification result. The
-    ///         backend calls this after running the five modules. docHash is the
-    ///         SHA-256 of the deed (proof, not the deed); the two *HardFail flags
-    ///         are the gates that zero the score regardless of the points.
+    // ── Core verification ───────────────────────────────────────────────────
+
+    /// @notice Submit an oracle's attestation for a project's AI result.
+    ///         Once `threshold` oracles submit the same result hash, the project finalises:
+    ///         mint on pass, fraud-flag on hard-fail, reject on low score.
     function submitVerification(
         bytes32           projectId,
         uint256           gpsScore,
@@ -212,12 +244,12 @@ contract CarbonOracle is Ownable {
         uint256           tonnes,
         bytes32           docHash
     ) external onlyAuthorizedOracle {
-        require(!finalized[projectId], "CarbonOracle: already finalized");
-        require(!hasAttested[projectId][msg.sender], "CarbonOracle: oracle already attested");
-        require(gpsScore       <= MAX_GPS,       "CarbonOracle: gpsScore out of range");
-        require(ownershipScore <= MAX_OWNERSHIP, "CarbonOracle: ownershipScore out of range");
-        require(anomalyScore   <= MAX_ANOMALY,   "CarbonOracle: anomalyScore out of range");
-        require(satelliteScore <= MAX_SATELLITE, "CarbonOracle: satelliteScore out of range");
+        require(!finalized[projectId],                "CarbonOracle: already finalized");
+        require(!hasAttested[projectId][msg.sender],  "CarbonOracle: oracle already attested");
+        require(gpsScore       <= MAX_GPS,            "CarbonOracle: gpsScore out of range");
+        require(ownershipScore <= MAX_OWNERSHIP,      "CarbonOracle: ownershipScore out of range");
+        require(anomalyScore   <= MAX_ANOMALY,        "CarbonOracle: anomalyScore out of range");
+        require(satelliteScore <= MAX_SATELLITE,      "CarbonOracle: satelliteScore out of range");
 
         ProjectRegistry.Project memory project = registry.getProject(projectId);
         require(project.submittedAt != 0, "CarbonOracle: project not in registry");
@@ -226,7 +258,6 @@ contract CarbonOracle is Ownable {
             "CarbonOracle: project not pending"
         );
 
-        // Hash the full result so two oracles only "agree" if every field matches.
         bytes32 resultHash = keccak256(abi.encode(
             projectId, gpsScore, ownershipScore, anomalyScore, satelliteScore,
             gpsHardFail, ownershipHardFail, vintage, tonnes, docHash,
@@ -236,7 +267,6 @@ contract CarbonOracle is Ownable {
         hasAttested[projectId][msg.sender] = true;
         uint256 count = ++attestationCount[projectId][resultHash];
 
-        // Stash the scores now so they're queryable even before we hit threshold.
         VerificationRecord storage rec = verifications[projectId];
         rec.projectId      = projectId;
         rec.submitter      = project.owner;
@@ -254,7 +284,7 @@ contract CarbonOracle is Ownable {
             _finalize(projectId, project.owner, gpsHardFail, ownershipHardFail, flags, vintage, tonnes);
         }
     }
-    ///      the same resultHash, so reading scores back from storage is safe.
+
     function _finalize(
         bytes32           projectId,
         address           owner,
@@ -271,7 +301,7 @@ contract CarbonOracle is Ownable {
         uint256 total   = hardFailed
             ? 0
             : (rec.gpsScore + rec.ownershipScore + rec.anomalyScore + rec.satelliteScore);
-        bool passed     = !hardFailed && total >= MIN_SCORE;
+        bool passed = !hardFailed && total >= MIN_SCORE;
 
         rec.totalScore   = total;
         rec.passed       = passed;
@@ -284,7 +314,7 @@ contract CarbonOracle is Ownable {
         if (passed) {
             _handleApproval(projectId, owner, rec.reportIpfsCid, vintage, tonnes, total);
         } else if (hardFailed) {
-            _handleFraud(projectId, owner, flags, rec.reportIpfsCid, gpsHardFail, ownershipHardFail);
+            _handleFraud(projectId, owner, flags, rec.reportIpfsCid, gpsHardFail, ownershipHardFail, total);
         } else {
             _handleRejection(projectId, owner, total, flags);
         }
@@ -300,37 +330,62 @@ contract CarbonOracle is Ownable {
     ) internal {
         registry.approveProject(projectId);
         VerificationRecord storage rec = verifications[projectId];
-        // Pass the scores through to the NFT so they live with the token.
+
+        // Mint the ERC-721 verification certificate (proof of AI pass).
         uint256 tokenId = creditContract.mint(
             owner, projectId, reportIpfsCid, vintage, tonnes,
             uint8(rec.gpsScore), uint8(rec.ownershipScore),
             uint8(rec.anomalyScore), uint8(rec.satelliteScore)
         );
         rec.mintedTokenId = tokenId;
+
+        // Mint TCC ERC-20 tokens — 1 TCC = 1 tonne CO₂ — directly to the project owner.
+        // If creditToken is not yet wired, this step is skipped silently (non-blocking).
+        if (address(creditToken) != address(0) && tonnes > 0) {
+            try creditToken.issue(owner, tonnes, projectId) {} catch {}
+        }
+
         emit CreditApproved(projectId, owner, tokenId, totalScore, reportIpfsCid);
     }
 
     function _handleFraud(
-        bytes32 projectId,
-        address owner,
+        bytes32           projectId,
+        address           owner,
         string[] calldata flags,
-        string memory reportIpfsCid,
-        bool gpsHardFail,
-        bool ownershipHardFail
+        string memory     reportIpfsCid,
+        bool              gpsHardFail,
+        bool              ownershipHardFail,
+        uint256           score
     ) internal {
         string memory reason = _buildFraudReason(gpsHardFail, ownershipHardFail);
         registry.flagFraud(projectId, reason);
-        emit FraudAttemptLogged(projectId, owner, 0, flags, reportIpfsCid, block.timestamp);
+
+        // Increment the public fraud counter.
+        _fraudsBlocked++;
+
+        // Append to the permanent fraud log (wallet, reason, flags, timestamp).
+        _fraudLog.push();
+        FraudRecord storage fr = _fraudLog[_fraudLog.length - 1];
+        fr.projectId = projectId;
+        fr.wallet    = owner;
+        fr.reason    = reason;
+        fr.score     = score;
+        fr.timestamp = block.timestamp;
+        for (uint256 i = 0; i < flags.length; i++) {
+            fr.flags.push(flags[i]);
+        }
+
+        emit FraudAttemptLogged(projectId, owner, reason, flags, reportIpfsCid, block.timestamp);
     }
 
     function _handleRejection(
-        bytes32 projectId,
-        address owner,
-        uint256 totalScore,
+        bytes32           projectId,
+        address           owner,
+        uint256           totalScore,
         string[] calldata flags
     ) internal {
         string memory reason = string(abi.encodePacked(
-            "Score ", Strings.toString(totalScore), "/100 - minimum required: ", Strings.toString(MIN_SCORE)
+            "Score ", Strings.toString(totalScore), "/100 below 70 minimum"
         ));
         registry.rejectProject(projectId, reason);
         emit VerificationFailed(projectId, owner, totalScore, flags);
@@ -339,13 +394,41 @@ contract CarbonOracle is Ownable {
     function _buildFraudReason(bool gpsHardFail, bool ownershipHardFail)
         internal pure returns (string memory)
     {
-        if (gpsHardFail && ownershipHardFail) {
+        if (gpsHardFail && ownershipHardFail)
             return "Hard fail: GPS overlap >20% AND ownership GPS mismatch";
-        } else if (gpsHardFail) {
-            return "Hard fail: GPS overlap >20% - duplicate land claim detected";
-        } else {
-            return "Hard fail: ownership document GPS does not match submitted polygon";
+        if (gpsHardFail)
+            return "Hard fail: GPS overlap >20% - duplicate land claim";
+        return "Hard fail: ownership document GPS does not match submitted polygon";
+    }
+
+    // ── Public read API ─────────────────────────────────────────────────────
+
+    /// @notice Total hard-fail fraud attempts blocked, ever.
+    function fraudsBlocked() external view returns (uint256) { return _fraudsBlocked; }
+
+    /// @notice Full fraud log — every blocked hard-fail with wallet, reason, flags, timestamp.
+    ///         Public and permanent — anyone can audit the history.
+    function getFraudLog() external view returns (FraudRecord[] memory) {
+        return _fraudLog;
+    }
+
+    /// @notice All fraud records triggered by a specific wallet address.
+    function getFraudsByWallet(address wallet) external view returns (FraudRecord[] memory) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < _fraudLog.length; i++) {
+            if (_fraudLog[i].wallet == wallet) count++;
         }
+        FraudRecord[] memory result = new FraudRecord[](count);
+        uint256 j = 0;
+        for (uint256 i = 0; i < _fraudLog.length; i++) {
+            if (_fraudLog[i].wallet == wallet) result[j++] = _fraudLog[i];
+        }
+        return result;
+    }
+
+    /// @notice All project IDs that have been verified (pass, fail, or fraud).
+    function getAllVerifiedIds() external view returns (bytes32[] memory) {
+        return _allVerifiedIds;
     }
 
     function getVerification(bytes32 projectId)
@@ -354,16 +437,11 @@ contract CarbonOracle is Ownable {
         return verifications[projectId];
     }
 
-    function getAllVerifiedIds() external view returns (bytes32[] memory) {
-        return _allVerifiedIds;
-    }
-
     function getDocumentHash(bytes32 projectId) external view returns (bytes32) {
         return verifications[projectId].docHash;
     }
 
-    // Prove a deed is the exact one that passed, without revealing it:
-    ///         hash your copy and compare against what we stored.
+    /// @notice Prove a deed is the exact document that passed — hash your copy, compare.
     function verifyDocument(bytes32 projectId, bytes32 candidateHash)
         external view returns (bool)
     {
@@ -371,8 +449,7 @@ contract CarbonOracle is Ownable {
         return stored != bytes32(0) && stored == candidateHash;
     }
 
-    // Every project ever flagged as a fraud attempt. On-chain forever —
-    ///         that permanence is half the point.
+    /// @notice Returns projectIds of all fraud-flagged attempts.
     function getFraudAttempts() external view returns (bytes32[] memory) {
         uint256 count;
         for (uint256 i = 0; i < _allVerifiedIds.length; i++) {
@@ -381,9 +458,8 @@ contract CarbonOracle is Ownable {
         bytes32[] memory result = new bytes32[](count);
         uint256 j;
         for (uint256 i = 0; i < _allVerifiedIds.length; i++) {
-            if (verifications[_allVerifiedIds[i]].fraudAttempt) {
+            if (verifications[_allVerifiedIds[i]].fraudAttempt)
                 result[j++] = _allVerifiedIds[i];
-            }
         }
         return result;
     }

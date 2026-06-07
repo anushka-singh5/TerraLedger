@@ -29,6 +29,11 @@ contract CarbonMarketplace is Ownable, ReentrancyGuard, ERC721Holder {
     mapping(uint256 => Listing) public listings;
     uint256[] private _listedTokenIds;        // for enumeration in the UI
 
+    /// @notice Total QUSDC volume traded (raw 6-decimal units), ever.
+    uint256 public totalVolume;
+    /// @notice Total number of successful credit sales, ever.
+    uint256 public totalSales;
+
     event Listed(uint256 indexed tokenId, address indexed seller, uint256 price);
     event Unlisted(uint256 indexed tokenId, address indexed seller);
     event Sold(uint256 indexed tokenId, address indexed seller, address indexed buyer, uint256 price, uint256 fee);
@@ -112,6 +117,10 @@ contract CarbonMarketplace is Ownable, ReentrancyGuard, ERC721Holder {
         }
 
         creditNFT.safeTransferFrom(item.seller, msg.sender, tokenId);
+
+        // Track cumulative volume and sales count for on-chain analytics.
+        totalVolume += item.price;
+        totalSales  += 1;
 
         emit Sold(tokenId, item.seller, msg.sender, item.price, fee);
     }

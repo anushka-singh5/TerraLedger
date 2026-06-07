@@ -78,10 +78,51 @@ async function main() {
   await (await oracle.setQIEPass(qiePassAddr)).wait();
   console.log("  →", qiePassAddr, "· oracle.setQIEPass ✓");
 
+  sep("7  Wire marketplace → CarbonCredit (for Listed status in tokenURI)");
+  await (await credit.setMarketplace(marketAddr)).wait();
+  console.log("  setMarketplace ✓ — tokenURI will now reflect Listed/Active/Retired");
+
+  sep("8  CarbonCreditToken (TCC — 1 token = 1 tonne CO₂)");
+  const tcc = await (await ethers.getContractFactory("CarbonCreditToken")).deploy(deployer.address);
+  await tcc.waitForDeployment();
+  const tccAddr = await tcc.getAddress();
+  console.log("  →", tccAddr);
+
+  sep("9  TCCMarketplace (ERC-20 carbon credit trading)");
+  const tccMkt = await (await ethers.getContractFactory("TCCMarketplace")).deploy(tccAddr, QUSDC, deployer.address);
+  await tccMkt.waitForDeployment();
+  const tccMktAddr = await tccMkt.getAddress();
+  console.log("  →", tccMktAddr);
+
+  sep("10 RetirementCertificate (TLRET — soulbound proof of CO2 offset)");
+  const retCert = await (await ethers.getContractFactory("RetirementCertificate")).deploy();
+  await retCert.waitForDeployment();
+  const retCertAddr = await retCert.getAddress();
+  console.log("  →", retCertAddr);
+
+  sep("11 Wire everything");
+  // TCC ← oracle address (for minting)
+  await (await tcc.setOracle(oracleAddr)).wait();
+  // TCC ← RetirementCertificate (mints cert on retire)
+  await (await tcc.setRetirementCert(retCertAddr)).wait();
+  // RetirementCertificate ← TCC address (only TCC can mint certs)
+  await (await retCert.setTCCContract(tccAddr)).wait();
+  // CarbonOracle ← TCC address (issues TCC alongside NFT on approval)
+  await (await oracle.setCreditToken(tccAddr)).wait();
+  // TLCERT ← TCC address (reads isFullyRetired for tokenURI status)
+  await (await credit.setTCCToken(tccAddr)).wait();
+  console.log("  TCC.setOracle ✓");
+  console.log("  TCC.setRetirementCert ✓");
+  console.log("  RetirementCertificate.setTCCContract ✓");
+  console.log("  CarbonOracle.setCreditToken ✓");
+  console.log("  CarbonCredit.setTCCToken ✓");
+
   // deployer is intentionally left out of the record — it's public on-chain anyway.
   const contracts = {
     ProjectRegistry: registryAddr, CarbonCredit: creditAddr, CarbonOracle: oracleAddr,
     CarbonMarketplace: marketAddr, QUSDC, MockQIEPass: qiePassAddr,
+    CarbonCreditToken: tccAddr, TCCMarketplace: tccMktAddr,
+    RetirementCertificate: retCertAddr,
   };
   const outPath = path.join(__dirname, "..", "addresses", `${chainId}.json`);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });

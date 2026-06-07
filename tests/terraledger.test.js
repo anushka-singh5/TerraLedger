@@ -320,7 +320,7 @@ describe("TerraLedger", () => {
     });
   });
 
-  describe("Marketplace — list, buy, fee, retire", () => {
+  describe("Soulbound certificate — non-transferable", () => {
     async function mintTo(fx, signer, idStr) {
       const id = ethers.encodeBytes32String(idStr);
       await submitProject(fx.registry, signer, id);
@@ -329,62 +329,39 @@ describe("TerraLedger", () => {
       return { id, tokenId };
     }
 
-    it("lists and sells a credit, paying seller in QUSDC and transferring the NFT", async () => {
+    it("certificate stays in minter's wallet — transfer reverts", async () => {
       const fx = await loadFixture(deployFixture);
-      const { credit, qusdc, market, owner, user, buyer } = fx;
-      const { tokenId } = await mintTo(fx, user, "CP-MKT1");
-
-      const marketAddr = await market.getAddress();
-      const price = ethers.parseUnits("100", 6);
-
-      await credit.connect(user).approve(marketAddr, tokenId);
-      await market.connect(user).list(tokenId, price);
-
-      // fund buyer with QUSDC + approve marketplace
-      await qusdc.connect(owner).transfer(buyer.address, ethers.parseUnits("500", 6));
-      await qusdc.connect(buyer).approve(marketAddr, price);
-
-      await expect(market.connect(buyer).buy(tokenId)).to.emit(market, "Sold");
-
-      expect(await credit.ownerOf(tokenId)).to.equal(buyer.address);
-      expect(await qusdc.balanceOf(user.address)).to.equal(price); // seller got full price (fee 0)
+      const { credit, user, buyer } = fx;
+      const { tokenId } = await mintTo(fx, user, "CP-SOUL1");
+      expect(await credit.ownerOf(tokenId)).to.equal(user.address);
+      await expect(
+        credit.connect(user).transferFrom(user.address, buyer.address, tokenId)
+      ).to.be.revertedWith("CarbonCredit: certificate is soulbound - non-transferable");
     });
 
-    it("splits a platform fee to the treasury", async () => {
+    it("approve is disabled on soulbound certificate", async () => {
       const fx = await loadFixture(deployFixture);
-      const { credit, qusdc, market, owner, user, buyer, stranger } = fx;
-      const { tokenId } = await mintTo(fx, user, "CP-MKT2");
-      const marketAddr = await market.getAddress();
-      const price = ethers.parseUnits("100", 6);
-
-      await market.setFee(250, stranger.address); // 2.5% fee, treasury = stranger
-      await credit.connect(user).approve(marketAddr, tokenId);
-      await market.connect(user).list(tokenId, price);
-      await qusdc.connect(owner).transfer(buyer.address, price);
-      await qusdc.connect(buyer).approve(marketAddr, price);
-      await market.connect(buyer).buy(tokenId);
-
-      const fee = price * 250n / 10000n;
-      expect(await qusdc.balanceOf(stranger.address)).to.equal(fee);
-      expect(await qusdc.balanceOf(user.address)).to.equal(price - fee);
+      const { credit, user, buyer } = fx;
+      const { tokenId } = await mintTo(fx, user, "CP-SOUL2");
+      await expect(
+        credit.connect(user).approve(buyer.address, tokenId)
+      ).to.be.revertedWith("CarbonCredit: approvals disabled - soulbound");
     });
 
-    it("caps the fee at 10%", async () => {
+    it("setApprovalForAll is disabled on soulbound certificate", async () => {
+      const fx = await loadFixture(deployFixture);
+      const { credit, user, buyer } = fx;
+      await expect(
+        credit.connect(user).setApprovalForAll(buyer.address, true)
+      ).to.be.revertedWith("CarbonCredit: approvals disabled - soulbound");
+    });
+
+    it("caps the marketplace fee at 10%", async () => {
       const { market, owner } = await loadFixture(deployFixture);
       await expect(market.setFee(1001, owner.address)).to.be.revertedWith("Marketplace: fee too high");
     });
 
-    it("cannot buy your own listing", async () => {
-      const fx = await loadFixture(deployFixture);
-      const { credit, market, user } = fx;
-      const { tokenId } = await mintTo(fx, user, "CP-MKT3");
-      const marketAddr = await market.getAddress();
-      await credit.connect(user).approve(marketAddr, tokenId);
-      await market.connect(user).list(tokenId, ethers.parseUnits("10", 6));
-      await expect(market.connect(user).buy(tokenId)).to.be.revertedWith("Marketplace: cannot buy own listing");
-    });
-
-    it("retire burns the token, records who/when, and blocks double-retire", async () => {
+    it("retire marks certificate as retired — NFT stays in wallet, blocks double-retire", async () => {
       const fx = await loadFixture(deployFixture);
       const { credit, user } = fx;
       const { tokenId } = await mintTo(fx, user, "CP-RETIRE");
@@ -393,9 +370,10 @@ describe("TerraLedger", () => {
       const c = await credit.credits(tokenId);
       expect(c.retired).to.equal(true);
       expect(c.retiredBy).to.equal(user.address);
-      // token burned → ownerOf reverts, and retire again reverts
-      await expect(credit.ownerOf(tokenId)).to.be.reverted;
-      await expect(credit.connect(user).retire(tokenId)).to.be.reverted;
+      // NFT stays in wallet — ownerOf still resolves (soulbound, not burned)
+      expect(await credit.ownerOf(tokenId)).to.equal(user.address);
+      // double-retire blocked
+      await expect(credit.connect(user).retire(tokenId)).to.be.revertedWith("CarbonCredit: already retired");
     });
 
     it("only the token owner can retire", async () => {
