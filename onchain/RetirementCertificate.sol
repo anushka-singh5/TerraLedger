@@ -6,16 +6,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-/// @title RetirementCertificate — TLRET
-/// @notice Soulbound ERC-721 minted automatically when TCC tokens are retired.
-///         Proves on-chain that the holder permanently offset X tonnes of CO₂.
-///         Non-transferable — the proof stays with whoever retired the credits.
 contract RetirementCertificate is ERC721, Ownable {
     using Strings for uint256;
 
     struct RetirementData {
         address retiredBy;
-        uint256 amount;     // tonnes CO₂ offset
+        uint256 amount;
         bytes32 projectId;
         uint256 timestamp;
     }
@@ -40,8 +36,7 @@ contract RetirementCertificate is ERC721, Ownable {
 
     constructor() ERC721("TerraLedger Retirement Certificate", "TLRET") Ownable(msg.sender) {}
 
-    // ── Soulbound ─────────────────────────────────────────────────────────
-
+    // soulbound
     function _update(address to, uint256 tokenId, address auth)
         internal override returns (address)
     {
@@ -58,14 +53,10 @@ contract RetirementCertificate is ERC721, Ownable {
         revert("TLRET: approvals disabled - soulbound");
     }
 
-    // ── Admin ─────────────────────────────────────────────────────────────
-
     function setTCCContract(address tcc_) external onlyOwner {
         require(tcc_ != address(0), "TLRET: zero address");
         tccContract = tcc_;
     }
-
-    // ── Mint — called by CarbonCreditToken on every retire() ──────────────
 
     function mint(address to, uint256 amount, bytes32 projectId)
         external onlyTCC returns (uint256 tokenId)
@@ -87,15 +78,11 @@ contract RetirementCertificate is ERC721, Ownable {
         emit RetirementCertMinted(tokenId, to, amount, projectId);
     }
 
-    // ── Read API ──────────────────────────────────────────────────────────
-
     function getWalletCerts(address wallet) external view returns (uint256[] memory) {
         return _walletTokens[wallet];
     }
 
     function totalMinted() external view returns (uint256) { return _nextTokenId; }
-
-    // ── tokenURI — fully on-chain SVG ─────────────────────────────────────
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         RetirementData memory r = retirements[tokenId];
@@ -126,8 +113,6 @@ contract RetirementCertificate is ERC721, Ownable {
             Base64.encode(bytes(json))
         ));
     }
-
-    // ── SVG helpers ───────────────────────────────────────────────────────
 
     function _buildSVG(uint256 tokenId, RetirementData memory r)
         internal pure returns (string memory)
@@ -165,11 +150,9 @@ contract RetirementCertificate is ERC721, Ownable {
         ));
     }
 
-    // ── Byte helpers ──────────────────────────────────────────────────────
-
     function _pidShort(bytes32 pid) internal pure returns (string memory) {
         bytes memory hex_ = "0123456789abcdef";
-        bytes memory r = new bytes(13); // "0x" + 8 hex + "..."
+        bytes memory r = new bytes(13);
         r[0] = '0'; r[1] = 'x';
         for (uint256 i = 0; i < 4; i++) {
             r[2 + i * 2] = hex_[uint8(pid[i] >> 4)];
@@ -180,8 +163,8 @@ contract RetirementCertificate is ERC721, Ownable {
     }
 
     function _addrShort(address addr) internal pure returns (string memory) {
-        bytes memory b = bytes(Strings.toHexString(addr)); // 42 chars: "0x" + 40 hex
-        bytes memory r = new bytes(13); // "0x1234...5678"
+        bytes memory b = bytes(Strings.toHexString(addr));
+        bytes memory r = new bytes(13);
         for (uint256 i = 0; i < 6; i++) r[i] = b[i];
         r[6] = '.'; r[7] = '.'; r[8] = '.';
         r[9] = b[38]; r[10] = b[39]; r[11] = b[40]; r[12] = b[41];

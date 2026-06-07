@@ -5,10 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-/// @title TCCMarketplace — buy and sell TCC (TerraLedger Carbon Credits) in any quantity.
-/// @notice Sellers list a quantity of TCC at a fixed price per tonne (in QUSDC).
-///         Buyers can fill all or part of a listing atomically. Remaining TCC
-///         stays listed until the seller unlists or the listing is fully filled.
 contract TCCMarketplace is Ownable, ReentrancyGuard {
 
     IERC20 public immutable tcc;
@@ -20,17 +16,17 @@ contract TCCMarketplace is Ownable, ReentrancyGuard {
 
     struct Listing {
         address seller;
-        uint256 amountLeft;      // TCC remaining (= tonnes)
-        uint256 pricePerTonne;   // QUSDC per 1 TCC (6 decimals)
-        bytes32 projectId;       // which project these TCC came from
+        uint256 amountLeft;
+        uint256 pricePerTonne;  // QUSDC per TCC (6 decimals)
+        bytes32 projectId;      // source project — buyer needs this to retire correctly
         bool    active;
     }
 
     mapping(uint256 => Listing) public listings;
     uint256 public nextListingId;
 
-    uint256 public totalVolume;  // cumulative QUSDC traded
-    uint256 public totalSales;   // number of buy() calls filled
+    uint256 public totalVolume;
+    uint256 public totalSales;
 
     event Listed(uint256 indexed listingId, address indexed seller, uint256 amount, uint256 pricePerTonne, bytes32 indexed projectId);
     event Unlisted(uint256 indexed listingId, address indexed seller, uint256 remaining);
@@ -52,10 +48,7 @@ contract TCCMarketplace is Ownable, ReentrancyGuard {
         emit FeeUpdated(newFeeBps, newTreasury);
     }
 
-    /// @notice List `amount` TCC for sale at `pricePerTonne` QUSDC each.
-    ///         `projectId` identifies which project these TCC came from — buyers use it
-    ///         to retire credits against the correct project for accurate offset tracking.
-    ///         Seller must approve this contract for `amount` TCC first.
+    // projectId stored on-chain so buyers always know which project to retire against
     function list(uint256 amount, uint256 pricePerTonne, bytes32 projectId) external returns (uint256 listingId) {
         require(amount > 0,         "TCCMkt: zero amount");
         require(pricePerTonne > 0,  "TCCMkt: zero price");
@@ -66,8 +59,6 @@ contract TCCMarketplace is Ownable, ReentrancyGuard {
         emit Listed(listingId, msg.sender, amount, pricePerTonne, projectId);
     }
 
-    /// @notice Buy `amount` TCC from listing `listingId`.
-    ///         Buyer must have approved this contract for `amount * pricePerTonne` QUSDC.
     function buy(uint256 listingId, uint256 amount) external nonReentrant {
         Listing storage item = listings[listingId];
         require(item.active,              "TCCMkt: not active");
@@ -93,7 +84,6 @@ contract TCCMarketplace is Ownable, ReentrancyGuard {
         emit Sold(listingId, item.seller, msg.sender, amount, totalCost, fee);
     }
 
-    /// @notice Seller withdraws remaining TCC and deactivates listing.
     function unlist(uint256 listingId) external {
         Listing storage item = listings[listingId];
         require(item.seller == msg.sender, "TCCMkt: not seller");
@@ -105,8 +95,6 @@ contract TCCMarketplace is Ownable, ReentrancyGuard {
         emit Unlisted(listingId, msg.sender, remaining);
     }
 
-    /// @notice All active listings for the UI — includes projectId so buyers know
-    ///         which project to retire against when offsetting their purchased TCC.
     function getActiveListings() external view returns (
         uint256[]  memory ids,
         address[]  memory sellers,

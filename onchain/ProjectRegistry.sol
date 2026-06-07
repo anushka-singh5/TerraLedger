@@ -3,25 +3,20 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-// ProjectRegistry
-// The land book. Holds each project's polygon + bounding box and its
-///         status. The backend reads polygons out of here to run overlap checks;
-///         the on-chain bbox gives anyone a cheap, trustless duplicate-land guard.
 contract ProjectRegistry is Ownable {
     enum ProjectStatus { Pending, Approved, Rejected, FraudFlagged }
 
     struct Project {
         bytes32 id;
         address owner;
-        string polygonGeoJSON;  // raw GeoJSON so AI backend can compute overlap
+        string polygonGeoJSON;
         uint256 areaHectares;
         uint256 claimedTonnes;
         uint256 submittedAt;
         ProjectStatus status;
-        string statusReason;    // rejection / fraud message
-        // Bounding box in microdegrees (lat/lng × 1e6) — integers, because Solidity
-        // has no floats. This is the coarse pre-filter for findOverlaps(); the real
-        // polygon intersection still happens off-chain in Shapely.
+        string statusReason;
+        // bbox in microdegrees (lat/lng × 1e6) — no floats in Solidity.
+        // used as a cheap pre-filter in findOverlaps(); Shapely does the real check off-chain.
         int64 minLat;
         int64 minLng;
         int64 maxLat;
@@ -56,9 +51,6 @@ contract ProjectRegistry is Ownable {
         oracle = newOracle;
     }
 
-    // Register a project. Anyone can submit; the bbox is microdegrees so
-    ///         findOverlaps() stays float-free. Status starts Pending until the
-    ///         oracle rules on it.
     function submitProject(
         bytes32 id,
         string calldata polygonGeoJSON,
@@ -109,7 +101,7 @@ contract ProjectRegistry is Ownable {
         emit ProjectRejected(id, projects[id].owner, reason);
     }
 
-    // Mark a project as fraud. One-way — there's no un-flag, on purpose.
+    // one-way — there's intentionally no un-flag
     function flagFraud(bytes32 id, string calldata reason) external onlyOracle {
         require(projects[id].submittedAt != 0, "ProjectRegistry: unknown project");
         projects[id].status = ProjectStatus.FraudFlagged;
@@ -125,12 +117,11 @@ contract ProjectRegistry is Ownable {
         return projects[id].polygonGeoJSON;
     }
 
-    // Every project ID, any status — the backend pulls polygons from here.
+    // backend pulls all polygons from here to run overlap detection
     function getAllProjectIds() external view returns (bytes32[] memory) {
         return _allIds;
     }
 
-    // Just the approved ones, i.e. land that's actually claimed.
     function getApprovedProjectIds() external view returns (bytes32[] memory) {
         uint256 count;
         for (uint256 i = 0; i < _allIds.length; i++) {
@@ -157,9 +148,8 @@ contract ProjectRegistry is Ownable {
         return (p.minLat, p.minLng, p.maxLat, p.maxLng);
     }
 
-    // Approved projects whose bbox touches the query box. A hit is only a
-    ///         *candidate* duplicate — Shapely makes the final call off-chain — but
-    ///         anyone can run this without trusting us, which is the whole value.
+    // returns approved projects whose bbox overlaps the query — candidate duplicates only,
+    // Shapely still makes the final call off-chain
     function findOverlaps(int64 minLat, int64 minLng, int64 maxLat, int64 maxLng)
         external view returns (bytes32[] memory)
     {

@@ -6,60 +6,45 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-/// @dev Minimal interface — only what tokenURI needs to check listing status.
+// minimal read — only needed so tokenURI can reflect Listed status
 interface IMarketplaceListing {
     struct Listing { address seller; uint256 price; bool active; }
     function getListing(uint256 tokenId) external view returns (Listing memory);
 }
 
-/// @dev Read-only TCC interface — lets tokenURI show "Fully Offset" when every
-///      TCC issued for this project has been burned by retirees.
+// read isFullyRetired() from TCC so tokenURI flips to "Fully Offset" automatically
 interface ITCCToken {
     function isFullyRetired(bytes32 projectId) external view returns (bool);
 }
 
-/// @title CarbonCredit
-/// @notice ERC-721 carbon credit NFT. Only the oracle can mint (it ran the AI
-///         checks). retire() burns the token but keeps the on-chain record — so
-///         a retired credit is still publicly verifiable forever.
-///
-///         tokenURI is fully on-chain: Base64-encoded JSON with an inline SVG image
-///         that shows credit number, AI score, tonnes, vintage and real-time status
-///         (Active / Listed / Retired). No IPFS or server dependency for metadata.
 contract CarbonCredit is ERC721, Ownable {
     using Strings for uint256;
 
     struct CreditData {
         bytes32 projectId;
-        uint256 vintage;        // year of carbon removal
-        uint256 tonnes;         // verified CO2 tonnes this token represents
-        string  ipfsCid;        // IPFS CID of the AI-generated audit report
+        uint256 vintage;
+        uint256 tonnes;
+        string  ipfsCid;
         bool    retired;
         uint256 retiredAt;
         address retiredBy;
-        // Scores stored on-chain — a buyer reads the trust score straight from
-        // the token, no backend or IPFS round-trip needed.
-        uint16  score;          // total 0-100
-        uint8   gpsScore;       // 0-30
-        uint8   ownershipScore; // 0-25
-        uint8   anomalyScore;   // 0-25
-        uint8   satelliteScore; // 0-20
+        // scores stored on-chain so a buyer can read trust level without hitting IPFS
+        uint16  score;
+        uint8   gpsScore;
+        uint8   ownershipScore;
+        uint8   anomalyScore;
+        uint8   satelliteScore;
     }
 
     address public oracle;
-    /// @notice Set via setMarketplace() so tokenURI can reflect Listed status.
-    address public marketplace;
-    /// @notice Set via setTCCToken() so tokenURI can show "Fully Offset" when
-    ///         all TCC from this project have been retired.
-    address public tccToken;
+    address public marketplace; // optional — enables "Listed" status in tokenURI
+    address public tccToken;    // optional — enables "Fully Offset" status in tokenURI
 
     uint256 private _nextTokenId;
     uint256 private _retiredCount;
 
     mapping(uint256 => CreditData) public credits;
     mapping(bytes32 => uint256[])  public projectTokens;
-
-    // ── Events ──────────────────────────────────────────────────────────────
 
     event OracleUpdated(address indexed previous, address indexed next);
     event MarketplaceUpdated(address indexed previous, address indexed next);
@@ -78,14 +63,10 @@ contract CarbonCredit is ERC721, Ownable {
         uint256 retiredAt
     );
 
-    // ── Modifiers ───────────────────────────────────────────────────────────
-
     modifier onlyOracle() {
         require(msg.sender == oracle, "CarbonCredit: not oracle");
         _;
     }
-
-    // ── Constructor ─────────────────────────────────────────────────────────
 
     constructor(address initialOracle)
         ERC721("TerraLedger Certificate", "TLCERT")
@@ -95,10 +76,7 @@ contract CarbonCredit is ERC721, Ownable {
         oracle = initialOracle;
     }
 
-    // ── Soulbound — non-transferable ────────────────────────────────────────
-
-    /// @notice Certificates are soulbound: only minting (from == address(0)) is
-    ///         allowed. Wallet-to-wallet transfers and burns are permanently blocked.
+    // soulbound: only allow minting (from == address(0)), block all transfers
     function _update(address to, uint256 tokenId, address auth)
         internal override returns (address)
     {
@@ -107,17 +85,13 @@ contract CarbonCredit is ERC721, Ownable {
         return super._update(to, tokenId, auth);
     }
 
-    /// @notice Approvals are disabled — a soulbound token cannot be transferred.
     function approve(address, uint256) public pure override {
         revert("CarbonCredit: approvals disabled - soulbound");
     }
 
-    /// @notice Operator approvals are disabled - a soulbound token cannot be transferred.
     function setApprovalForAll(address, bool) public pure override {
         revert("CarbonCredit: approvals disabled - soulbound");
     }
-
-    // ── Admin ───────────────────────────────────────────────────────────────
 
     function setOracle(address newOracle) external onlyOwner {
         require(newOracle != address(0), "CarbonCredit: zero oracle");
@@ -125,22 +99,15 @@ contract CarbonCredit is ERC721, Ownable {
         oracle = newOracle;
     }
 
-    /// @notice Point to CarbonMarketplace so tokenURI shows "Listed" status.
-    ///         Safe to leave unset — status gracefully falls back to "Active".
     function setMarketplace(address mp) external onlyOwner {
         emit MarketplaceUpdated(marketplace, mp);
         marketplace = mp;
     }
 
-    /// @notice Point to CarbonCreditToken so tokenURI shows "Fully Offset"
-    ///         when all TCC from a project have been retired. Safe to leave unset.
     function setTCCToken(address tcc_) external onlyOwner {
         tccToken = tcc_;
     }
 
-    // ── Core: mint / retire ─────────────────────────────────────────────────
-
-    /// @notice Oracle-only mint. Called once the backend scores ≥ 70 with no hard-fail.
     function mint(
         address   to,
         bytes32   projectId,
@@ -178,10 +145,7 @@ contract CarbonCredit is ERC721, Ownable {
         emit CreditMinted(tokenId, projectId, to, tonnes, ipfsCid);
     }
 
-    /// @notice Mark the certificate as retired. The NFT stays in the holder's wallet
-    ///         forever — it is the permanent proof that TCC tokens from this project
-    ///         were offset. No burn: the certificate must always be viewable on-chain.
-    ///         TCC retirement (the actual ERC-20 burn) is handled by CarbonCreditToken.
+    // marks cert retired; NFT stays in wallet as permanent proof — no burn
     function retire(uint256 tokenId) external {
         require(ownerOf(tokenId) == msg.sender, "CarbonCredit: not token owner");
         CreditData storage c = credits[tokenId];
@@ -193,16 +157,9 @@ contract CarbonCredit is ERC721, Ownable {
         emit CreditRetired(tokenId, c.projectId, msg.sender, c.tonnes, block.timestamp);
     }
 
-    // ── Public read API ─────────────────────────────────────────────────────
-
-    /// @notice Total credits ever minted (includes retired ones).
     function totalMinted() external view returns (uint256) { return _nextTokenId; }
-
-    /// @notice Total credits permanently retired / offset.
     function totalRetired() external view returns (uint256) { return _retiredCount; }
 
-    /// @notice All non-retired token IDs currently held by `owner_`.
-    ///         Iterates the full minted range — fine for small collections.
     function tokensOfOwner(address owner_) external view returns (uint256[] memory) {
         require(owner_ != address(0), "CarbonCredit: zero address");
         uint256 total = _nextTokenId;
@@ -222,10 +179,6 @@ contract CarbonCredit is ERC721, Ownable {
         return projectTokens[projectId];
     }
 
-    // ── contractURI — EIP-7572 collection metadata ──────────────────────────
-
-    /// @notice Collection-level metadata for explorers and marketplace aggregators.
-    ///         Returns Base64-encoded JSON with an inline SVG banner image.
     function contractURI() external pure returns (string memory) {
         string memory svg = _buildBannerSVG();
         string memory imageUri = string(abi.encodePacked(
@@ -246,10 +199,6 @@ contract CarbonCredit is ERC721, Ownable {
         ));
     }
 
-    // ── tokenURI — per-token on-chain SVG ───────────────────────────────────
-
-    /// @notice Fully on-chain metadata + SVG image. Works for live and retired tokens.
-    ///         Status reflects Active / Listed / Retired in real time.
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         CreditData memory c = credits[tokenId];
         require(c.tonnes > 0, "CarbonCredit: nonexistent token");
@@ -297,13 +246,10 @@ contract CarbonCredit is ERC721, Ownable {
         ));
     }
 
-    // ── Internal: status + color ─────────────────────────────────────────────
-
     function _statusOf(uint256 tokenId, bool retired_, bytes32 projectId)
         internal view returns (string memory)
     {
         if (retired_) return "Retired";
-        // Check if all TCC for this project have been retired → "Fully Offset"
         if (tccToken != address(0)) {
             try ITCCToken(tccToken).isFullyRetired(projectId) returns (bool fullyRetired) {
                 if (fullyRetired) return "Fully Offset";
@@ -327,8 +273,7 @@ contract CarbonCredit is ERC721, Ownable {
         return "#00e57a";
     }
 
-    // ── Internal: SVG helpers (split to stay under stack depth limit) ─────────
-
+    // split into three helpers to stay under Solidity's stack depth limit
     function _svgTop(string memory sColor) internal pure returns (string memory) {
         return string(abi.encodePacked(
             '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">',
@@ -358,7 +303,7 @@ contract CarbonCredit is ERC721, Ownable {
     function _svgBot(CreditData memory c, string memory status, string memory sColor)
         internal pure returns (string memory)
     {
-        // "Fully Offset" is longer — use wider badge (130px); others use 96px
+        // "Fully Offset" needs wider badge than the others
         bool wide = keccak256(bytes(status)) == keccak256(bytes("Fully Offset"));
         string memory badgeW  = wide ? "130" : "96";
         string memory badgeCX = wide ? "93"  : "76";
@@ -373,8 +318,6 @@ contract CarbonCredit is ERC721, Ownable {
             '</text></svg>'
         ));
     }
-
-    // ── Internal: collection banner SVG ────────────────────────────────────
 
     function _buildBannerSVG() internal pure returns (string memory) {
         string memory part1 = string(abi.encodePacked(
@@ -402,8 +345,6 @@ contract CarbonCredit is ERC721, Ownable {
         ));
         return string(abi.encodePacked(part1, part2));
     }
-
-    // ── Internal: bytes32 → hex string ──────────────────────────────────────
 
     function _bytes32ToHex(bytes32 b) internal pure returns (string memory) {
         bytes memory hex_ = "0123456789abcdef";

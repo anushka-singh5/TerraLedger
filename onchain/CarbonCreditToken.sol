@@ -8,19 +8,14 @@ interface IRetirementCertificate {
     function mint(address to, uint256 amount, bytes32 projectId) external returns (uint256);
 }
 
-/// @title CarbonCreditToken — TCC (TerraLedger Carbon Credit)
-/// @notice 1 TCC = 1 tonne CO2. Minted by the oracle when a project passes AI
-///         verification. Holders can retire (burn) any quantity — each burn is
-///         permanently logged on-chain and triggers a soulbound RetirementCertificate
-///         NFT minted to the retiree as proof of CO2 offset.
 contract CarbonCreditToken is ERC20, Ownable {
 
     address public oracle;
-    address public retirementCert;  // RetirementCertificate contract
+    address public retirementCert;
 
     struct RetirementRecord {
         address  retiredBy;
-        uint256  amount;        // in TCC (= tonnes)
+        uint256  amount;
         bytes32  projectId;
         uint256  timestamp;
     }
@@ -28,7 +23,7 @@ contract CarbonCreditToken is ERC20, Ownable {
     RetirementRecord[] private _retirements;
     uint256 private _totalRetiredTonnes;
 
-    // Per-project accounting — lets TLCERT know when all credits are offset.
+    // tracked per-project so TLCERT can flip to "Fully Offset" when issued == retired
     mapping(bytes32 => uint256) public issuedByProject;
     mapping(bytes32 => uint256) public retiredByProject;
 
@@ -44,25 +39,19 @@ contract CarbonCreditToken is ERC20, Ownable {
 
     constructor(address owner_) ERC20("TerraLedger Carbon Credit", "TCC") Ownable(owner_) {}
 
-    // ── Admin ─────────────────────────────────────────────────────────────
-
     function setOracle(address oracle_) external onlyOwner {
         require(oracle_ != address(0), "TCC: zero oracle");
         emit OracleUpdated(oracle, oracle_);
         oracle = oracle_;
     }
 
-    /// @notice Wire the RetirementCertificate contract. Safe to leave unset
-    ///         (cert minting is skipped silently if address is zero).
+    // safe to leave unset — TLRET mint is skipped if address is zero
     function setRetirementCert(address cert_) external onlyOwner {
         require(cert_ != address(0), "TCC: zero address");
         emit RetirementCertUpdated(retirementCert, cert_);
         retirementCert = cert_;
     }
 
-    // ── Core: issue / retire ──────────────────────────────────────────────
-
-    /// @notice Oracle mints `amount` TCC to `to` after a project passes AI verification.
     function issue(address to, uint256 amount, bytes32 projectId) external onlyOracle {
         require(to != address(0), "TCC: mint to zero address");
         require(amount > 0,       "TCC: zero amount");
@@ -71,13 +60,11 @@ contract CarbonCreditToken is ERC20, Ownable {
         emit CreditsIssued(to, amount, projectId);
     }
 
-    /// @notice Permanently retire (burn) `amount` TCC from caller's balance.
-    ///         Mints a soulbound RetirementCertificate to the caller as proof.
     function retire(uint256 amount, bytes32 projectId) external {
         require(amount > 0, "TCC: zero amount");
 
         _burn(msg.sender, amount);
-        _totalRetiredTonnes    += amount;
+        _totalRetiredTonnes        += amount;
         retiredByProject[projectId] += amount;
 
         _retirements.push(RetirementRecord({
@@ -89,16 +76,13 @@ contract CarbonCreditToken is ERC20, Ownable {
 
         emit CreditsRetired(msg.sender, amount, projectId);
 
-        // Mint soulbound retirement certificate to the retiree as permanent proof.
+        // best-effort TLRET mint — don't let a cert contract bug block the burn
         if (retirementCert != address(0)) {
             try IRetirementCertificate(retirementCert).mint(msg.sender, amount, projectId) {} catch {}
         }
     }
 
-    // ── Read API ──────────────────────────────────────────────────────────
-
-    /// @notice True when every TCC issued for a project has been retired.
-    ///         TLCERT reads this to show "Fully Offset" status in its tokenURI.
+    // TLCERT reads this to show "Fully Offset" in tokenURI
     function isFullyRetired(bytes32 projectId) external view returns (bool) {
         uint256 issued  = issuedByProject[projectId];
         uint256 retired = retiredByProject[projectId];
