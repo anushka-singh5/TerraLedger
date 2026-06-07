@@ -39,6 +39,9 @@ contract CarbonCreditToken is ERC20, Ownable {
 
     constructor(address owner_) ERC20("TerraLedger Carbon Credit", "TCC") Ownable(owner_) {}
 
+    // 1 TCC = 1 tonne CO₂ — whole units only, no fractions
+    function decimals() public pure override returns (uint8) { return 0; }
+
     function setOracle(address oracle_) external onlyOwner {
         require(oracle_ != address(0), "TCC: zero oracle");
         emit OracleUpdated(oracle, oracle_);

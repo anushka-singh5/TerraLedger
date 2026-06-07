@@ -1925,7 +1925,7 @@ async function updateQusdcBal(){
   const el=document.getElementById('qusdc-bal'); if(!walletAddr){ el.textContent='QUSDC: connect wallet'; return }
   try{ const q=new ethers.Contract(ADDRESSES.QUSDC,QUSDC_ABI,readProvider()); const b=await q.balanceOf(walletAddr); el.textContent='QUSDC: '+fmtQUSDC(b) }catch(_){}
   const tel=document.getElementById('tcc-bal'); if(!tel) return
-  try{ const t=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,readProvider()); const b=await t.balanceOf(walletAddr); tel.textContent='TCC: '+Number(b).toLocaleString()+' t CO₂' }catch(_){ tel.textContent='TCC: —' }
+  try{ const t=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,readProvider()); const b=await t.balanceOf(walletAddr); tel.textContent='TCC: '+b.toString()+' t CO₂' }catch(_){ tel.textContent='TCC: —' }
 }
 
 async function loadTCCMarketplace(){
@@ -1955,7 +1955,7 @@ async function loadTCCMarketplace(){
     </div>`
 
     const myTccBal = walletAddr ? await tcc.balanceOf(walletAddr).catch(()=>ethers.BigNumber.from(0)) : ethers.BigNumber.from(0)
-    const myTcc = Number(myTccBal)
+    const myTcc = Number(myTccBal.toString())
 
     const mySection = myTcc > 0 ? `
       <div style="background:rgba(0,229,122,0.05);border:1px solid rgba(0,229,122,0.2);border-radius:14px;padding:18px;margin-bottom:18px">
@@ -2054,7 +2054,7 @@ async function openRetireModal(projectId){
   if(!requireWallet()) return
   const rp=readProvider()
   const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
-  _tccRetireBal=Number(await tcc.balanceOf(walletAddr).catch(()=>0))
+  _tccRetireBal=Number(ethers.BigNumber.from(await tcc.balanceOf(walletAddr).catch(()=>0)).toString())
   if(_tccRetireBal<1){ showToast('No TCC to retire','error'); return }
   const ZERO32='0x'+('0'.repeat(64))
   const pidOk = projectId && projectId!=='undefined' && projectId!=='' && projectId!==ZERO32
@@ -2154,7 +2154,7 @@ async function openListTCCModal(){
   if(!requireWallet()) return
   const rp=readProvider()
   const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
-  _tccListBal=Number(await tcc.balanceOf(walletAddr).catch(()=>0))
+  _tccListBal=Number(ethers.BigNumber.from(await tcc.balanceOf(walletAddr).catch(()=>0)).toString())
   if(_tccListBal<1){ showToast('No TCC to list','error'); return }
   document.getElementById('tcc-list-price').value=''
   document.getElementById('tcc-list-total').textContent=''
@@ -2213,9 +2213,9 @@ async function confirmListTCC(){
   try{
     const rp=readProvider(); const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
     const allow=await tcc.allowance(walletAddr,ADDRESSES.TCCMarketplace).catch(()=>ethers.BigNumber.from(0))
-    if(ethers.BigNumber.from(allow).lt(amt)){
+    if(ethers.BigNumber.from(allow).lt(ethers.BigNumber.from(amt))){
       showToast('Approving TCC for marketplace…','success')
-      await rawSend(ADDRESSES.CarbonCreditToken,IFACE.tcc,'approve',[ADDRESSES.TCCMarketplace,amt],120000)
+      await rawSend(ADDRESSES.CarbonCreditToken,IFACE.tcc,'approve',[ADDRESSES.TCCMarketplace,ethers.BigNumber.from(amt)],120000)
     }
     showToast(`Listing ${amt.toLocaleString()} TCC at ${Number(priceStr).toFixed(2)} QUSDC/t…`,'success')
     await rawSend(ADDRESSES.TCCMarketplace,IFACE.tccMkt,'list',[amt,priceRaw,projectId],200000)
