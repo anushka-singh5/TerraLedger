@@ -13,13 +13,16 @@ __pycache__/
 dist/
 build/
 
+# ── Test documents (never commit land deeds / sample PDFs) ───────────────────
+samples/
+test_deeds/
+test_docs/
+
 # ── ML models & data ─────────────────────────────────────────────────────────
 store/*.pkl
 store/*.csv
+store/*.json
 store/generated_*
-store/reputation.json
-store/document_registry.json
-store/extended_documents.json
 store/reports/
 
 # ── Node / Hardhat ────────────────────────────────────────────────────────────
