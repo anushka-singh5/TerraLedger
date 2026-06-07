@@ -1845,9 +1845,9 @@ async function renderRetiredTab(){
       <div class=”cc-header”><div><div class=”cc-name”>${c.name?c.name:('Credit #'+c.tokenId)}</div>
         <div class=”cc-id”>Project ${c.projectId.slice(0,10)}…${c.projectId.slice(-4)}</div>
         <div class=”cc-status ${statusCls}”>${statusTxt}</div></div>${scoreBadge(c)}</div>
-      <div class=”cc-meta”>
-        <div class=”cc-meta-row”><span class=”cc-meta-label”>Tonnes CO₂</span><span class=”cc-meta-val”>${Number(c.tonnes).toLocaleString()} t</span></div>
-        <div class=”cc-meta-row”><span class=”cc-meta-label”>Vintage</span><span class=”cc-meta-val”>${c.vintage}</span></div>
+      <div style=”display:flex;flex-direction:column;gap:6px;margin-bottom:14px”>
+        <div style=”display:flex;justify-content:space-between;font-size:12px”><span style=”color:var(--muted)”>Tonnes CO₂</span><span style=”color:var(--muted2);font-family:var(--mono)”>${Number(c.tonnes).toLocaleString()} t</span></div>
+        <div style=”display:flex;justify-content:space-between;font-size:12px”><span style=”color:var(--muted)”>Vintage</span><span style=”color:var(--muted2);font-family:var(--mono)”>${c.vintage}</span></div>
       </div>
       <div class=”cc-footer”><div class=”cc-links”>
         <span class=”view-cred” onclick=”openCredModal('${c.tokenId}','${c.projectId}','${c.ipfsCid}')”>Credential ↗</span>
@@ -1859,23 +1859,23 @@ async function renderRetiredTab(){
     const date=r.timestamp?new Date(r.timestamp*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):''
     const pid=r.projectId?r.projectId.slice(0,10)+'…'+r.projectId.slice(-4):''
     return `<div class=”credit-card” style=”border-color:rgba(0,229,122,0.3);background:linear-gradient(145deg,var(--surface) 60%,rgba(0,229,122,0.05) 100%)”>
-      <div class=”cc-header”>
+      <div style=”display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:10px”>
         <div>
-          <div class=”cc-name”>Retirement Cert #${r.tokenId}</div>
-          <div class=”cc-id”>Project ${pid}</div>
-          <div class=”cc-status fully-offset”>PERMANENTLY RETIRED ✓</div>
+          <div style=”font-size:14px;font-weight:600;line-height:1.3”>Retirement Cert #${r.tokenId}</div>
+          <div style=”font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px”>${pid}</div>
+          <div class=”cc-status fully-offset” style=”margin-top:6px”>PERMANENTLY RETIRED ✓</div>
         </div>
-        <span class=”ai-score-badge” style=”color:var(--green);border-color:#00e57a33;background:#00e57a14”>TLRET #${r.tokenId}</span>
+        <span class=”ai-score-badge” style=”color:var(--green);border-color:#00e57a33;background:#00e57a14;flex-shrink:0”>TLRET #${r.tokenId}</span>
       </div>
-      <div style=”text-align:center;padding:12px 0 16px;border-bottom:1px solid var(--border)”>
+      <div style=”text-align:center;padding:12px 0 16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)”>
         <div style=”font-size:32px;font-weight:700;color:var(--green);font-family:var(--mono);line-height:1”>${Number(r.amount).toLocaleString()}</div>
         <div style=”font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.04em”>tonnes CO₂ permanently retired</div>
       </div>
-      <div class=”cc-meta” style=”margin-top:14px”>
-        <div class=”cc-meta-row”><span class=”cc-meta-label”>Project</span><span class=”cc-meta-val” style=”font-size:10px”>${pid}</span></div>
-        <div class=”cc-meta-row”><span class=”cc-meta-label”>Retired on</span><span class=”cc-meta-val”>${date}</span></div>
+      <div style=”display:flex;justify-content:space-between;align-items:center;padding-top:12px;font-size:12px”>
+        <span style=”color:var(--muted)”>Offset date</span>
+        <span style=”color:var(--muted2);font-family:var(--mono)”>${date}</span>
       </div>
-      <div class=”cc-footer”>
+      <div style=”display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border);margin-top:12px;gap:10px;flex-wrap:wrap”>
         <a class=”view-cred” href=”${EXPLORER}/token/${ADDRESSES.RetirementCertificate}?a=${r.tokenId}” target=”_blank”>Explorer ↗</a>
         <span style=”font-size:10px;color:var(--muted)”>Soulbound · non-transferable</span>
       </div></div>`
