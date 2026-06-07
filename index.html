@@ -610,11 +610,17 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 .proof-txn.fraud{border-color:rgba(255,69,96,0.22);background:rgba(255,69,96,0.03)}
 .proof-txn.fraud:hover{border-color:rgba(255,69,96,0.45);box-shadow:0 8px 32px rgba(255,69,96,0.08)}
 .proof-txn.retire{border-color:rgba(79,140,255,0.22);background:rgba(79,140,255,0.03)}
-.proof-txn.retire:hover{border-color:rgba(79,140,255,0.45)}
+.proof-txn.retire:hover{border-color:rgba(79,140,255,0.45);box-shadow:0 8px 32px rgba(79,140,255,0.08)}
+.proof-txn.list{border-color:rgba(245,166,35,0.22);background:rgba(245,166,35,0.03)}
+.proof-txn.list:hover{border-color:rgba(245,166,35,0.45);box-shadow:0 8px 32px rgba(245,166,35,0.08)}
+.proof-txn.buy{border-color:rgba(157,123,255,0.22);background:rgba(157,123,255,0.03)}
+.proof-txn.buy:hover{border-color:rgba(157,123,255,0.45);box-shadow:0 8px 32px rgba(157,123,255,0.08)}
 .ptag{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:6px;width:fit-content}
 .ptag.mint{background:rgba(0,229,122,0.12);color:var(--green)}
 .ptag.fraud{background:rgba(255,69,96,0.12);color:var(--red)}
 .ptag.retire{background:rgba(79,140,255,0.12);color:var(--blue)}
+.ptag.list{background:rgba(245,166,35,0.12);color:#f5a623}
+.ptag.buy{background:rgba(157,123,255,0.12);color:var(--purple)}
 .pdesc{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.35}
 .phash{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.5}
 .plink{font-size:11px;color:var(--blue);margin-top:2px;display:flex;align-items:center;gap:4px}
@@ -855,14 +861,26 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
         <span class="phash">0x820092…bd1d</span>
         <span class="plink">QIE Explorer ↗</span>
       </a>
-      <a class="proof-txn retire" href="https://mainnet.qie.digital/tx/0x898ba01c33f6549497908e6c2317fea6c87d1bef35e4895963426d1cb2e0925f" target="_blank" rel="noopener">
+      <a class="proof-txn list" href="https://mainnet.qie.digital/tx/0x507686319d2e4eb91e5fabb740a3f8c36489711348929a7f4116c971a321b471" target="_blank" rel="noopener">
+        <span class="ptag list">Listed ◈</span>
+        <span class="pdesc">200 TCC listed on marketplace</span>
+        <span class="phash">0x507686…b471</span>
+        <span class="plink">QIE Explorer ↗</span>
+      </a>
+      <a class="proof-txn buy" href="https://mainnet.qie.digital/tx/0x317714cc2c6553e522da815bb902e61647804c0b3cf0a1d66183b689759fccc0" target="_blank" rel="noopener">
+        <span class="ptag buy">Bought ✦</span>
+        <span class="pdesc">TCC purchased from marketplace</span>
+        <span class="phash">0x317714…ccc0</span>
+        <span class="plink">QIE Explorer ↗</span>
+      </a>
+      <a class="proof-txn retire" href="https://mainnet.qie.digital/tx/0x4f132bf93af8bbb7ed09206a5fb07977b27b6f44ab5d6f326e67e06463a65e62" target="_blank" rel="noopener">
         <span class="ptag retire">Retired ⊘</span>
-        <span class="pdesc">Credit #0 permanently offset</span>
-        <span class="phash">0x898ba0…925f</span>
+        <span class="pdesc">50 t CO₂ burned · TLRET cert issued</span>
+        <span class="phash">0x4f132b…5e62</span>
         <span class="plink">QIE Explorer ↗</span>
       </a>
     </div>
-    <div class="gate-line" style="margin-top:28px">This is the complete on-chain history of TerraLedger on QIE Mainnet. <strong>1 credit minted · 1 credit retired.</strong> Every action is permanent and publicly verifiable.</div>
+    <div class="gate-line" style="margin-top:28px">This is the complete on-chain history of TerraLedger on QIE Mainnet. <strong>1 credit minted · 200 TCC listed · TCC purchased · 50 t CO₂ retired.</strong> Every action is permanent and publicly verifiable.</div>
   </div>
 
   <!-- FRAUD ACTIVITY LOG -->
