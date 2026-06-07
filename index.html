@@ -4,6 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>TerraLedger — AI-Verified Carbon Credits on QIE</title>
+<meta name="description" content="Carbon credits that can't be faked. AI verification gates every mint — no passing AI, no NFT. Live on QIE Blockchain (chain 1990)."/>
+<meta property="og:title" content="TerraLedger — AI-Gated Carbon Credits on QIE Blockchain"/>
+<meta property="og:description" content="Carbon credits that can't be faked. 5 AI modules gate every mint — GPS, ownership forensics, anomaly AI, NASA satellite, and oracle attestation. Fraudulent credit cannot be created in the first place."/>
+<meta property="og:type" content="website"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="TerraLedger — AI-Gated Carbon Credits"/>
+<meta name="twitter:description" content="Verify-before-mint: no passing AI = no NFT. Live on QIE Mainnet with 1 credit minted and 1 credit retired on-chain."/>
 <link rel="icon" type="image/png" href="assets/logo-icon.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -497,6 +504,142 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
   .cc-actions{justify-content:flex-start}
   .market-header{flex-direction:column}
 }
+/* ═══════════════════════════════════════════════════════════════
+   VISUAL ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* Nav scroll shadow */
+nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--border2)}
+
+/* Hero layers */
+.hero{position:relative;overflow:hidden}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.grid-bg{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;z-index:0;-webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,black 20%,transparent 75%);mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,black 20%,transparent 75%)}
+.hero-orb{position:absolute;border-radius:50%;pointer-events:none;z-index:0}
+.hero-orb-1{width:600px;height:600px;background:radial-gradient(circle,rgba(0,229,122,.11) 0%,transparent 65%);top:-200px;left:50%;transform:translateX(-50%);animation:orb1 7s ease-in-out infinite alternate}
+.hero-orb-2{width:340px;height:340px;background:radial-gradient(circle,rgba(79,140,255,.08) 0%,transparent 70%);top:5%;left:-8%;animation:orb2 9s ease-in-out infinite alternate}
+.hero-orb-3{width:300px;height:300px;background:radial-gradient(circle,rgba(157,123,255,.07) 0%,transparent 70%);top:10%;right:-5%;animation:orb3 8s ease-in-out infinite alternate}
+@keyframes orb1{from{transform:translateX(-50%) scale(1);opacity:.7}to{transform:translateX(-50%) scale(1.2);opacity:1}}
+@keyframes orb2{from{transform:translate(0,0)}to{transform:translate(22px,28px)}}
+@keyframes orb3{from{transform:translate(0,0)}to{transform:translate(-18px,22px)}}
+/* Real hero content sits above canvas layers */
+.hero>:not(#hero-canvas):not(.grid-bg):not(.hero-orb){position:relative;z-index:1}
+
+/* Hero badge ring */
+.hero-badge{position:relative}
+.hero-badge::after{content:'';position:absolute;inset:-5px;border-radius:26px;border:1px solid rgba(0,229,122,.18);animation:badgeRing 3.5s ease-in-out infinite;pointer-events:none}
+@keyframes badgeRing{0%,100%{opacity:0;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+
+/* Section separators */
+#page-landing .section+.section::before{content:'';display:block;height:1px;background:linear-gradient(90deg,transparent 0%,var(--border2) 30%,var(--border2) 70%,transparent 100%);margin-bottom:80px;opacity:.55}
+
+/* Fraud stats entrance animation */
+.fraud-stat-card{opacity:0;transform:translateY(22px);transition:opacity .55s cubic-bezier(.16,1,.3,1),transform .55s cubic-bezier(.16,1,.3,1),border-color .3s,box-shadow .3s}
+.fraud-stat-card:nth-child(1){transition-delay:0ms}
+.fraud-stat-card:nth-child(2){transition-delay:110ms}
+.fraud-stat-card:nth-child(3){transition-delay:220ms}
+.fraud-stat-card:nth-child(4){transition-delay:330ms}
+.fraud-stat-card.vis{opacity:1;transform:translateY(0)}
+.fraud-stat-card:nth-child(1).vis,.fraud-stat-card:nth-child(2).vis{animation:redPulse 3.8s ease-in-out infinite 0.7s}
+@keyframes redPulse{0%,100%{border-color:rgba(255,69,96,.18);box-shadow:none}50%{border-color:rgba(255,69,96,.48);box-shadow:0 0 20px rgba(255,69,96,.07)}}
+.fraud-stat-card.hl.vis{animation:greenPulse 4s ease-in-out infinite 1s}
+@keyframes greenPulse{0%,100%{border-color:rgba(0,229,122,.25);box-shadow:none}50%{border-color:rgba(0,229,122,.52);box-shadow:0 0 24px rgba(0,229,122,.1)}}
+/* Bigger stat numbers */
+.fsc-val{font-size:50px!important;line-height:1!important}
+
+/* Module cards — top colour stripe per module */
+.module-card:nth-child(1){border-top:2px solid rgba(0,229,122,.5)}
+.module-card:nth-child(2){border-top:2px solid rgba(79,140,255,.5)}
+.module-card:nth-child(3){border-top:2px solid rgba(157,123,255,.5)}
+.module-card:nth-child(4){border-top:2px solid rgba(245,166,35,.5)}
+.module-card:nth-child(5){border-top:2px solid rgba(0,229,122,.25)}
+.module-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.35)!important}
+
+/* Diff grid as proper cards */
+.diff{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;transition:border-color .2s,transform .22s cubic-bezier(.16,1,.3,1)}
+.diff:hover{border-color:var(--border2);transform:translateY(-2px)}
+
+/* Audience card hover glow */
+.aud-card:hover{box-shadow:0 10px 34px rgba(0,0,0,.32),0 0 0 1px var(--border2)!important}
+
+/* Flow steps active enhancement */
+.flow-step.active .flow-num{background:var(--green)!important;color:#040507!important;box-shadow:0 0 20px rgba(0,229,122,.38)}
+.flow-step.active .flow-name{color:var(--text)}
+.flow-step.active .flow-name span{color:var(--green)}
+
+/* Problem card hover */
+.problem-card{transition:transform .25s cubic-bezier(.16,1,.3,1),box-shadow .25s}
+.problem-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.3)}
+
+/* Mission card enhanced */
+.mission{transition:box-shadow .3s}
+.mission:hover{box-shadow:0 12px 44px rgba(0,0,0,.3),0 0 0 1px rgba(0,229,122,.1)!important}
+
+/* Gate line enhanced */
+.gate-line{border:1px solid rgba(0,229,122,.3)!important;background:rgba(0,229,122,.05)!important}
+
+/* Proof cards hover */
+.proof-txn.mint:hover{border-color:rgba(0,229,122,.5)!important;box-shadow:0 6px 28px rgba(0,229,122,.1)!important}
+.proof-txn.retire:hover{border-color:rgba(79,140,255,.5)!important;box-shadow:0 6px 28px rgba(79,140,255,.1)!important}
+
+/* Stats loaded flash */
+@keyframes statFlash{0%{transform:scale(1.18);filter:brightness(1.4)}100%{transform:scale(1);filter:brightness(1)}}
+.stat-val.flash{animation:statFlash .55s cubic-bezier(.16,1,.3,1) forwards}
+
+/* fraud scale stats grid */
+.fraud-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:60px}
+.fraud-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 24px;display:flex;flex-direction:column;gap:6px;transition:transform .25s cubic-bezier(.16,1,.3,1),border-color .25s}
+.fraud-stat-card:hover{transform:translateY(-3px)}
+.fraud-stat-card.hl{border-color:rgba(0,229,122,0.25);background:rgba(0,229,122,0.04)}
+.fsc-val{font-size:38px;font-weight:700;font-family:var(--mono);letter-spacing:-.035em;color:var(--text);line-height:1}
+.fsc-val.red{color:var(--red)}.fsc-val.green{color:var(--green)}
+.fsc-label{font-size:13.5px;color:var(--text);line-height:1.55;margin-top:4px}
+.fsc-source{font-size:10.5px;color:var(--muted);font-family:var(--mono);margin-top:6px;letter-spacing:.02em}
+/* live on-chain proof cards */
+.proof-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:6px}
+.proof-txn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;transition:transform .25s cubic-bezier(.16,1,.3,1),border-color .25s,box-shadow .25s;text-decoration:none;color:inherit}
+.proof-txn:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.35)}
+.proof-txn.mint{border-color:rgba(0,229,122,0.22);background:rgba(0,229,122,0.03)}
+.proof-txn.mint:hover{border-color:rgba(0,229,122,0.45);box-shadow:0 8px 32px rgba(0,229,122,0.08)}
+.proof-txn.fraud{border-color:rgba(255,69,96,0.22);background:rgba(255,69,96,0.03)}
+.proof-txn.fraud:hover{border-color:rgba(255,69,96,0.45);box-shadow:0 8px 32px rgba(255,69,96,0.08)}
+.proof-txn.retire{border-color:rgba(79,140,255,0.22);background:rgba(79,140,255,0.03)}
+.proof-txn.retire:hover{border-color:rgba(79,140,255,0.45)}
+.ptag{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:6px;width:fit-content}
+.ptag.mint{background:rgba(0,229,122,0.12);color:var(--green)}
+.ptag.fraud{background:rgba(255,69,96,0.12);color:var(--red)}
+.ptag.retire{background:rgba(79,140,255,0.12);color:var(--blue)}
+.pdesc{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.35}
+.phash{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.5}
+.plink{font-size:11px;color:var(--blue);margin-top:2px;display:flex;align-items:center;gap:4px}
+/* cold-start notice */
+.cold-notice{font-size:12px;color:var(--muted2);line-height:1.7;padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface);margin-bottom:16px}
+.cold-notice strong{color:var(--text)}
+/* fraud log */
+.fraud-log{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.fraud-row{background:var(--surface);border:1px solid rgba(255,69,96,0.18);border-radius:14px;padding:16px 20px;display:grid;grid-template-columns:1fr auto;gap:6px 16px;align-items:start}
+.fraud-row:hover{border-color:rgba(255,69,96,0.35)}
+.fr-left{display:flex;flex-direction:column;gap:5px}
+.fr-wallet{font-family:var(--mono);font-size:12px;color:var(--muted2);display:flex;align-items:center;gap:8px}
+.fr-wallet a{color:var(--blue);font-size:11px}
+.fr-reason{font-size:13px;font-weight:600;color:var(--red);line-height:1.35}
+.fr-flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.fr-flag{font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:5px;background:rgba(255,69,96,0.1);color:var(--red);border:1px solid rgba(255,69,96,0.2)}
+.fr-time{font-family:var(--mono);font-size:10.5px;color:var(--muted);white-space:nowrap;padding-top:2px}
+.fraud-empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 0}
+.fraud-loading{text-align:center;color:var(--muted);font-size:12px;padding:16px 0}
+/* credit card status pill */
+.cc-status{display:inline-flex;align-items:center;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-top:5px;width:fit-content}
+.cc-status.active{background:rgba(0,229,122,0.1);color:var(--green);border:1px solid rgba(0,229,122,0.25)}
+.cc-status.listed{background:rgba(245,166,35,0.12);color:var(--amber);border:1px solid rgba(245,166,35,0.35)}
+.cc-status.retired{background:rgba(107,114,128,0.1);color:var(--muted);border:1px solid rgba(107,114,128,0.2)}
+.cc-status.fully-offset{background:rgba(34,211,238,0.1);color:#22d3ee;border:1px solid rgba(34,211,238,0.3)}
 </style>
 </head>
 <body>
@@ -537,6 +680,11 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
 <!-- LANDING -->
 <div class="page active" id="page-landing">
   <div class="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="grid-bg"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
     <div class="hero-badge"><div class="hero-badge-dot"></div>QIE Blockchain · AI + Web3 Track</div>
     <h1>Carbon Credits.<br><span>Actually Verified.</span></h1>
     <p class="hero-sub">The carbon market is full of phantom credits — tokenized first, verified never. We're not claiming to fix carbon accounting. We built something narrower and provable: <strong style="color:var(--text)">on TerraLedger a fraudulent credit can't be minted in the first place.</strong> AI verification is the gate. No passing AI, no NFT.</p>
@@ -551,6 +699,31 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
       <div class="stat-item"><div class="stat-val red" id="stat-blocked">—</div><div class="stat-label">Frauds blocked</div></div>
       <div class="stat-item"><div class="stat-val" id="stat-tonnes">—</div><div class="stat-label">Tonnes CO₂</div></div>
       <div class="stat-item"><div class="stat-val green">0</div><div class="stat-label">Double-counted</div></div>
+    </div>
+
+    <div class="section-title">The scale of the problem</div>
+    <p class="section-sub">Carbon credit fraud isn't theoretical — it's documented, quantified, and growing</p>
+    <div class="fraud-stats-grid">
+      <div class="fraud-stat-card">
+        <div class="fsc-val red">~90%</div>
+        <div class="fsc-label">of Verra's REDD+ rainforest credits found to be phantom — they didn't represent real CO₂ reductions</div>
+        <div class="fsc-source">West et al., Science (2023) · The Guardian / Zeit Online investigation</div>
+      </div>
+      <div class="fraud-stat-card">
+        <div class="fsc-val red">€5B+</div>
+        <div class="fsc-label">stolen via carbon credit VAT fraud across Europe, in a single coordinated scheme</div>
+        <div class="fsc-source">Europol — Operation Oikos (2010–2011)</div>
+      </div>
+      <div class="fraud-stat-card">
+        <div class="fsc-val">$2B+</div>
+        <div class="fsc-label">voluntary carbon market value in 2021 — a record high, with minimal standardised verification</div>
+        <div class="fsc-source">Ecosystem Marketplace State of the Market, 2022</div>
+      </div>
+      <div class="fraud-stat-card hl">
+        <div class="fsc-val green">$50B</div>
+        <div class="fsc-label">projected market size by 2030 — without gate-level verification, fraud scales proportionally</div>
+        <div class="fsc-source">McKinsey & Company · BCG</div>
+      </div>
     </div>
 
     <div class="section-title">The problem with existing carbon markets</div>
@@ -604,15 +777,14 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
 
   <!-- HOW IT WORKS -->
   <div class="section">
-    <div class="section-title">How it works — submission to retirement</div>
-    <p class="section-sub">The full lifecycle of a verified carbon credit on TerraLedger</p>
+    <div class="section-title">How it works — end to end</div>
+    <p class="section-sub">Verification gates the mint. Credits are fungible. Retirement is permanent and tracked per project.</p>
     <div class="flow">
-      <div class="flow-step"><div class="flow-num">1</div><div class="flow-body"><div class="flow-name">Submit <span>project developer</span></div><div class="flow-desc">A developer submits the GPS polygon, area, claimed tonnes and the ownership deed, and signs the submission with their wallet (proving ownership).</div></div></div>
-      <div class="flow-step"><div class="flow-num">2</div><div class="flow-body"><div class="flow-name">AI verification gate <span>5 modules</span></div><div class="flow-desc">GPS de-duplication, ownership-document forensics (OCR + forgery + reuse), anomaly detection, and real NASA satellite permanence run in sequence. Any hard-fail — duplicate land, forged deed, burned forest — blocks the mint instantly and logs a fraud attempt on-chain.</div></div></div>
-      <div class="flow-step"><div class="flow-num">3</div><div class="flow-body"><div class="flow-name">Oracle attestation <span>M-of-N</span></div><div class="flow-desc">A passing result (≥70/100) is attested by the decentralised oracle set. The total and per-module score are written into the NFT on-chain — trustless, no backend needed to read them.</div></div></div>
-      <div class="flow-step"><div class="flow-num">4</div><div class="flow-body"><div class="flow-name">Mint <span>ERC-721 credit</span></div><div class="flow-desc">The credit NFT is minted to the developer. A plain-English Llama-3 audit is pinned to IPFS and linked to the token forever — the public proof behind the score.</div></div></div>
-      <div class="flow-step"><div class="flow-num">5</div><div class="flow-body"><div class="flow-name">Marketplace <span>list &amp; buy with QUSDC</span></div><div class="flow-desc">Credits are listed and traded in QUSDC. Before buying, anyone can open the full on-chain credential + audit and verify document integrity — for free.</div></div></div>
-      <div class="flow-step"><div class="flow-num">6</div><div class="flow-body"><div class="flow-name">Retire <span>QIE Pass-verified buyer</span></div><div class="flow-desc">A KYC-verified corporate buyer permanently retires (burns) the credit to claim the offset. The retirement is recorded on-chain forever and a PDF certificate is issued — no double-counting, ever.</div></div></div>
+      <div class="flow-step"><div class="flow-num">1</div><div class="flow-body"><div class="flow-name">Submit + AI verify <span>5 modules · score ≥ 70</span></div><div class="flow-desc">Developer submits GPS polygon, deed PDF and tonnage claim. Five AI modules run in sequence: GPS duplicate detector, deed forensics (OCR + ELA forgery check), anomaly model trained on Verra registry data, real NASA FIRMS satellite check and a Llama-3 plain-English audit. GPS overlap &gt;20% or forged deed = instant hard-block, logged on-chain forever. Score below 70 = no mint.</div></div></div>
+      <div class="flow-step"><div class="flow-num">2</div><div class="flow-body"><div class="flow-name">Oracle mints TLCERT + TCC <span>soulbound proof + fungible credits</span></div><div class="flow-desc">On pass, the M-of-N oracle mints two things directly to the developer's wallet: a <b>TLCERT</b> soulbound NFT (non-transferable verification proof, bound to the project ID forever) and <b>TCC</b> ERC-20 tokens (1 TCC = 1 tonne CO₂, tradeable). TLCERT cannot be sold — it stays with the developer as permanent on-chain proof the project cleared all AI checks.</div></div></div>
+      <div class="flow-step"><div class="flow-num">3</div><div class="flow-body"><div class="flow-name">List &amp; trade TCC <span>QUSDC · per-tonne pricing · projectId stored on-chain</span></div><div class="flow-desc">Developer lists TCC at a per-tonne QUSDC price on the marketplace. Every listing stores the source <b>projectId</b> on-chain — buyers always know which verified project they're buying credits from, even after credits change hands. No anonymous TCC floating around the market.</div></div></div>
+      <div class="flow-step"><div class="flow-num">4</div><div class="flow-body"><div class="flow-name">Retire TCC → TLRET certificate <span>permanent offset + PDF download</span></div><div class="flow-desc">Any TCC holder calls retire(). Tokens burn permanently against the correct project ID. A <b>TLRET</b> soulbound certificate auto-mints to the retiree's wallet (amount, projectId and block timestamp stored on-chain), and a PDF retirement certificate is instantly downloaded — with tx hash and full details. One retire call = one certificate. No double-counting possible.</div></div></div>
+      <div class="flow-step"><div class="flow-num">5</div><div class="flow-body"><div class="flow-name">TLCERT auto-offsets <span>no button · no re-minting · tamper-proof</span></div><div class="flow-desc">The contract tracks TCC issued vs. retired per project ID. When every TCC from a project is burned, the TLCERT automatically flips to <b>Fully Offset</b> — no manual action, no admin call. Since the project ID is locked at mint and GPS coordinates are registered on-chain, the same land parcel cannot generate new credits once fully offset.</div></div></div>
     </div>
   </div>
 
@@ -646,10 +818,15 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
     <p class="section-sub">How the model improves from fraud-gating toward measurement-grade trust</p>
     <div class="roadmap">
       <div class="rm"><span class="rm-tag now">LIVE NOW</span><ul>
-        <li>5-module AI verification gate</li>
-        <li>On-chain scores, fraud log &amp; retirement</li>
-        <li>M-of-N oracle + QIE Pass KYC bridge</li>
-        <li>Live on QIE Mainnet with QUSDC settlement</li>
+        <li>5-module AI verification gate (GPS · deed forensics · anomaly · NASA satellite · Llama-3 audit)</li>
+        <li>TLCERT soulbound NFT — non-transferable verification proof tied to project ID</li>
+        <li>TCC ERC-20 fungible credits — 1 TCC = 1 tonne CO₂, oracle-minted</li>
+        <li>TCCMarketplace — per-listing projectId so buyers always know the source project</li>
+        <li>TLRET soulbound retirement certificate — auto-minted on every retire() call</li>
+        <li>PDF retirement certificate download with tx hash + full details</li>
+        <li>TLCERT auto-flips to Fully Offset when all project TCC burned — no admin action</li>
+        <li>On-chain fraud log, per-module scores, M-of-N oracle + QUSDC settlement</li>
+        <li>Live on QIE Mainnet (chain 1990)</li>
       </ul></div>
       <div class="rm"><span class="rm-tag next">NEXT</span><ul>
         <li>Multi-oracle MRV feeds — satellite-biomass + field validators for measurement-grade attestation</li>
@@ -666,12 +843,40 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
     </div>
     <div class="disclaimer"><b>An honest note on what we do and don't claim:</b> TerraLedger gates fraud at the moment of minting — it does not physically measure sequestered carbon (an MRV problem no blockchain solves today). Claimed tonnage is checked for <b>plausibility and permanence</b>, not measured. Our roadmap brings measurement-grade MRV oracles on-chain; until then, every credit is honest about exactly what it has — and hasn't — been verified for.</div>
   </div>
+
+  <!-- LIVE PROOF -->
+  <div class="section">
+    <div class="section-title">Live on-chain — verify yourself</div>
+    <p class="section-sub">Real transactions on QIE Mainnet · anyone can check these hashes</p>
+    <div class="proof-grid">
+      <a class="proof-txn mint" href="https://mainnet.qie.digital/tx/0x820092c9e6153da88f8662d00f697340cc0d1a9628d2a49ab651d9f7aa17bd1d" target="_blank" rel="noopener">
+        <span class="ptag mint">Mint ✓</span>
+        <span class="pdesc">Credit #0 · AI score 97/100</span>
+        <span class="phash">0x820092…bd1d</span>
+        <span class="plink">QIE Explorer ↗</span>
+      </a>
+      <a class="proof-txn retire" href="https://mainnet.qie.digital/tx/0x898ba01c33f6549497908e6c2317fea6c87d1bef35e4895963426d1cb2e0925f" target="_blank" rel="noopener">
+        <span class="ptag retire">Retired ⊘</span>
+        <span class="pdesc">Credit #0 permanently offset</span>
+        <span class="phash">0x898ba0…925f</span>
+        <span class="plink">QIE Explorer ↗</span>
+      </a>
+    </div>
+    <div class="gate-line" style="margin-top:28px">This is the complete on-chain history of TerraLedger on QIE Mainnet. <strong>1 credit minted · 1 credit retired.</strong> Every action is permanent and publicly verifiable.</div>
+  </div>
+
+  <!-- FRAUD ACTIVITY LOG -->
+  <div class="section">
+    <div class="section-title">Fraud activity log</div>
+    <p class="section-sub">Every blocked hard-fail — wallet, reason, flags — read directly from the oracle contract</p>
+    <div class="fraud-log" id="fraud-log"><div class="fraud-loading">Loading on-chain fraud log…</div></div>
+  </div>
 </div>
 
 <!-- SUBMIT -->
 <div class="page" id="page-submit">
   <div class="submit-layout">
-    <div class="page-header"><div class="page-title">Submit Carbon Project</div><div class="page-desc">AI verifies before any token is minted. Score 70/100 minimum. Connect your wallet — the credit mints to you on success.</div></div>
+    <div class="page-header"><div class="page-title">Submit Carbon Project</div><div class="page-desc">AI verifies before any token is minted. Score 70/100 minimum. Connect your wallet — you register on-chain first, then the credit mints directly to your address on pass.</div></div>
     <div class="form-card">
       <div class="form-section-title">Project information</div>
       <div class="form-row">
@@ -718,6 +923,7 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
       <div class="sp-row"><div class="sp-lbl">Satellite</div><div class="sp-track"><div class="sp-fill" id="spf-sat"></div></div><div class="sp-pts" id="spp-sat">0/20</div></div>
       <div class="sp-note">Estimate only — the real score comes from the live AI run. 70/100 needed to mint.</div>
     </div>
+    <div class="cold-notice"><strong>Note:</strong> The AI backend runs on Render free tier — the <strong>first request after inactivity takes ~15–30 s</strong> to wake up. The verification timer above tracks live progress. Subsequent submissions are fast.</div>
     <button class="submit-btn" id="submit-btn" onclick="submitProject()">Run AI Verification →</button>
   </div>
 </div>
@@ -775,22 +981,24 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
 <div class="page" id="page-market">
   <div class="market-layout">
     <div class="market-header">
-      <div><div class="page-title">Verified Credits</div><div class="page-desc" style="margin-top:4px">Every credit AI-verified. Buy & retire with QUSDC. Every retirement permanent.</div></div>
+      <div><div class="page-title">Carbon Credits</div><div class="page-desc" style="margin-top:4px">Every credit AI-verified. <b>TCC</b> = 1 tonne CO₂ · buy any quantity · retire permanently on-chain.</div></div>
       <div style="text-align:right">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px" id="qusdc-bal">QUSDC: —</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px" id="qusdc-bal">QUSDC: —</div>
+        <div style="font-size:11px;color:var(--green);margin-bottom:6px;font-weight:600" id="tcc-bal">TCC: —</div>
         <button class="btn-ghost" id="faucet-btn" onclick="getFaucet()">Get test QUSDC</button>
-        <div id="qusdc-note" style="font-size:10.5px;color:var(--muted);margin-top:6px;display:none;max-width:200px">Buying needs QUSDC — bridge USDC (Ethereum) → QUSDC on QIE.</div>
       </div>
     </div>
     <div class="market-tabs" id="market-tabs">
-      <button class="filter-btn active" data-tab="all" onclick="setMarketTab('all',this)">All <span class="tab-count" id="tc-all">0</span></button>
-      <button class="filter-btn" data-tab="sale" onclick="setMarketTab('sale',this)">For Sale <span class="tab-count" id="tc-sale">0</span></button>
-      <button class="filter-btn" data-tab="owned" onclick="setMarketTab('owned',this)">Owned <span class="tab-count" id="tc-owned">0</span></button>
-      <button class="filter-btn" data-tab="mine" onclick="setMarketTab('mine',this)">My Credits <span class="tab-count" id="tc-mine">0</span></button>
+      <button class="filter-btn active" data-tab="tcc" onclick="setMarketTab('tcc',this)">TCC Credits <span class="tab-count" id="tc-tcc">—</span></button>
+      <button class="filter-btn" data-tab="all" onclick="setMarketTab('all',this)">Certificates <span class="tab-count" id="tc-all">0</span></button>
+      <button class="filter-btn" data-tab="mine" onclick="setMarketTab('mine',this)">My Certs <span class="tab-count" id="tc-mine">0</span></button>
       <button class="filter-btn" data-tab="retired" onclick="setMarketTab('retired',this)">Retired <span class="tab-count" id="tc-retired">0</span></button>
     </div>
     <div style="margin-top:18px"></div>
-    <div class="credits-grid" id="credits-grid"><div class="empty-state">Loading on-chain credits…</div></div>
+    <div id="tcc-market-panel">
+      <div id="tcc-market-content"><div class="empty-state">Loading TCC credit listings…</div></div>
+    </div>
+    <div class="credits-grid" id="credits-grid" style="display:none"><div class="empty-state">Loading certificates…</div></div>
   </div>
 </div>
 
@@ -828,6 +1036,52 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
     <div class="modal-sub">Set a price in QUSDC. The marketplace gets approval to transfer the NFT on sale.</div>
     <div class="field"><label>Price (QUSDC)</label><input type="number" id="list-price" placeholder="100" min="0.01" step="0.01"/></div>
     <button class="submit-btn" id="list-confirm" onclick="confirmList()">List Credit</button>
+  </div>
+</div>
+
+<!-- TCC LIST MODAL -->
+<div class="modal-overlay" id="tcc-list-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><div class="modal-title">List TCC Credits for Sale</div><button class="modal-x" onclick="closeModal('tcc-list-modal')">×</button></div>
+    <div class="modal-sub">Set quantity and price. Buyers pay in QUSDC — 1 TCC = 1 tonne CO₂. Project ID is stored on-chain so buyers always know which project to retire against.</div>
+    <div class="field">
+      <label>Project <span style="color:var(--muted);font-weight:400;font-size:12px">— which project are these TCC from?</span></label>
+      <select id="tcc-list-project" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px">
+        <option value="">Select project…</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Quantity (TCC) <span id="tcc-list-bal-hint" style="color:var(--muted);font-weight:400;font-size:12px"></span></label>
+      <input type="number" id="tcc-list-qty" placeholder="e.g. 500" min="1" step="1" style="width:100%" oninput="_updateListTotal()"/>
+    </div>
+    <div class="field">
+      <label>Price per tonne (QUSDC)</label>
+      <input type="number" id="tcc-list-price" placeholder="e.g. 10.50" min="0.000001" step="0.01" style="width:100%" oninput="_updateListTotal()"/>
+    </div>
+    <div id="tcc-list-total" style="font-family:var(--mono);font-size:13px;color:var(--green);margin-bottom:16px;min-height:20px"></div>
+    <div class="confirm-actions">
+      <button class="submit-btn ghost-btn" onclick="closeModal('tcc-list-modal')">Cancel</button>
+      <button class="submit-btn" id="tcc-list-confirm" onclick="confirmListTCC()">List for Sale</button>
+    </div>
+  </div>
+</div>
+
+<!-- TCC RETIRE MODAL -->
+<div class="modal-overlay" id="tcc-retire-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><div class="modal-title">Retire TCC Credits</div><button class="modal-x" onclick="closeModal('tcc-retire-modal')">×</button></div>
+    <div class="modal-sub">Permanently burns TCC and mints a soulbound Retirement Certificate (TLRET) on-chain. A signed PDF offset certificate is also generated and downloaded automatically.</div>
+    <div class="field">
+      <label>Quantity to retire (TCC) <span id="tcc-retire-bal-hint" style="color:var(--muted);font-weight:400;font-size:12px"></span></label>
+      <input type="number" id="tcc-retire-qty" placeholder="e.g. 100" min="1" step="1" style="width:100%"/>
+    </div>
+    <div class="field"><label>Your name <span class="lbl-opt">(for certificate)</span></label><input type="text" id="tcc-retire-beneficiary" placeholder="e.g. Rahul Sharma" autocomplete="off"/></div>
+    <div class="field"><label>Organization <span class="lbl-opt">(optional)</span></label><input type="text" id="tcc-retire-org" placeholder="e.g. Acme Corp" autocomplete="off"/></div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:16px">Each tonne retired = 1 t CO₂ permanently offset · TLRET NFT + PDF certificate issued</div>
+    <div class="confirm-actions">
+      <button class="submit-btn ghost-btn" onclick="closeModal('tcc-retire-modal')">Cancel</button>
+      <button class="submit-btn danger" id="tcc-retire-confirm" onclick="confirmRetireTCC()">Retire permanently</button>
+    </div>
   </div>
 </div>
 
@@ -896,8 +1150,9 @@ const AI_BACKEND = (() => {
     const q = new URLSearchParams(location.search).get('api')
     if (q) { localStorage.setItem('tl_api', strip(q)); return strip(q) }
     const s = localStorage.getItem('tl_api'); if (s) return strip(s)
-    if (window.TERRALEDGER_API) return strip(window.TERRALEDGER_API)
+    // localhost always hits local backend — production URL only applies on real deployments
     if (['localhost','127.0.0.1',''].includes(location.hostname) || location.protocol === 'file:') return 'http://localhost:8000'
+    if (window.TERRALEDGER_API) return strip(window.TERRALEDGER_API)
     return strip(location.origin)
   } catch(_) { return 'http://localhost:8000' }
 })()
@@ -917,12 +1172,15 @@ const QIE_CHAIN = {
 // comes only from the real REST API (then mirrored on-chain by the oracle).
 const IS_TESTNET = QIE_CHAIN.chainId === '0x7BF' // false on mainnet
 const ADDRESSES = {
-  ProjectRegistry:   '0x9894ee26e81c19ABfe9C381168f0f1e6b5f44112',
-  CarbonCredit:      '0x78650e0B619b5ECbb4B127Cb21c319befcE2ab16',
-  CarbonOracle:      '0x8A07F795Cef75350D4BE4b939F367cFC3A1ed219',
-  CarbonMarketplace: '0x04442AE6DCb22803A4D4Ca8bB2a49691F603c343',
-  QUSDC:             '0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5',
-  QIEPass:           '0xBc05fd5617167eD6ee45a42CC3844f2484836431',
+  ProjectRegistry:      '0xC780b1C96175e59B559315c0Df00B0E8c06750dc',
+  CarbonCredit:         '0x7Bb8999aa1163bD9438e3efcf40CE28a73d8677C',
+  CarbonOracle:         '0x606b15fD35DcaD1e0104b6e6c1E783BB84252f55',
+  CarbonMarketplace:    '0xCf994675A919892AcD43D6E285127b3743402B58',
+  QUSDC:                '0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5',
+  QIEPass:              '0x5D41F203BaFF1CBb503394E6C9fD9F0C95696b7D',
+  CarbonCreditToken:    '0x54b96be03e161C12B1e07b013CdFdFF69490c624',
+  TCCMarketplace:       '0x7E61D69115dd4f1c2823B4d0a28bE71060424691',
+  RetirementCertificate:'0xb87140fcb58B4Aa8f8a3796B3a961Ec2D0F100F2',
 }
 const CREDIT_ABI = [
   'function credits(uint256 tokenId) view returns (bytes32 projectId, uint256 vintage, uint256 tonnes, string ipfsCid, bool retired, uint256 retiredAt, address retiredBy, uint16 score, uint8 gpsScore, uint8 ownershipScore, uint8 anomalyScore, uint8 satelliteScore)',
@@ -930,7 +1188,10 @@ const CREDIT_ABI = [
   'function getApproved(uint256 tokenId) view returns (address)',
   'function approve(address to, uint256 tokenId)',
   'function totalMinted() view returns (uint256)',
+  'function totalRetired() view returns (uint256)',
+  'function tokensOfOwner(address owner) view returns (uint256[])',
   'function getProjectTokens(bytes32 projectId) view returns (uint256[])',
+  'function contractURI() view returns (string)',
   'function retire(uint256 tokenId)',
 ]
 const MARKET_ABI = [
@@ -938,6 +1199,8 @@ const MARKET_ABI = [
   'function unlist(uint256 tokenId)',
   'function buy(uint256 tokenId)',
   'function getListing(uint256 tokenId) view returns (tuple(address seller, uint256 price, bool active))',
+  'function totalVolume() view returns (uint256)',
+  'function totalSales() view returns (uint256)',
 ]
 const QUSDC_ABI = [
   'function balanceOf(address) view returns (uint256)',
@@ -952,11 +1215,40 @@ const ORACLE_ABI = [
   'function hasDocumentAccess(bytes32 projectId, address requester) view returns (bool)',
   'function oracleCount() view returns (uint256)',
   'function attestationThreshold() view returns (uint256)',
+  'function fraudsBlocked() view returns (uint256)',
+  'function getFraudLog() view returns (tuple(bytes32 projectId, address wallet, string reason, string[] flags, uint256 score, uint256 timestamp)[])',
+  'function getFraudsByWallet(address wallet) view returns (tuple(bytes32 projectId, address wallet, string reason, string[] flags, uint256 score, uint256 timestamp)[])',
 ]
 const QIEPASS_ABI = [
   'function verifyMe(string fullName, string organization)',
   'function isVerified(address wallet) view returns (bool)',
   'function getIdentity(address wallet) view returns (string fullName, string organization, uint256 verifiedAt, bool verified)',
+]
+const REGISTRY_ABI = [
+  'function submitProject(bytes32 id, string polygonGeoJSON, uint256 areaHectares, uint256 claimedTonnes, int64 minLat, int64 minLng, int64 maxLat, int64 maxLng)',
+  'function getProject(bytes32 id) view returns (bytes32 id, address owner, string polygonGeoJSON, uint256 areaHectares, uint256 claimedTonnes, uint256 submittedAt, uint8 status, string statusReason, int64 minLat, int64 minLng, int64 maxLat, int64 maxLng)',
+]
+const TCC_ABI = [
+  'function balanceOf(address) view returns (uint256)',
+  'function totalSupply() view returns (uint256)',
+  'function totalRetiredTonnes() view returns (uint256)',
+  'function retire(uint256 amount, bytes32 projectId)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function isFullyRetired(bytes32 projectId) view returns (bool)',
+  'function issuedByProject(bytes32 projectId) view returns (uint256)',
+  'function getRetirements() view returns (tuple(address retiredBy, uint256 amount, bytes32 projectId, uint256 timestamp)[])',
+  'function getRetirementsByWallet(address wallet) view returns (tuple(address retiredBy, uint256 amount, bytes32 projectId, uint256 timestamp)[])',
+]
+const TCC_MKT_ABI = [
+  'function list(uint256 amount, uint256 pricePerTonne, bytes32 projectId) returns (uint256)',
+  'function buy(uint256 listingId, uint256 amount)',
+  'function unlist(uint256 listingId)',
+  'function getActiveListings() view returns (uint256[] ids, address[] sellers, uint256[] amounts, uint256[] prices, bytes32[] projectIds)',
+  'function nextListingId() view returns (uint256)',
+  'function totalVolume() view returns (uint256)',
+  'function totalSales() view returns (uint256)',
+  'function listings(uint256) view returns (address seller, uint256 amountLeft, uint256 pricePerTonne, bytes32 projectId, bool active)',
 ]
 
 // state
@@ -969,11 +1261,21 @@ const short = a => a ? a.slice(0,6)+'…'+a.slice(-4) : ''
 
 // Pre-built ABI interfaces for encoding tx data
 const IFACE = {
-  credit: new ethers.utils.Interface(CREDIT_ABI),
-  market: new ethers.utils.Interface(MARKET_ABI),
-  qusdc:  new ethers.utils.Interface(QUSDC_ABI),
-  oracle: new ethers.utils.Interface(ORACLE_ABI),
-  pass:   new ethers.utils.Interface(QIEPASS_ABI),
+  credit:    new ethers.utils.Interface(CREDIT_ABI),
+  market:    new ethers.utils.Interface(MARKET_ABI),
+  qusdc:     new ethers.utils.Interface(QUSDC_ABI),
+  oracle:    new ethers.utils.Interface(ORACLE_ABI),
+  pass:      new ethers.utils.Interface(QIEPASS_ABI),
+  registry:  new ethers.utils.Interface(REGISTRY_ABI),
+  tcc:       new ethers.utils.Interface(TCC_ABI),
+  tccMkt:    new ethers.utils.Interface(TCC_MKT_ABI),
+}
+// Mirror the backend's _str_to_bytes32: UTF-8 encode, pad to 32 bytes; SHA-256 if > 32 chars.
+function projectIdToBytes32(id) {
+  const enc = ethers.utils.toUtf8Bytes(id)
+  if (enc.length > 32) return ethers.utils.sha256(enc)
+  const buf = new Uint8Array(32); buf.set(enc)
+  return ethers.utils.hexlify(buf)
 }
 // Send a tx via the RAW EIP-1193 provider. Some injected wallets (incl. QIE Wallet)
 // choke on ethers' JsonRpcSigner tx population and never show a prompt. Building the
@@ -1001,7 +1303,7 @@ function showPage(id){
   document.querySelectorAll('.nav-link').forEach(l=>{ if(l.textContent.toLowerCase().includes(id==='landing'?'home':id)) l.classList.add('active') })
   window.scrollTo(0,0)
   if(id==='market') loadMarketplace()
-  if(id==='landing') loadStats()
+  if(id==='landing'){ loadStats(); loadFraudLog() }
   if(id==='verify') startPipeAnim(); else stopPipeAnim()
 }
 
@@ -1028,12 +1330,13 @@ async function connectWallet(){
   const cbtn=document.getElementById('connect-btn'); const cdone=btnLoading(cbtn,'Connecting…')
   try{
     provider = new ethers.providers.Web3Provider(window.ethereum, 'any')
+    // Always request permissions so wallet popup reliably appears (even on reconnect after disconnect).
+    // QIE Wallet sometimes never resolves this promise — race it with a 4s timeout so we don't hang.
+    try{ await Promise.race([
+      window.ethereum.request({method:'wallet_requestPermissions',params:[{eth_accounts:{}}]}),
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),4000))
+    ]) }catch(_){}
     let accs = await window.ethereum.request({method:'eth_requestAccounts'}).catch(()=>null)
-    if(!accs || !accs.length){
-      // force the wallet to re-show its connect prompt (some wallets need this after disconnect)
-      try{ await window.ethereum.request({method:'wallet_requestPermissions',params:[{eth_accounts:{}}]}) }catch(_){}
-      accs = await window.ethereum.request({method:'eth_requestAccounts'}).catch(()=>null)
-    }
     if(!accs || !accs.length){ cdone(); showToast('No account returned — open your wallet and approve the connection.','error'); return }
     await ensureChain().catch(()=>{})   // never let a chain-switch failure block connect
     signer = provider.getSigner()
@@ -1042,7 +1345,7 @@ async function connectWallet(){
     setWalletBtn()
     updateQusdcBal(); updateQiePassChip(); checkNetwork()
     window.ethereum.removeAllListeners?.('accountsChanged')
-    window.ethereum.on?.('accountsChanged', ()=>location.reload())
+    window.ethereum.on?.('accountsChanged', accs=>{ if(!accs||!accs.length) disconnectWallet(); else location.reload() })
     window.ethereum.on?.('chainChanged', ()=>location.reload())
     showToast('Wallet connected: '+short(walletAddr),'success')
   }catch(e){ cdone(); showToast('Connect failed: '+(e.message||e).toString().slice(0,80),'error') }
@@ -1068,6 +1371,8 @@ function toggleWalletMenu(){
 function disconnectWallet(){
   walletAddr=null; signer=null; provider=null
   localStorage.setItem('tl_wallet_off','1')           // remember across refresh
+  // Tell the wallet to revoke site permissions so eth_accounts returns [] on next check
+  window.ethereum?.request({method:'wallet_revokePermissions',params:[{eth_accounts:{}}]}).catch(()=>{})
   const b=document.getElementById('connect-btn'); b.textContent='Connect Wallet'; b.classList.remove('connected')
   document.getElementById('wallet-menu').classList.remove('show')
   document.getElementById('qiepass-chip').style.display='none'
@@ -1087,9 +1392,29 @@ function countUp(el,target,fmt){
   requestAnimationFrame(tick)
 }
 async function loadStats(){
+  // Phase 1: read all countable stats directly from chain (no backend needed).
+  // fraudsBlocked() and totalRetired() are now on-chain — always accurate.
   try{
-    const r=await fetch(`${AI_BACKEND}/api/stats`); const d=await r.json()
-    if(d.error) return
+    const rp=readProvider()
+    const credit=new ethers.Contract(ADDRESSES.CarbonCredit,CREDIT_ABI,rp)
+    const oracle=new ethers.Contract(ADDRESSES.CarbonOracle,ORACLE_ABI,rp)
+    const [minted,frauds]=await Promise.all([credit.totalMinted(),oracle.fraudsBlocked()])
+    countUp(document.getElementById('stat-verified'), Number(minted))
+    countUp(document.getElementById('stat-blocked'),  Number(frauds))
+    // Sum tonnes from all credits directly (small collection — no perf issue)
+    const total=Number(minted)
+    if(total>0){
+      const fmt=n=>n>=1000?(n/1000).toFixed(n>=10000?0:1)+'K':String(n)
+      const allCredits=await Promise.all(Array.from({length:total},(_,i)=>credit.credits(i).catch(()=>null)))
+      const tonnes=allCredits.reduce((s,c)=>s+(c&&!c.retired?Number(c.tonnes):0),0)
+      if(tonnes>0) countUp(document.getElementById('stat-tonnes'),tonnes,fmt)
+    }
+  }catch(_){}
+  // Phase 2: backend call for any stats not on-chain (e.g. enriched tonnes).
+  try{
+    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),6000)
+    const r=await fetch(`${AI_BACKEND}/api/stats`,{signal:ctl.signal}); clearTimeout(t)
+    const d=await r.json(); if(d.error) return
     const fmt=n=>n>=1000?(n/1000).toFixed(n>=10000?0:1)+'K':String(n)
     countUp(document.getElementById('stat-verified'), d.credits_verified)
     countUp(document.getElementById('stat-blocked'),  d.frauds_blocked)
@@ -1097,7 +1422,51 @@ async function loadStats(){
   }catch(_){}
 }
 
+// Fraud log — reads from oracle.getFraudLog(), renders in the landing section
+async function loadFraudLog(){
+  const el=document.getElementById('fraud-log'); if(!el) return
+  try{
+    const oracle=new ethers.Contract(ADDRESSES.CarbonOracle,ORACLE_ABI,readProvider())
+    const log=await oracle.getFraudLog()
+    if(!log||log.length===0){ el.innerHTML='<div class="fraud-empty">No hard-fail fraud attempts on-chain yet.</div>'; return }
+    // Show newest first
+    const sorted=[...log].reverse()
+    el.innerHTML=sorted.map(fr=>{
+      const wallet=fr.wallet||'unknown'
+      const short=wallet.slice(0,8)+'…'+wallet.slice(-6)
+      const explorerUrl=`${EXPLORER}/address/${wallet}`
+      const flags=(fr.flags||[]).map(f=>`<span class="fr-flag">${f}</span>`).join('')
+      const ts=fr.timestamp?new Date(Number(fr.timestamp)*1000).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—'
+      return `<div class="fraud-row">
+        <div class="fr-left">
+          <div class="fr-wallet">${short} <a href="${explorerUrl}" target="_blank" rel="noopener">Explorer ↗</a></div>
+          <div class="fr-reason">${fr.reason||'Hard-fail block'}</div>
+          ${flags?`<div class="fr-flags">${flags}</div>`:''}
+        </div>
+        <div class="fr-time">${ts}</div>
+      </div>`
+    }).join('')
+  }catch(_){
+    el.innerHTML='<div class="fraud-empty" style="color:var(--muted)">Connect to QIE RPC to load fraud log.</div>'
+  }
+}
+
 // project submission
+function resetSubmitForm(){
+  // Clear all text/number/select fields
+  ['f-name','f-id','f-ha','f-tonnes','f-vintage','f-country'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''})
+  const type=document.getElementById('f-type'); if(type) type.value='forest'
+  const biome=document.getElementById('f-biome'); if(biome) biome.value='tropical'
+  // Reset GPS rows back to 3 blank rows
+  const gc=document.getElementById('gps-coords')
+  if(gc){ gc.innerHTML=['P1','P2','P3'].map(l=>`<div class="coord-row"><span class="coord-label">${l}</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>`).join('') }
+  // Clear file upload
+  uploadedFile=null
+  const ua=document.getElementById('upload-area'); if(ua) ua.classList.remove('has-file')
+  const fn=document.getElementById('upload-filename'); if(fn) fn.textContent=''
+  const fi=document.getElementById('doc-upload'); if(fi) fi.value=''
+  updateScorePreview()
+}
 function addGpsPoint(){
   const c=document.getElementById('gps-coords'); const n=c.querySelectorAll('.coord-row').length+1
   const row=document.createElement('div'); row.className='coord-row'
@@ -1143,7 +1512,29 @@ async function submitProject(){
   if(!requireWallet()) return
   if(!projId){ projId='TL-'+Date.now(); document.getElementById('f-id').value=projId }
 
-  // Prove wallet ownership — sign the submission (backend recovers + checks it)
+  // Step 1: Register project on-chain from user's own wallet so project.owner = user wallet.
+  // This means the oracle will mint the NFT directly to the user — no intermediate transfer.
+  const idB32 = projectIdToBytes32(projId)
+  const lats = poly.map(p=>p[0]), lngs = poly.map(p=>p[1])
+  const minLat=Math.round(Math.min(...lats)*1e6), maxLat=Math.round(Math.max(...lats)*1e6)
+  const minLng=Math.round(Math.min(...lngs)*1e6), maxLng=Math.round(Math.max(...lngs)*1e6)
+  // Check if already registered (re-submit scenario) — skip if so
+  const rp = readProvider()
+  const regRead = new ethers.Contract(ADDRESSES.ProjectRegistry, REGISTRY_ABI, rp)
+  let alreadyRegistered = false
+  try{ const p = await regRead.getProject(idB32); alreadyRegistered = p.submittedAt && p.submittedAt.gt(0) }catch(_){}
+  if(!alreadyRegistered){
+    showToast('Register project on-chain — approve in wallet…','success')
+    try{
+      await rawSend(ADDRESSES.ProjectRegistry, IFACE.registry, 'submitProject',
+        [idB32, '{}', Math.max(1,Math.round(Number(ha))), Math.max(1,Math.round(Number(tonnes))),
+         minLat, minLng, maxLat, maxLng], 900000)
+    }catch(e){
+      showToast('On-chain registration failed: '+(e.message||'').slice(0,80),'error'); return
+    }
+  }
+
+  // Step 2: Prove wallet ownership — sign the submission (backend recovers + checks it)
   let signature='', signedTs=String(Date.now())
   try{
     signature=await signer.signMessage(`TerraLedger: verify project ${projId} as ${walletAddr} @ ${signedTs}`)
@@ -1232,7 +1623,9 @@ function renderVerifyResult(d){
 
   const actions=document.getElementById('result-actions'); const ipfsUrl=d.report_ipfs_cid?IPFS_GATEWAY+d.report_ipfs_cid:null
   if(pass){
+    if(d.on_chain_tx) resetSubmitForm()   // clear form so next project starts clean
     actions.innerHTML=`${d.on_chain_tx?`<button class="btn-primary" onclick="showPage('market')">View in Marketplace →</button>`:''}
+      <button class="btn-secondary" onclick="resetSubmitForm();showPage('submit')">+ Submit Another Project</button>
       ${ipfsUrl?`<a class="btn-secondary" href="${ipfsUrl}" target="_blank">IPFS Audit ↗</a>`:''}`
   }else{
     actions.innerHTML=`<button class="btn-secondary" onclick="showPage('submit')">← Fix & Resubmit</button>
@@ -1281,8 +1674,17 @@ function renderBlocked(status, detail){
 
 // marketplace
 async function loadMarketplace(){
+  // Default to TCC tab — that's the real carbon credit view
+  if(_marketTab==='all'||_marketTab==='tcc'||!_marketTab){
+    _marketTab='tcc'
+    document.querySelectorAll('#market-tabs .filter-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.tab==='tcc')
+    })
+    document.getElementById('tcc-market-panel').style.display=''
+    document.getElementById('credits-grid').style.display='none'
+    loadTCCMarketplace()
+  }
   const grid=document.getElementById('credits-grid')
-  grid.innerHTML=Array(6).fill('<div class="skel-card"><div class="skel" style="height:18px;width:55%;margin-bottom:16px"></div><div class="skel" style="height:11px;width:100%;margin-bottom:9px"></div><div class="skel" style="height:11px;width:85%;margin-bottom:9px"></div><div class="skel" style="height:11px;width:70%;margin-bottom:22px"></div><div class="skel" style="height:30px;width:100%"></div></div>').join('')
   updateQusdcBal(); updateQiePassChip()
   try{
     const res=await fetch(`${AI_BACKEND}/marketplace`); const data=await res.json()
@@ -1290,6 +1692,7 @@ async function loadMarketplace(){
     const rp=readProvider()
     const credit=new ethers.Contract(ADDRESSES.CarbonCredit,CREDIT_ABI,rp)
     const market=new ethers.Contract(ADDRESSES.CarbonMarketplace,MARKET_ABI,rp)
+    const tccR=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
     // Read every credit's on-chain data in parallel (fast load)
     const results=await Promise.all(projects.map(async p=>{
       try{
@@ -1300,6 +1703,8 @@ async function loadMarketplace(){
           ipfsCid:m.ipfsCid, retired:m.retired, score:Number(m.score),
           sub:{gps:Number(m.gpsScore),ownership:Number(m.ownershipScore),anomaly:Number(m.anomalyScore),satellite:Number(m.satelliteScore)},
           area:p.area_hectares }
+        // Check if all TCC for this project have been retired
+        if(!c.retired){ const [fullyR, issued, supply] = await Promise.all([tccR.isFullyRetired(m.projectId).catch(()=>false), tccR.issuedByProject(m.projectId).catch(()=>ethers.BigNumber.from(0)), tccR.totalSupply().catch(()=>ethers.BigNumber.from(1))]); c.fullyOffset = fullyR || (ethers.BigNumber.from(issued).gt(0) && ethers.BigNumber.from(supply).eq(0)) } else { c.fullyOffset = false }
         if(!c.retired){
           const [owner,l]=await Promise.all([credit.ownerOf(tokenId),market.getListing(tokenId)])
           c.owner=owner; c.listed=l.active; c.priceRaw=l.active?l.price.toString():null; c.price=l.active?fmtQUSDC(l.price):null
@@ -1311,8 +1716,38 @@ async function loadMarketplace(){
     updateTabCounts(); renderMarketplace()
     enrichNames()   // pull real project names from IPFS audits, then re-render
   }catch(e){
-    _credits=[]; grid.innerHTML='<div class="empty-state">Backend offline. Start terraledger.py to see live credits.</div>'
+    // Backend down — try reading credits directly from the blockchain
+    try{
+      grid.innerHTML='<div class="empty-state" style="color:var(--amber)">Backend offline — reading credits from chain…</div>'
+      _credits=await loadMarketplaceDirect()
+      updateTabCounts(); renderMarketplace(); enrichNames()
+    }catch(_){
+      _credits=[]; grid.innerHTML='<div class="empty-state">Could not load credits — check your connection.</div>'
+    }
   }
+}
+// Chain-direct marketplace loader — works with no backend
+async function loadMarketplaceDirect(){
+  const rp=readProvider()
+  const credit=new ethers.Contract(ADDRESSES.CarbonCredit,CREDIT_ABI,rp)
+  const market=new ethers.Contract(ADDRESSES.CarbonMarketplace,MARKET_ABI,rp)
+  const tccR=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
+  const total=Number(await credit.totalMinted())
+  const results=await Promise.all(Array.from({length:total},async(_,tokenId)=>{
+    try{
+      const m=await credit.credits(tokenId)
+      const c={projectId:m.projectId,tokenId:String(tokenId),tonnes:m.tonnes.toString(),vintage:m.vintage.toString(),
+        ipfsCid:m.ipfsCid,retired:m.retired,score:Number(m.score),
+        sub:{gps:Number(m.gpsScore),ownership:Number(m.ownershipScore),anomaly:Number(m.anomalyScore),satellite:Number(m.satelliteScore)}}
+      c.fullyOffset = !c.retired && await tccR.isFullyRetired(m.projectId).catch(()=>false)
+      if(!c.retired){
+        const [owner,l]=await Promise.all([credit.ownerOf(tokenId),market.getListing(tokenId)])
+        c.owner=owner; c.listed=l.active; c.priceRaw=l.active?l.price.toString():null; c.price=l.active?fmtQUSDC(l.price):null
+      }else{ c.retiredBy=m.retiredBy }
+      return c
+    }catch(_){return null}
+  }))
+  return results.filter(Boolean)
 }
 async function enrichNames(){
   let changed=false
@@ -1328,44 +1763,56 @@ async function enrichNames(){
 function tabMatch(c,tab){
   const me=(walletAddr||'').toLowerCase()
   switch(tab){
-    case 'sale': return !c.retired&&c.listed
-    case 'owned': return !c.retired&&!c.listed
-    case 'mine': return !c.retired&&c.owner&&c.owner.toLowerCase()===me
-    case 'retired': return c.retired
+    case 'sale':    return !c.retired&&!c.fullyOffset&&c.listed
+    case 'owned':   return !c.retired&&!c.fullyOffset&&!c.listed
+    case 'mine':    return !c.retired&&!c.fullyOffset&&c.owner&&c.owner.toLowerCase()===me
+    case 'retired': return c.retired||c.fullyOffset
     default: return true
   }
 }
 function updateTabCounts(){
   const set=(id,n)=>{const e=document.getElementById(id);if(e)e.textContent=n}
-  set('tc-all',_credits.length); set('tc-sale',_credits.filter(c=>tabMatch(c,'sale')).length)
-  set('tc-owned',_credits.filter(c=>tabMatch(c,'owned')).length); set('tc-mine',_credits.filter(c=>tabMatch(c,'mine')).length)
+  set('tc-all',_credits.length)
+  set('tc-mine',_credits.filter(c=>tabMatch(c,'mine')).length)
   set('tc-retired',_credits.filter(c=>tabMatch(c,'retired')).length)
 }
-function setMarketTab(tab,btn){ _marketTab=tab; document.querySelectorAll('#market-tabs .filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderMarketplace() }
+function setMarketTab(tab,btn){
+  _marketTab=tab
+  document.querySelectorAll('#market-tabs .filter-btn').forEach(b=>b.classList.remove('active'))
+  btn.classList.add('active')
+  const tccPanel=document.getElementById('tcc-market-panel')
+  const certGrid=document.getElementById('credits-grid')
+  if(tab==='tcc'){ tccPanel.style.display=''; certGrid.style.display='none'; loadTCCMarketplace() }
+  else { tccPanel.style.display='none'; certGrid.style.display=''; renderMarketplace() }
+}
 function scoreBadge(c){
-  if(c.retired) return `<span class="retired-badge">RETIRED</span>`
+  if(c.retired)     return `<span class="retired-badge">RETIRED</span>`
+  if(c.fullyOffset) return `<span class="ai-score-badge" style="color:#22d3ee;border-color:#22d3ee33;background:#22d3ee14">AI ${c.score}/100 ✓ OFFSET</span>`
   const col=c.score>=85?'var(--green)':c.score>=70?'var(--amber)':'var(--red)'
   return `<span class="ai-score-badge" title="Score read on-chain from the NFT" style="color:${col};border-color:${col}33;background:${col}14">AI ${c.score}/100 ⛓</span>`
 }
 function renderMarketplace(){
   const grid=document.getElementById('credits-grid')
+  if(_marketTab==='tcc'){ loadTCCMarketplace(); return }
+  grid.style.display=''
+  document.getElementById('tcc-market-panel').style.display='none'
   const me=(walletAddr||'').toLowerCase()
   const list=_credits.filter(c=>tabMatch(c,_marketTab))
-  if(!list.length){ grid.innerHTML=`<div class="empty-state">No credits in “${_marketTab}”.</div>`; return }
+  if(!list.length){ grid.innerHTML=`<div class=”empty-state”>No certificates in this view.</div>`; return }
   grid.innerHTML=list.map(c=>{
     const isMine=c.owner&&c.owner.toLowerCase()===me
     let actions=''
-    if(c.retired){ actions=`<span style="font-size:11px;color:var(--muted)">Offset · burned</span>` }
-    else if(c.listed){
-      actions = isMine
-        ? `<button class="mini-btn ghost" onclick="unlistCredit('${c.tokenId}',this)">Unlist</button>`
-        : `<button class="mini-btn buy" onclick="buyCredit('${c.tokenId}','${c.priceRaw}',this)">Buy</button>`
-    } else if(isMine){
-      actions=`<button class="mini-btn ghost" onclick="openList('${c.tokenId}')">List</button><button class="mini-btn ghost red" onclick="openRetire('${c.tokenId}','${c.projectId}')">Retire</button>`
+    if(c.retired||c.fullyOffset){ actions=`<span style="font-size:11px;color:var(--muted)">Offset · all TCC retired</span>` }
+    else if(isMine){
+      // TLCERT is soulbound — burn TCC for THIS project to auto-upgrade to "Fully Offset"
+      actions=`<button class="mini-btn ghost" onclick="openRetireModal('${c.projectId}')" title="Retire TCC credits for this project to offset CO₂">Retire TCC →</button>`
     } else { actions=`<span style="font-size:11px;color:var(--muted)">Not for sale</span>` }
+    const statusCls = c.retired?'retired':c.fullyOffset?'fully-offset':c.listed?'listed':'active'
+    const statusTxt = c.retired?'RETIRED ⊘':c.fullyOffset?'FULLY OFFSET ✓':c.listed?'LISTED · FOR SALE':'ACTIVE'
     return `<div class="credit-card">
       <div class="cc-header"><div><div class="cc-name">${c.name?c.name:('Credit #'+c.tokenId)}</div>
-        <div class="cc-id">Project ${c.projectId.slice(0,10)}…${c.projectId.slice(-4)} <span class="copy-ic" onclick="copyText('${c.projectId}','Project ID')" title="Copy full project ID">⧉</span></div></div>${scoreBadge(c)}</div>
+        <div class="cc-id">Project ${c.projectId.slice(0,10)}…${c.projectId.slice(-4)} <span class="copy-ic" onclick="copyText('${c.projectId}','Project ID')" title="Copy full project ID">⧉</span></div>
+        <div class="cc-status ${statusCls}">${statusTxt}</div></div>${scoreBadge(c)}</div>
       <div class="cc-meta">
         <div class="cc-meta-row"><span class="cc-meta-label">Tonnes CO₂</span><span class="cc-meta-val">${Number(c.tonnes).toLocaleString()} t</span></div>
         <div class="cc-meta-row"><span class="cc-meta-label">Vintage</span><span class="cc-meta-val">${c.vintage}</span></div>
@@ -1462,6 +1909,237 @@ async function confirmRetire(){
 async function updateQusdcBal(){
   const el=document.getElementById('qusdc-bal'); if(!walletAddr){ el.textContent='QUSDC: connect wallet'; return }
   try{ const q=new ethers.Contract(ADDRESSES.QUSDC,QUSDC_ABI,readProvider()); const b=await q.balanceOf(walletAddr); el.textContent='QUSDC: '+fmtQUSDC(b) }catch(_){}
+  // TCC balance
+  const tel=document.getElementById('tcc-bal'); if(!tel) return
+  try{ const t=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,readProvider()); const b=await t.balanceOf(walletAddr); tel.textContent='TCC: '+Number(b).toLocaleString()+' t CO₂' }catch(_){ tel.textContent='TCC: —' }
+}
+
+// ── TCC Credit Marketplace ──────────────────────────────────────────────────
+async function loadTCCMarketplace(){
+  const panel=document.getElementById('tcc-market-content')
+  panel.innerHTML='<div class="empty-state">Loading TCC listings…</div>'
+  try{
+    const rp=readProvider()
+    const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
+    const mkt=new ethers.Contract(ADDRESSES.TCCMarketplace,TCC_MKT_ABI,rp)
+    const [supply,retired,[ids,sellers,amounts,prices,projectIds]]=await Promise.all([
+      tcc.totalSupply(), tcc.totalRetiredTonnes(), mkt.getActiveListings()
+    ])
+    const supplyN=Number(supply), retiredN=Number(retired)
+    const header=`<div style="display:flex;gap:20px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;flex:1;min-width:140px">
+        <div style="font-size:22px;font-weight:700;color:var(--green)">${supplyN.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">TCC IN CIRCULATION</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;flex:1;min-width:140px">
+        <div style="font-size:22px;font-weight:700;color:var(--text)">${retiredN.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">TONNES RETIRED FOREVER</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;flex:1;min-width:140px">
+        <div style="font-size:22px;font-weight:700;color:var(--amber)">${ids.length}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">ACTIVE LISTINGS</div>
+      </div>
+    </div>`
+
+    const myTccBal = walletAddr ? await tcc.balanceOf(walletAddr).catch(()=>ethers.BigNumber.from(0)) : ethers.BigNumber.from(0)
+    const myTcc = Number(myTccBal)
+
+    const mySection = myTcc > 0 ? `
+      <div style="background:rgba(0,229,122,0.05);border:1px solid rgba(0,229,122,0.2);border-radius:14px;padding:18px;margin-bottom:18px">
+        <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:12px">Your TCC Balance: ${myTcc.toLocaleString()} t CO₂</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-primary" style="font-size:12px;padding:8px 16px" onclick="openRetireModal()">Retire Credits (offset)</button>
+          <button class="btn-secondary" style="font-size:12px;padding:8px 16px" onclick="openListTCCModal()">List Credits for Sale</button>
+        </div>
+      </div>` : ''
+
+    const listingCards = ids.length === 0 ? '<div class="empty-state" style="margin-top:8px">No TCC listings yet. Mint credits via Submit Project to create supply.</div>'
+      : ids.map((_,i)=>{
+        const id=Number(ids[i]), seller=sellers[i], amt=Number(amounts[i]), ppt=Number(prices[i])
+        const pid = projectIds ? projectIds[i] : null
+        const pidShort = pid && pid!=='0x'+'0'.repeat(64) ? pid.slice(0,10)+'…'+pid.slice(-4) : '—'
+        const isMine=walletAddr&&seller.toLowerCase()===walletAddr.toLowerCase()
+        const priceStr=fmtQUSDC(ethers.BigNumber.from(prices[i]))+' QUSDC/t'
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:10px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:18px;font-weight:700;color:var(--text)">${amt.toLocaleString()} TCC</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${amt.toLocaleString()} tonnes CO₂ · ${short(seller)}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--mono)">Project: ${pidShort}</div>
+          </div>
+          <div style="font-size:15px;font-weight:600;color:var(--green)">${priceStr}</div>
+          ${isMine
+            ? `<button class="btn-ghost" style="font-size:12px" onclick="unlistTCC(${id})">Unlist</button>`
+            : `<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+                <input type="number" id="buy-qty-${id}" placeholder="qty" min="1" max="${amt}" value="${Math.min(100,amt)}" style="width:80px;padding:6px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:12px">
+                <button class="btn-primary" style="font-size:12px;padding:8px 14px" onclick="buyTCC(${id},${Number(prices[i])},'${pid||''}')">Buy TCC</button>
+               </div>`
+          }
+        </div>`
+      }).join('')
+
+    panel.innerHTML = header + mySection + listingCards
+    const tc=document.getElementById('tc-tcc'); if(tc) tc.textContent=ids.length
+  }catch(e){ panel.innerHTML=`<div class="empty-state">Error loading TCC market: ${(e.message||'').slice(0,80)}</div>` }
+}
+
+async function buyTCC(listingId, pricePerTonne, projectId){
+  if(!requireWallet()) return
+  const qtyEl=document.getElementById(`buy-qty-${listingId}`)
+  const qty=Number(qtyEl?.value||0)
+  if(qty<1){ showToast('Enter quantity ≥ 1','error'); return }
+  const totalCost=ethers.BigNumber.from(pricePerTonne).mul(qty)
+  const rp=readProvider()
+  const qusdcC=new ethers.Contract(ADDRESSES.QUSDC,QUSDC_ABI,rp)
+  const bal=await qusdcC.balanceOf(walletAddr).catch(()=>ethers.BigNumber.from(0))
+  if(bal.lt(totalCost)){ showToast(`Need ${fmtQUSDC(totalCost)} QUSDC for ${qty} TCC`,'error'); return }
+  const allow=await qusdcC.allowance(walletAddr,ADDRESSES.TCCMarketplace).catch(()=>ethers.BigNumber.from(0))
+  if(allow.lt(totalCost)){
+    showToast('Approving QUSDC…','success')
+    await rawSend(ADDRESSES.QUSDC,IFACE.qusdc,'approve',[ADDRESSES.TCCMarketplace,totalCost],120000)
+  }
+  showToast(`Buying ${qty} TCC…`,'success')
+  await rawSend(ADDRESSES.TCCMarketplace,IFACE.tccMkt,'buy',[listingId,qty],200000)
+  // After buy, offer immediate retire with the correct project ID (no guessing needed)
+  showToast(`Bought ${qty} TCC ✓ — retire now to offset CO₂ for this project`,'success')
+  updateQusdcBal(); loadTCCMarketplace()
+  if(projectId && projectId!==''){ openRetireModal(projectId) }
+}
+
+async function unlistTCC(listingId){
+  if(!requireWallet()) return
+  await rawSend(ADDRESSES.TCCMarketplace,IFACE.tccMkt,'unlist',[listingId],100000)
+  showToast('Unlisted ✓','success'); loadTCCMarketplace()
+}
+
+let _tccRetireBal=0, _tccRetireProjectId='0x'+('0'.repeat(64))
+async function openRetireModal(projectId){
+  if(!requireWallet()) return
+  const rp=readProvider()
+  const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
+  _tccRetireBal=Number(await tcc.balanceOf(walletAddr).catch(()=>0))
+  if(_tccRetireBal<1){ showToast('No TCC to retire','error'); return }
+  // Use provided projectId (from TLCERT card or buy flow).
+  // If none given, auto-detect from the user's own certificates in _credits.
+  if(projectId && projectId!=='undefined' && projectId!==''){
+    _tccRetireProjectId = projectId
+  } else {
+    const mine=_credits.filter(c=>c.owner&&c.owner.toLowerCase()===walletAddr.toLowerCase()&&!c.retired&&!c.fullyOffset)
+    _tccRetireProjectId = mine.length>0 ? mine[0].projectId : '0x'+('0'.repeat(64))
+  }
+  document.getElementById('tcc-retire-bal-hint').textContent=`— you have ${_tccRetireBal.toLocaleString()} TCC`
+  document.getElementById('tcc-retire-qty').value=''
+  document.getElementById('tcc-retire-qty').max=_tccRetireBal
+  document.getElementById('tcc-retire-beneficiary').value=''
+  document.getElementById('tcc-retire-org').value=''
+  const btn=document.getElementById('tcc-retire-confirm'); btn.disabled=false; btn.textContent='Retire permanently'
+  openModal('tcc-retire-modal')
+  setTimeout(()=>document.getElementById('tcc-retire-qty').focus(),100)
+}
+async function confirmRetireTCC(){
+  const qty=parseInt(document.getElementById('tcc-retire-qty').value,10)
+  if(!qty||qty<1||qty>_tccRetireBal){ showToast(`Enter a quantity between 1 and ${_tccRetireBal.toLocaleString()}`, 'error'); return }
+  const beneficiary=(document.getElementById('tcc-retire-beneficiary').value||'').trim()
+  const organization=(document.getElementById('tcc-retire-org').value||'').trim()
+  const btn=document.getElementById('tcc-retire-confirm'); const done=btnLoading(btn,'Retiring…')
+  try{
+    const rcpt=await rawSend(ADDRESSES.CarbonCreditToken,IFACE.tcc,'retire',[qty,_tccRetireProjectId],450000)
+    closeModal('tcc-retire-modal')
+    showToast(`${qty.toLocaleString()} t CO₂ retired ✓ · generating PDF certificate…`,'success')
+    updateQusdcBal(); loadTCCMarketplace(); loadMarketplace()
+
+    // Parse TLRET token ID from receipt logs
+    let tlretTokenId=0
+    try{
+      const TLRET_EVENT_ABI=['event RetirementCertMinted(uint256 indexed tokenId,address indexed retiredBy,uint256 amount,bytes32 indexed projectId)']
+      const iface=new ethers.utils.Interface(TLRET_EVENT_ABI)
+      const log=(rcpt.logs||[]).find(l=>{ try{ return iface.parseLog(l).name==='RetirementCertMinted' }catch{ return false } })
+      if(log) tlretTokenId=Number(iface.parseLog(log).args.tokenId)
+    }catch(_){}
+
+    // Find project name + vintage from loaded certificates
+    const proj=_credits.find(c=>c.projectId===_tccRetireProjectId)||{}
+    const projectName=proj.name||('Project '+(_tccRetireProjectId.slice(0,10)+'…'))
+    const vintage=proj.vintage||new Date().getFullYear()
+
+    // Call backend to generate PDF offset certificate
+    try{
+      const form=new FormData()
+      form.append('token_id',String(tlretTokenId))
+      form.append('project_id',_tccRetireProjectId)
+      form.append('project_name',projectName)
+      form.append('tonnes',String(qty))
+      form.append('vintage',String(vintage))
+      form.append('retired_by',walletAddr)
+      form.append('retired_at',new Date().toISOString())
+      form.append('tx_hash',rcpt.transactionHash)
+      if(proj.ipfsCid) form.append('ipfs_cid',proj.ipfsCid)
+      form.append('beneficiary',beneficiary)
+      form.append('organization',organization)
+      const r=await fetch(`${AI_BACKEND}/retirement-certificate`,{method:'POST',body:form})
+      if(r.ok){
+        const blob=await r.blob()
+        const url=URL.createObjectURL(blob)
+        const a=document.createElement('a'); a.href=url
+        a.download=`terraledger_offset_certificate_${qty}t_${new Date().toISOString().slice(0,10)}.pdf`
+        a.click(); URL.revokeObjectURL(url)
+        showToast('Offset certificate downloaded ✓','success')
+      }
+    }catch(_){ showToast('Certificate generated on-chain · PDF download failed — check backend','error') }
+  }catch(e){ showToast('Retire failed: '+(e.message||'').slice(0,70),'error') }
+  finally{ done() }
+}
+
+let _tccListBal=0
+async function openListTCCModal(){
+  if(!requireWallet()) return
+  const rp=readProvider()
+  const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
+  _tccListBal=Number(await tcc.balanceOf(walletAddr).catch(()=>0))
+  if(_tccListBal<1){ showToast('No TCC to list','error'); return }
+  document.getElementById('tcc-list-bal-hint').textContent=`— you have ${_tccListBal.toLocaleString()} TCC`
+  document.getElementById('tcc-list-qty').value=''; document.getElementById('tcc-list-qty').max=_tccListBal
+  document.getElementById('tcc-list-price').value=''
+  document.getElementById('tcc-list-total').textContent=''
+  // Populate project selector from user's own TLCERT certs
+  const sel=document.getElementById('tcc-list-project')
+  sel.innerHTML='<option value="">Select project…</option>'
+  const myProjects=_credits.filter(c=>c.owner&&c.owner.toLowerCase()===walletAddr.toLowerCase()&&!c.retired)
+  myProjects.forEach(c=>{ const o=document.createElement('option'); o.value=c.projectId; o.textContent=(c.name||('Credit #'+c.tokenId))+' · '+c.projectId.slice(0,10)+'…'; sel.appendChild(o) })
+  if(myProjects.length===1) sel.value=myProjects[0].projectId  // auto-select if only one
+  const btn=document.getElementById('tcc-list-confirm'); btn.disabled=false; btn.textContent='List for Sale'
+  openModal('tcc-list-modal')
+  setTimeout(()=>sel.focus(),100)
+}
+function _updateListTotal(){
+  const q=parseInt(document.getElementById('tcc-list-qty').value,10)||0
+  const p=parseFloat(document.getElementById('tcc-list-price').value)||0
+  const tot=document.getElementById('tcc-list-total')
+  if(q>0&&p>0) tot.textContent=`Total value: ${(q*p).toLocaleString(undefined,{maximumFractionDigits:2})} QUSDC`
+  else tot.textContent=''
+}
+async function confirmListTCC(){
+  const qty=parseInt(document.getElementById('tcc-list-qty').value,10)
+  const priceStr=document.getElementById('tcc-list-price').value
+  const projectId=document.getElementById('tcc-list-project').value
+  if(!projectId){ showToast('Select the project these TCC came from','error'); return }
+  if(!qty||qty<1||qty>_tccListBal){ showToast(`Enter a quantity between 1 and ${_tccListBal.toLocaleString()}`, 'error'); return }
+  if(!priceStr||isNaN(priceStr)||Number(priceStr)<=0){ showToast('Enter a valid QUSDC price per tonne','error'); return }
+  const amt=qty, priceRaw=ethers.utils.parseUnits(String(Number(priceStr).toFixed(6)),6)
+  const btn=document.getElementById('tcc-list-confirm'); const done=btnLoading(btn,'Listing…')
+  try{
+    const rp=readProvider(); const tcc=new ethers.Contract(ADDRESSES.CarbonCreditToken,TCC_ABI,rp)
+    const allow=await tcc.allowance(walletAddr,ADDRESSES.TCCMarketplace).catch(()=>ethers.BigNumber.from(0))
+    if(ethers.BigNumber.from(allow).lt(amt)){
+      showToast('Approving TCC for marketplace…','success')
+      await rawSend(ADDRESSES.CarbonCreditToken,IFACE.tcc,'approve',[ADDRESSES.TCCMarketplace,amt],120000)
+    }
+    showToast(`Listing ${amt.toLocaleString()} TCC at ${Number(priceStr).toFixed(2)} QUSDC/t…`,'success')
+    await rawSend(ADDRESSES.TCCMarketplace,IFACE.tccMkt,'list',[amt,priceRaw,projectId],200000)
+    closeModal('tcc-list-modal')
+    showToast(`${amt.toLocaleString()} TCC listed ✓`,'success')
+    loadTCCMarketplace()
+  }catch(e){ showToast('List failed: '+(e.message||'').slice(0,70),'error') }
+  finally{ done() }
 }
 async function getFaucet(){
   if(!IS_TESTNET){ showToast('Mainnet QUSDC has no faucet — bridge USDC to get QUSDC.','error'); return }
@@ -1748,7 +2426,7 @@ function updateScorePreview(){
 
 // Restore wallet session (unless the user explicitly disconnected)
 if(window.ethereum && !localStorage.getItem('tl_wallet_off')){ window.ethereum.request({method:'eth_accounts'}).then(async a=>{ if(a.length){ provider=new ethers.providers.Web3Provider(window.ethereum); signer=provider.getSigner(); walletAddr=a[0]; setWalletBtn(); updateQusdcBal(); updateQiePassChip(); checkNetwork()
-  window.ethereum.on?.('accountsChanged',()=>location.reload()); window.ethereum.on?.('chainChanged',()=>location.reload()) } }).catch(()=>{}) }
+  window.ethereum.on?.('accountsChanged',accs=>{ if(!accs||!accs.length) disconnectWallet(); else location.reload() }); window.ethereum.on?.('chainChanged',()=>location.reload()) } }).catch(()=>{}) }
 
 // Faucet is testnet-only — hide it on mainnet (real QUSDC has no faucet)
 if(!IS_TESTNET){ const fb=document.getElementById('faucet-btn'); if(fb) fb.style.display='none'
@@ -1765,10 +2443,10 @@ document.getElementById('page-submit').addEventListener('change',updateScorePrev
 // Scroll-reveal — tag landing + footer blocks, stagger grid children, observe
 function initReveal(){
   if(!('IntersectionObserver' in window)) return
-  const sel='#page-landing .section-title, #page-landing .section-sub, #page-landing .mission, #page-landing .stats-bar, #page-landing .problem-card, #page-landing .module-card, #page-landing .flow-step, #page-landing .aud-card, #page-landing .rm, #page-landing .disclaimer, .site-footer'
+  const sel='#page-landing .section-title, #page-landing .section-sub, #page-landing .mission, #page-landing .stats-bar, #page-landing .problem-card, #page-landing .module-card, #page-landing .flow-step, #page-landing .aud-card, #page-landing .rm, #page-landing .disclaimer, #page-landing .proof-txn, .site-footer'
   const els=[...document.querySelectorAll(sel)]
   els.forEach(el=>el.classList.add('reveal'))
-  document.querySelectorAll('#page-landing .modules-grid, #page-landing .aud-grid, #page-landing .roadmap, #page-landing .diff-grid, #page-landing .two-col').forEach(g=>{
+  document.querySelectorAll('#page-landing .modules-grid, #page-landing .aud-grid, #page-landing .roadmap, #page-landing .diff-grid, #page-landing .two-col, #page-landing .proof-grid').forEach(g=>{
     [...g.children].forEach((c,i)=>{ if(c.classList.contains('reveal')) c.style.transitionDelay=(i*70)+'ms' })
   })
   const io=new IntersectionObserver((ents)=>{ ents.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target) } }) },
@@ -1798,7 +2476,103 @@ function initFlowScroll(){
 }
 initFlowScroll()
 
+// ═══════════════════════════════════════════════════════════════
+// VISUAL ENHANCEMENTS — particles · nav · stagger · stat flash
+// ═══════════════════════════════════════════════════════════════
+
+// Nav scroll shadow
+window.addEventListener('scroll', () => {
+  document.querySelector('nav').classList.toggle('scrolled', window.scrollY > 8)
+}, { passive: true })
+
+// Particle network in hero canvas
+;(function initParticles() {
+  const canvas = document.getElementById('hero-canvas')
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+  let W = 0, H = 0
+  const N = 50, LINK = 115
+  const pts = []
+
+  function resize() {
+    W = canvas.width  = canvas.offsetWidth
+    H = canvas.height = canvas.offsetHeight
+  }
+  resize()
+  new ResizeObserver(resize).observe(canvas.parentElement)
+
+  for (let i = 0; i < N; i++) pts.push({
+    x: Math.random() * 900, y: Math.random() * 500,
+    vx: (Math.random() - .5) * .26, vy: (Math.random() - .5) * .26,
+    r: Math.random() * 1.3 + .35, o: Math.random() * .42 + .1
+  })
+
+  function frame() {
+    ctx.clearRect(0, 0, W, H)
+    for (let i = 0; i < N; i++) {
+      const a = pts[i]
+      for (let j = i + 1; j < N; j++) {
+        const b = pts[j], dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy)
+        if (d < LINK) {
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
+          ctx.strokeStyle = `rgba(0,229,122,${(1 - d / LINK) * .13})`
+          ctx.lineWidth = .75; ctx.stroke()
+        }
+      }
+    }
+    pts.forEach(p => {
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+      ctx.fillStyle = `rgba(0,229,122,${p.o})`; ctx.fill()
+      p.x += p.vx; p.y += p.vy
+      if (p.x < 0 || p.x > W) p.vx *= -1
+      if (p.y < 0 || p.y > H) p.vy *= -1
+    })
+    requestAnimationFrame(frame)
+  }
+  frame()
+
+  // Subtle orb parallax on hero mouse move
+  const hero = canvas.parentElement
+  hero.addEventListener('mousemove', e => {
+    const r = hero.getBoundingClientRect()
+    const mx = (e.clientX - r.left) / r.width - .5
+    const my = (e.clientY - r.top)  / r.height - .5
+    const o2 = hero.querySelector('.hero-orb-2')
+    const o3 = hero.querySelector('.hero-orb-3')
+    if (o2) o2.style.transform = `translate(${mx * 22}px,${my * 16}px)`
+    if (o3) o3.style.transform = `translate(${-mx * 16}px,${my * 14}px)`
+  }, { passive: true })
+})()
+
+// Fraud stats stagger entrance via IntersectionObserver
+;(function initFraudStagger() {
+  const cards = document.querySelectorAll('.fraud-stat-card')
+  if (!cards.length) return
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target) }
+    })
+  }, { threshold: 0.18 })
+  cards.forEach(c => io.observe(c))
+})()
+
+// Stat flash — briefly flashes when countUp finishes writing a real value
+;['stat-verified', 'stat-blocked', 'stat-tonnes'].forEach(id => {
+  const el = document.getElementById(id)
+  if (!el) return
+  new MutationObserver(() => {
+    const v = el.textContent.trim()
+    if (v && v !== '—' && v !== '0' && !isNaN(parseFloat(v.replace(/[^0-9.]/g, '')))) {
+      el.classList.remove('flash')
+      void el.offsetWidth
+      el.classList.add('flash')
+      setTimeout(() => el.classList.remove('flash'), 600)
+    }
+  }).observe(el, { childList: true, subtree: true, characterData: true })
+})
+
 loadStats()
+loadFraudLog()
 </script>
 </body>
 </html>
