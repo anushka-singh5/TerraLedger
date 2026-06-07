@@ -1,142 +1,112 @@
 # TerraLedger
 
-AI-gated carbon credit platform on QIE Blockchain (chain 1990).
+Carbon credit platform on QIE Blockchain where the AI check is the gate — no passing score means no tokens minted. Built for QIE Blockchain Hackathon 2026.
 
-The core principle: instead of tokenizing first and verifying never (the Toucan/KlimaDAO failure mode), the AI check IS the gate. No pass = no tokens minted.
-
-Live on QIE Mainnet — dual-token architecture: TLCERT soulbound verification NFT + TCC ERC-20 fungible carbon credits.
+The problem with existing carbon markets (Toucan, KlimaDAO etc.) is they tokenize first and verify never. We flipped it: verification happens before anything hits the chain.
 
 ---
 
 ## How it works
 
 ```
-submit → 5 AI modules → score ≥ 70?
-              ↓ yes                      ↓ no / hard-fail
-  oracle mints TLCERT (soulbound)    blocked + logged on-chain
-            + TCC tokens (ERC-20)
-              ↓
-      developer lists TCC on marketplace
-      (every listing stores projectId on-chain)
-              ↓
-      any holder retires TCC via retire()
-      → TCC burns permanently
-      → TLRET soulbound cert auto-mints to retiree
-      → PDF certificate downloaded instantly
-              ↓
-      when all project TCC retired:
-      TLCERT auto-shows "Fully Offset"
-      (no button, no admin — tracked per project ID on-chain)
+submit project + deed PDF
+        ↓
+   5 AI modules run in parallel
+        ↓ score ≥ 70 + no hard fails
+   oracle mints TLCERT (soulbound) + TCC tokens
+        ↓
+   list TCC on marketplace (projectId locked in listing)
+        ↓
+   buyer purchases TCC, retires via retire()
+   → TCC burns permanently
+   → TLRET soulbound cert auto-mints
+   → PDF certificate downloaded
+        ↓
+   when all TCC for a project are retired:
+   TLCERT flips to "Fully Offset" automatically — no admin call
 ```
 
-Two checks are hard gates regardless of score:
-- GPS polygon overlaps an existing registered project by >20%
-- Deed GPS coordinates don't match claimed project coordinates
+Two hard fails that block regardless of score:
+- GPS polygon overlaps an existing project by >20%
+- Deed GPS coordinates don't match the submitted polygon
 
 ---
 
-### The 5 AI modules
+## AI modules
 
-| Module | What | Weight |
+| Module | What it checks | Max score |
 |---|---|---|
-| GPS overlap | Shapely polygon vs all registered projects | 30 |
-| Ownership | OCR + NLP on deed PDF, ELA forgery detection, SHA-256 stored on-chain | 25 |
-| Anomaly | IsolationForest trained on Verra registry data — flags abnormal tonnes/ha | 25 |
-| Satellite | Real NASA FIRMS fire/deforestation history for the GPS coords (90-day window) | 20 |
-| Audit | Llama-3 writes plain-English audit, score breakdown on-chain | — |
+| GPS overlap | Shapely polygon intersection against all registered projects | 30 |
+| Ownership | OCR + NLP on deed PDF, ELA forgery detection, SHA-256 on-chain | 25 |
+| Anomaly | IsolationForest on Verra registry data, flags abnormal tonnes/ha | 25 |
+| Satellite | NASA FIRMS fire/deforestation data for coordinates, 90-day window | 20 |
+| Audit | Llama-3 plain-English audit, score breakdown stored on-chain | — |
 
 ---
 
-## Problems we solved
+## Things that broke and how we fixed them
 
-### 1. Fungibility trap — buyers couldn't track which project their TCC came from
-TCC is an ERC-20. Once traded, a buyer holding TCC had no way to know which verified project the tokens came from. If they retired against the wrong project ID, the TLCERT would never show offset.
+**TCC buyers had no idea which project their tokens came from.** ERC-20s are fungible — once in your wallet you lose provenance. Fixed by storing `bytes32 projectId` in every TCCMarketplace listing so the retire flow always knows which project to credit.
 
-**Fix:** TCCMarketplace v2 stores `bytes32 projectId` in every listing. `getActiveListings()` returns projectIds. The marketplace UI passes the correct projectId to `retire()` automatically when a buyer purchases and retires credits.
+**TLCERT stayed "ACTIVE" forever even after all TCC burned.** retire() was passing bytes32(0) as projectId, so `retiredByProject` never matched `issuedByProject`. Fixed with per-project accounting on CarbonCreditToken and `isFullyRetired()`.
 
-### 2. TLCERT stuck "ACTIVE" after all TCC were burned
-The original retire flow passed `projectIdZero` (bytes32 0x000...0) to `retiredByProject` mapping, so the per-project counter never reached `issuedByProject`. The cert stayed "ACTIVE" even after every token was gone.
+**Buyers had no retirement proof.** The old PDF cert flow only worked for the ERC-721 path. Added TLRET — soulbound cert that auto-mints on every `retire()` call, plus a PDF download from the backend.
 
-**Fix:** Per-project tracking via `issuedByProject[bytes32]` and `retiredByProject[bytes32]` on CarbonCreditToken. Frontend uses `isFullyRetired(projectId)` with a totalSupply fallback: if `issued > 0 && totalSupply == 0`, the project is fully offset regardless.
+**retire() kept reverting.** Burning TCC and minting a TLRET in one call costs ~350k gas. The default limit was 150k. Bumped to 450k.
 
-### 3. Retirement certificate only existed for the old NFT flow
-Before, a PDF certificate downloaded only when retiring the legacy ERC-721 credit NFT. TCC retire() had no certificate.
+**Retired tab showed nothing for buyers.** Buyers don't own TLCERTs, only TLRET certs. Fixed by loading `RetirementCertificate.getWalletCerts(wallet)` in the retired tab.
 
-**Fix:** TLRET (RetirementCertificate) — soulbound ERC-721 that auto-mints on every `retire()` call from CarbonCreditToken. Backend `/retirement-certificate` generates a PDF with retiree name, organisation, amount, projectId and tx hash. Downloads immediately after the on-chain tx confirms.
+**Wallet connect hung forever.** `wallet_requestPermissions` on QIE Wallet would just hang if the user dismissed it. Added `Promise.race` with a 4s timeout, falls through to `eth_requestAccounts`.
 
-### 4. retire() failing — gas limit too low
-`retire()` burns TCC then mints a TLRET soulbound cert. Combined gas was ~300k+. Default 150k limit caused every retire to fail.
-
-**Fix:** Gas limit bumped to 450,000 for retire calls.
-
-### 5. Manual Retire button on soulbound TLCERT — confusing UX
-TLCERT is soulbound and non-transferable. Showing a Retire button on it made no sense. Users were unclear whether retiring the cert or the tokens did the offset.
-
-**Fix:** TLCERT cards now show "Retire TCC →" which opens the TCC retire modal pre-filled with the correct projectId. Soulbound status on the card is clear.
-
-### 6. Wallet connect stuck "Connecting..." forever
-`wallet_requestPermissions` on QIE Wallet would hang indefinitely if the user dismissed the popup or the wallet was slow.
-
-**Fix:** `Promise.race` with a 4-second timeout — if permissions don't resolve, the flow falls through to `eth_requestAccounts` directly.
-
-### 7. Wallet auto-reconnecting after explicit disconnect
-The `accountsChanged` handler called `location.reload()` on empty accounts, which re-triggered auto-connect. `disconnectWallet()` also didn't actually revoke site permissions.
-
-**Fix:** `wallet_revokePermissions` call in `disconnectWallet()`. `accountsChanged` now calls `disconnectWallet()` on empty accounts instead of reloading.
-
-### 8. Submit form not clearing after successful mint
-After AI verification + oracle mint, the form still showed old GPS rows, uploaded deed filename and field values.
-
-**Fix:** `resetSubmitForm()` called after confirmed mint — clears all GPS rows back to one blank row, resets all input fields, clears file upload display.
+**TCC showed as 0.000...001 on the explorer.** Contract inherited ERC20's default 18 decimals but oracle was issuing whole numbers. Added `decimals()` override returning 0.
 
 ---
 
 ## Stack
 
-- `index.html` — single-file frontend (Ethers.js v5.7.2 CDN), works with QIE Wallet
-- `terraledger.py` — FastAPI backend: 5 AI modules, oracle signer, PDF certificate generator (ReportLab)
-- `onchain/` — 9 Solidity contracts (Hardhat)
+- `index.html` — single-file frontend, Ethers.js v5, works with QIE Wallet
+- `terraledger.py` — FastAPI, 5 AI modules, oracle signer, PDF cert generator (ReportLab)
+- `onchain/` — 9 Solidity contracts, Hardhat
 
 ### Contracts
 
-| Contract | Role |
+| Contract | What it does |
 |---|---|
-| **CarbonCredit (TLCERT)** | Soulbound ERC-721. Non-transferable verification certificate. Automatically shows "Fully Offset" when all project TCC are retired. Stays in minter's wallet permanently. |
-| **CarbonCreditToken (TCC)** | ERC-20, 1 TCC = 1 tonne CO₂. Oracle-minted on verification pass. Tracks `issuedByProject[bytes32]` and `retiredByProject[bytes32]` for per-project offset accounting. Burns on `retire()`. |
-| **RetirementCertificate (TLRET)** | Soulbound ERC-721. Auto-minted by CarbonCreditToken on every `retire()` call. Stores retiree address, amount, projectId and timestamp on-chain. Emits `RetirementCertMinted` event. |
-| **CarbonOracle** | M-of-N attestation. `FraudRecord` on-chain, `getFraudLog()`. Mints both TLCERT + TCC to user wallet on attestation. |
-| **TCCMarketplace** | ERC-20 TCC trading. Buy any quantity at price-per-tonne in QUSDC. Every listing stores `bytes32 projectId` so buyers always know the source project. |
-| **ProjectRegistry** | User registers project on-chain (owner = user wallet). GPS bounding box stored for duplicate detection. |
-| **CarbonMarketplace** | Legacy TLCERT NFT marketplace (soulbound — list/buy disabled for non-transferable certs). |
-| **MockQIEPass** | On-chain KYC identity gate for the demo document-access grant. |
-| **QUSDC** | Real QIE ERC-20 stablecoin used for marketplace settlement (6 decimals). |
+| CarbonCredit (TLCERT) | Soulbound ERC-721, one per verified project. Flips to "Fully Offset" when all project TCC retire. Non-transferable. |
+| CarbonCreditToken (TCC) | ERC-20, 1 token = 1 tonne CO₂, decimals=0. Oracle mints on approval. Burns on retire(). |
+| RetirementCertificate (TLRET) | Soulbound ERC-721 proof of offset. Auto-minted by TCC on retire(), stores amount + projectId + timestamp. |
+| CarbonOracle | M-of-N attestation, fraud log on-chain. Mints TLCERT + TCC together on approval. |
+| TCCMarketplace | Buy/sell TCC at price-per-tonne in QUSDC. Every listing stores projectId. |
+| ProjectRegistry | On-chain project register. GPS bounding box for duplicate detection. |
+| CarbonMarketplace | Original TLCERT marketplace — soulbound certs can't actually transfer, kept for status display. |
+| MockQIEPass | On-chain gate for the document-access demo flow. |
 
 ---
 
-## Mainnet (chain 1990) — v7 deployment
+## Live on QIE Mainnet — chain 1990
 
-RPC: `https://rpc1mainnet.qie.digital/` · Explorer: `https://mainnet.qie.digital/`
+Explorer: `https://mainnet.qie.digital/` · RPC: `https://rpc1mainnet.qie.digital/`
 
 | Contract | Address |
 |---|---|
 | ProjectRegistry | `0x4Ad9378bf710F2F21bbB1884D0F6bBeF7C27Ae05` |
-| CarbonCredit (TLCERT — soulbound) | `0xdFfB3a6892D77C16b77c0d7cf640A48fb4f86a45` |
+| CarbonCredit (TLCERT) | `0xdFfB3a6892D77C16b77c0d7cf640A48fb4f86a45` |
 | CarbonOracle | `0x7550320b313b4c0Cf1AB1ecDeA2EB601cea0DAAE` |
 | CarbonMarketplace | `0x8B5a31BaC85f9803b78C407B528C8758f58854bC` |
 | QUSDC | `0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5` |
 | MockQIEPass | `0x2aDBb3c3a840f154f9C4518e60FA389A193F7D00` |
-| CarbonCreditToken (TCC — 1 token = 1 tonne CO₂, decimals=0) | `0x649979124d8938BBf31Cd2d24F6C460Ea768369a` |
-| TCCMarketplace (per-listing projectId) | `0x0b75BeDf2026A060187D3C8D6d68a8E7dd161f7e` |
-| RetirementCertificate (TLRET — soulbound) | `0x39A7AeBBaA5d159Cc20bBE27c1B1ea55162FE123` |
+| CarbonCreditToken (TCC) | `0x649979124d8938BBf31Cd2d24F6C460Ea768369a` |
+| TCCMarketplace | `0x0b75BeDf2026A060187D3C8D6d68a8E7dd161f7e` |
+| RetirementCertificate (TLRET) | `0x39A7AeBBaA5d159Cc20bBE27c1B1ea55162FE123` |
 
-### Live txns (v7 contracts)
+Real transactions you can verify:
 
-| Action | tx |
+| | tx hash |
 |---|---|
-| Mint Credit #0 (AI score 98 · 25,000 TCC) | `0xe8c94ded7ec96daf4a708733616967d706df8d6bc6d4107b4e6ee2de4b514eac` |
+| Mint Credit #0 — AI score 98, 25k TCC | `0xe8c94ded7ec96daf4a708733616967d706df8d6bc6d4107b4e6ee2de4b514eac` |
 | List TCC on marketplace | `0x7bb6cd83b63c3a8d6ad060be1506688ae132b285894351807ded955b4079be76` |
-| Buy 500 TCC from marketplace | `0x3eec35c3495217af9b8a5fbc244e426b9bf28a7d8fa1c5b86f97520286762e92` |
-| Retire 24,500 TCC · TLRET cert issued | `0x5a0057dbe846ca3b8da144719969dc664c608633048add6670d08dfb86c30192` |
+| Buy 500 TCC | `0x3eec35c3495217af9b8a5fbc244e426b9bf28a7d8fa1c5b86f97520286762e92` |
+| Retire 24,500 TCC + TLRET cert | `0x5a0057dbe846ca3b8da144719969dc664c608633048add6670d08dfb86c30192` |
 
 ---
 
@@ -146,41 +116,37 @@ RPC: `https://rpc1mainnet.qie.digital/` · Explorer: `https://mainnet.qie.digita
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
-cp .env.example .env   # fill in PRIVATE_KEY at minimum
-python terraledger.py  # :8000
-
-# frontend (separate terminal)
-python3 -m http.server 5500
-# open http://localhost:5500
+cp .env.example .env   # at minimum set PRIVATE_KEY
+python terraledger.py  # starts on :8000
 ```
 
-Ollama is optional — if it's not running the audit falls back to a template report.
+Frontend is a single HTML file — just open with any static server:
+```bash
+python3 -m http.server 5500
+```
+
+Ollama is optional. Without it the audit module falls back to a template.
 
 ## Deploying contracts
 
 ```bash
-npm install && npx hardhat compile && npx hardhat test
-npm run deploy   # needs MAINNET_PRIVATE_KEY in .env
+npm install
+npx hardhat compile
+npm run deploy   # reads MAINNET_PRIVATE_KEY from .env
 ```
 
-After deploy: the script auto-patches `index.html` ADDRESSES and prints the 4 env vars to update on Render. No manual address editing needed.
+After deploy the script auto-patches `index.html` with new addresses and prints the env vars to update on Render.
 
-## Project layout
+## Layout
 
 ```
-terraledger.py       backend (FastAPI + AI modules + oracle signer + PDF certs)
-index.html           frontend (single file, QIE Wallet, Ethers.js v5)
-onchain/             solidity contracts (Hardhat)
-tools/               deploy + utility scripts
-tests/               hardhat test suite
-store/               runtime data (trained model, IPFS reports)
-test_docs/           sample deeds for local testing
-addresses/           deployed contract addresses per chainId
+terraledger.py    FastAPI backend — AI modules, oracle signer, PDF certs
+index.html        frontend — single file, QIE Wallet, Ethers.js v5
+onchain/          Solidity contracts
+tools/            deploy scripts
+tests/            Hardhat test suite
+store/            trained models, IPFS reports
+addresses/        deployed addresses per chain
 ```
 
-## Notes
-
-- Backend never touches user funds — only uses the oracle key for minting
-- Wallet ownership proved via EIP-191 signature on `/verify`
-- `.env` must never be committed — contains oracle private key
-- `samples/test_deeds/` excluded from git
+The oracle wallet only signs verification txns — it never touches user funds. Wallet ownership is proved via EIP-191 on `/verify`. Don't commit `.env`.

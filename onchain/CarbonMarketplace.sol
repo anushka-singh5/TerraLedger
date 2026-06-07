@@ -7,11 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-// CarbonMarketplace
-// List and buy CarbonCredit NFTs for QUSDC. A buy settles atomically —
-///         QUSDC moves buyer→seller (+ optional fee) and the NFT moves seller→buyer
-///         in one tx, so nobody can be left half-paid. The payment token is settable
-///         so a deploy can be re-pointed at a different QUSDC without redeploying.
 contract CarbonMarketplace is Ownable, ReentrancyGuard, ERC721Holder {
     IERC721 public immutable creditNFT;       // CarbonCredit
     IERC20  public           paymentToken;    // QUSDC
@@ -29,9 +24,7 @@ contract CarbonMarketplace is Ownable, ReentrancyGuard, ERC721Holder {
     mapping(uint256 => Listing) public listings;
     uint256[] private _listedTokenIds;        // for enumeration in the UI
 
-    /// @notice Total QUSDC volume traded (raw 6-decimal units), ever.
     uint256 public totalVolume;
-    /// @notice Total number of successful credit sales, ever.
     uint256 public totalSales;
 
     event Listed(uint256 indexed tokenId, address indexed seller, uint256 price);
@@ -52,7 +45,6 @@ contract CarbonMarketplace is Ownable, ReentrancyGuard, ERC721Holder {
         treasury     = treasury_ == address(0) ? msg.sender : treasury_;
     }
 
-    // Re-point the marketplace at a different QUSDC contract.
     function setPaymentToken(address newToken) external onlyOwner {
         require(newToken != address(0), "Marketplace: zero token");
         emit PaymentTokenUpdated(address(paymentToken), newToken);
@@ -67,8 +59,6 @@ contract CarbonMarketplace is Ownable, ReentrancyGuard, ERC721Holder {
         emit FeeUpdated(newFeeBps, newTreasury);
     }
 
-    // List a credit. Seller has to approve() this contract on the NFT
-    ///         first, otherwise the eventual safeTransferFrom on buy would revert.
     function list(uint256 tokenId, uint256 price) external {
         require(price > 0, "Marketplace: zero price");
         require(creditNFT.ownerOf(tokenId) == msg.sender, "Marketplace: not token owner");
@@ -91,8 +81,6 @@ contract CarbonMarketplace is Ownable, ReentrancyGuard, ERC721Holder {
         emit Unlisted(tokenId, msg.sender);
     }
 
-    // Buy a listed credit. Buyer must have approved this contract for
-    ///         `price` QUSDC first. nonReentrant because we touch an ERC20 + ERC721.
     function buy(uint256 tokenId) external nonReentrant {
         Listing memory item = listings[tokenId];
         require(item.active, "Marketplace: not listed");
@@ -118,7 +106,6 @@ contract CarbonMarketplace is Ownable, ReentrancyGuard, ERC721Holder {
 
         creditNFT.safeTransferFrom(item.seller, msg.sender, tokenId);
 
-        // Track cumulative volume and sales count for on-chain analytics.
         totalVolume += item.price;
         totalSales  += 1;
 
@@ -129,7 +116,6 @@ contract CarbonMarketplace is Ownable, ReentrancyGuard, ERC721Holder {
         return listings[tokenId];
     }
 
-    // Only the live listings, unpacked into parallel arrays the UI can map over.
     function getActiveListings() external view returns (uint256[] memory ids, uint256[] memory prices, address[] memory sellers) {
         uint256 count;
         for (uint256 i = 0; i < _listedTokenIds.length; i++) {

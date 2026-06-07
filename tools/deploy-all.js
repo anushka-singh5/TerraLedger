@@ -1,18 +1,5 @@
-/**
- * Deploys and wires the whole TerraLedger contract set, then writes the
- * resulting addresses to addresses/<chainId>.json.
- *
- * Order matters: the oracle needs the registry + credit addresses at
- * construction, and both of those have to be told who their oracle is before
- * anything can mint. The marketplace binds the credit NFT + the payment token.
- *
- * On mainnet (1990) we point the marketplace at the REAL QUSDC token and deploy
- * a fresh MockQIEPass (real QIE Pass is an off-chain REST API — the on-chain
- * mock only gates the demo document-access grant). Anywhere else (e.g. a local
- * hardhat node) we deploy throwaway mocks for both so the script self-contains.
- *
- *   npx hardhat run scripts/deploy-all.js --network qieMainnet
- */
+// deploys all 9 TerraLedger contracts in dependency order, auto-patches index.html addresses, prints Render env vars
+// usage: npx hardhat run tools/deploy-all.js --network qieMainnet
 const { ethers } = require("hardhat");
 const fs   = require("fs");
 const path = require("path");
