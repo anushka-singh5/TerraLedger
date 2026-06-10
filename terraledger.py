@@ -510,7 +510,7 @@ def parse_ownership_document(
 
     if not text or len(text.strip()) < 20:
         return {
-            "hard_fail":  False,
+            "hard_fail":  True,
             "score":      0,
             "owner_name": "Unreadable",
             "doc_gps":    None,
@@ -518,7 +518,7 @@ def parse_ownership_document(
             "confidence": 0.0,
             "authenticity": 0.0,
             "auth_flags": ["UNREADABLE_DOCUMENT"],
-            "reason":     "Document could not be read (check file format).",
+            "reason":     "Document is unreadable — cannot verify ownership from an unreadable or blank file.",
         }
 
     owner     = _extract_owner(text)
@@ -564,6 +564,28 @@ def parse_ownership_document(
             "gps_match":  gps_match, "confidence": 0.0,
             "authenticity": auth["authenticity"], "auth_flags": auth["flags"],
             "reason":     "Forged document — " + forge_flag,
+        }
+
+    low            = text.lower()
+    has_registry   = any(kw in low for kw in REGISTRY_KEYWORDS)
+    has_reg_number = bool(re.search(REG_NUMBER_PATTERN, text, re.IGNORECASE))
+
+    # hard fail if document has zero deed characteristics — screenshot, random file, etc.
+    if not has_registry and not has_reg_number and doc_gps is None:
+        return {
+            "hard_fail":  True, "score": 0, "owner_name": owner, "doc_gps": None,
+            "gps_match":  False, "confidence": 0.0,
+            "authenticity": auth["authenticity"], "auth_flags": auth["flags"],
+            "reason":     "Document does not appear to be a land deed — no registry markers, registration number, or GPS coordinates found.",
+        }
+
+    # hard fail if authenticity is critically low (tampering + no structure)
+    if auth["authenticity"] < 0.30:
+        return {
+            "hard_fail":  True, "score": 0, "owner_name": owner, "doc_gps": doc_gps,
+            "gps_match":  gps_match, "confidence": 0.0,
+            "authenticity": auth["authenticity"], "auth_flags": auth["flags"],
+            "reason":     f"Document authenticity too low ({int(auth['authenticity']*100)}%) — possible tampering or unverifiable source.",
         }
 
     confidence = _doc_confidence(owner, doc_gps, gps_match, text)
