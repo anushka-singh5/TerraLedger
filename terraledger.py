@@ -64,6 +64,7 @@ MIN_SCORE          = 70
 HARD_FAIL_OVERLAP  = 20.0       # GPS overlap % that triggers hard-fail
 WARN_OVERLAP       = 5.0        # GPS overlap % that adds a flag
 MAX_DOC_DIST_KM    = 50.0       # max km between doc GPS and project centroid
+ACCEPTED_DOC_TYPES = {".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".tif"}
 
 NASA_BASE_URL      = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
 NASA_DAYS          = 90         # total satellite lookback window
@@ -495,6 +496,28 @@ def check_document_authenticity(
         "flags":        flags,
     }
 
+def _project_id_in_doc(text: str, project_id: str) -> bool:
+    """Returns True if project_id is found in document text, or if the check doesn't apply."""
+    pid = (project_id or "").strip()
+    # skip for auto-generated IDs (TL-<timestamp>) and on-chain hex hashes
+    if not pid or re.match(r'^TL-\d{10,}$', pid) or re.match(r'^0x[0-9a-fA-F]{40,}$', pid):
+        return True
+    text_lower = text.lower()
+    pid_lower  = pid.lower()
+    # strategy 1: direct case-insensitive match
+    if pid_lower in text_lower:
+        return True
+    # strategy 2: normalized (remove separators) substring match
+    pid_norm  = re.sub(r'[\s\-_/]', '', pid_lower)
+    text_norm = re.sub(r'[\s\-_/]', '', text_lower)
+    if pid_norm in text_norm:
+        return True
+    # strategy 3: all tokens present as whole words (handles "Khasra No 123/B" vs "Khasra 123/B")
+    tokens = [t for t in re.split(r'[\s\-_/]+', pid_lower) if len(t) >= 1]
+    if tokens and all(re.search(r'\b' + re.escape(t) + r'\b', text_lower) for t in tokens):
+        return True
+    return False
+
 def parse_ownership_document(
     file_bytes: bytes,
     filename:   str,
@@ -506,6 +529,20 @@ def parse_ownership_document(
     Hard-fails on GPS mismatch OR document reuse.
     Final score = 25 × consistency_confidence × authenticity_multiplier.
     """
+    ext = os.path.splitext((filename or "").lower())[1]
+    if not ext or ext not in ACCEPTED_DOC_TYPES:
+        return {
+            "hard_fail":    True,
+            "score":        0,
+            "owner_name":   "Unknown",
+            "doc_gps":      None,
+            "gps_match":    False,
+            "confidence":   0.0,
+            "authenticity": 0.0,
+            "auth_flags":   ["INVALID_FILE_TYPE"],
+            "reason":       f"File type '{ext or 'unknown'}' not accepted — only scanned PDFs and images (JPG, PNG, TIFF) are valid ownership documents.",
+        }
+
     text = _extract_text(file_bytes, filename)
 
     if not text or len(text.strip()) < 20:
@@ -519,6 +556,19 @@ def parse_ownership_document(
             "authenticity": 0.0,
             "auth_flags": ["UNREADABLE_DOCUMENT"],
             "reason":     "Document is unreadable — cannot verify ownership from an unreadable or blank file.",
+        }
+
+    if not _project_id_in_doc(text, project_id):
+        return {
+            "hard_fail":    True,
+            "score":        0,
+            "owner_name":   "Unknown",
+            "doc_gps":      None,
+            "gps_match":    False,
+            "confidence":   0.0,
+            "authenticity": 0.0,
+            "auth_flags":   ["PROJECT_ID_MISMATCH"],
+            "reason":       f"Project ID '{project_id}' not found in document — the deed must reference this project ID.",
         }
 
     owner     = _extract_owner(text)
@@ -2191,33 +2241,48 @@ async def verify(
             doc_result = parse_ownership_document(file_bytes, document.filename or "", polygon, project_id)
         except Exception as exc:
             log.error("Ownership module error (fail-closed): %s", exc)
-            doc_result = {"hard_fail": False, "score": 0, "owner_name": "Unknown",
+            doc_result = {"hard_fail": True, "score": 0, "owner_name": "Unknown",
                           "doc_gps": None, "gps_match": False, "confidence": 0.0,
-                          "auth_flags": [], "reason": "Ownership module unavailable — scored 0 (fail-closed)."}
+                          "auth_flags": ["OWNERSHIP_MODULE_ERROR"], "reason": "Ownership verification failed — document could not be processed."}
             flags.append("OWNERSHIP_MODULE_UNAVAILABLE")
         # Surface authenticity flags into the main flags list
         for af in doc_result.get("auth_flags", []):
             flags.append(af.split(":")[0])   # short flag code for the UI
     else:
         doc_result = {
-            "hard_fail":  False,
+            "hard_fail":  True,
             "score":      0,
             "owner_name": "Unknown",
             "doc_gps":    None,
             "gps_match":  False,
             "confidence": 0.0,
-            "reason":     "No ownership document provided.",
+            "reason":     "No ownership document provided — a land deed or title document is required.",
         }
         flags.append("NO_OWNERSHIP_DOCUMENT")
 
     if doc_result["hard_fail"]:
-        reason_low = doc_result.get("reason", "").lower()
-        if "reuse" in reason_low:
+        reason_low  = doc_result.get("reason", "").lower()
+        auth_flags  = doc_result.get("auth_flags", [])
+        if "reuse" in reason_low or "DOCUMENT_REUSE" in auth_flags:
             fail_reason, fail_flag = "Document reuse — deed already used for another project", "DOCUMENT_REUSE"
-        elif "forg" in reason_low:
+        elif "forg" in reason_low or "FORGED_DOCUMENT" in auth_flags:
             fail_reason, fail_flag = "Forged document — not a genuine land deed", "FORGED_DOCUMENT"
-        else:
+        elif "project id" in reason_low or "PROJECT_ID_MISMATCH" in auth_flags:
+            fail_reason, fail_flag = f"Project ID mismatch — document does not reference this project", "PROJECT_ID_MISMATCH"
+        elif "file type" in reason_low or "INVALID_FILE_TYPE" in auth_flags:
+            fail_reason, fail_flag = "Invalid file type — only PDFs and scanned images accepted", "INVALID_FILE_TYPE"
+        elif "unreadable" in reason_low or "UNREADABLE_DOCUMENT" in auth_flags:
+            fail_reason, fail_flag = "Unreadable document — file could not be parsed", "UNREADABLE_DOCUMENT"
+        elif "not appear to be a land deed" in reason_low or "not a deed" in reason_low:
+            fail_reason, fail_flag = "Not a land deed — document lacks required deed characteristics", "NOT_A_DEED"
+        elif "authenticity" in reason_low:
+            fail_reason, fail_flag = "Document authenticity too low — possible tampering or unverifiable source", "LOW_AUTHENTICITY"
+        elif "no ownership document" in reason_low:
+            fail_reason, fail_flag = "No ownership document provided", "NO_OWNERSHIP_DOCUMENT"
+        elif "gps" in reason_low or "km from" in reason_low:
             fail_reason, fail_flag = "Ownership document GPS mismatch", "OWNERSHIP_GPS_MISMATCH"
+        else:
+            fail_reason, fail_flag = "Ownership verification failed", "OWNERSHIP_HARD_FAIL"
         return _fail_response(
             project_id = project_id,
             submitter  = submitter_address,
