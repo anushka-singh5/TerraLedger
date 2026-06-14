@@ -658,6 +658,15 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 .fr-time{font-family:var(--mono);font-size:10.5px;color:var(--muted);white-space:nowrap;padding-top:2px}
 .fraud-empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 0}
 .fraud-loading{text-align:center;color:var(--muted);font-size:12px;padding:16px 0}
+.fraud-pager{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:14px;padding:13px 18px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.fraud-pg-btn{padding:7px 18px;border-radius:8px;font-size:12.5px;font-weight:600;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);cursor:pointer;transition:all .18s;font-family:var(--font)}
+.fraud-pg-btn:hover:not(:disabled){border-color:var(--green);color:var(--green);background:rgba(0,229,122,.06)}
+.fraud-pg-btn:disabled{opacity:.3;cursor:not-allowed}
+.fraud-pg-info{font-size:11.5px;color:var(--muted);font-family:var(--mono);text-align:center}
+.fraud-pg-dots{display:flex;gap:6px;align-items:center}
+.fraud-pg-dot{width:7px;height:7px;border-radius:50%;background:var(--border2);cursor:pointer;transition:all .2s;border:none;padding:0}
+.fraud-pg-dot.active{background:var(--green);box-shadow:0 0 6px rgba(0,229,122,.5)}
+.fraud-pg-dot:hover:not(.active){background:var(--muted)}
 /* ─── Design refresh ──────────────────────────────────────────── */
 
 /* gradient headline — "Actually Verified." cyan-to-green */
@@ -1891,31 +1900,69 @@ async function loadStats(){
 }
 
 // Fraud log — reads from oracle.getFraudLog(), renders in the landing section
+let _fraudAll=[], _fraudPage=0
+const FRAUD_PER_PAGE=5
+
 async function loadFraudLog(){
   const el=document.getElementById('fraud-log'); if(!el) return
   try{
     const oracle=new ethers.Contract(ADDRESSES.CarbonOracle,ORACLE_ABI,readProvider())
     const log=await oracle.getFraudLog()
     if(!log||log.length===0){ el.innerHTML='<div class="fraud-empty">No hard-fail fraud attempts on-chain yet.</div>'; return }
-    const sorted=[...log].reverse()
-    el.innerHTML=sorted.map(fr=>{
-      const wallet=fr.wallet||'unknown'
-      const short=wallet.slice(0,8)+'…'+wallet.slice(-6)
-      const explorerUrl=`${EXPLORER}/address/${wallet}`
-      const flags=(fr.flags||[]).map(f=>`<span class="fr-flag">${f}</span>`).join('')
-      const ts=fr.timestamp?new Date(Number(fr.timestamp)*1000).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—'
-      return `<div class="fraud-row">
-        <div class="fr-left">
-          <div class="fr-wallet">${short} <a href="${explorerUrl}" target="_blank" rel="noopener">Explorer ↗</a></div>
-          <div class="fr-reason">${fr.reason||'Hard-fail block'}</div>
-          ${flags?`<div class="fr-flags">${flags}</div>`:''}
-        </div>
-        <div class="fr-time">${ts}</div>
-      </div>`
-    }).join('')
+    _fraudAll=[...log].reverse()
+    _fraudPage=0
+    renderFraudPage()
   }catch(_){
     el.innerHTML='<div class="fraud-empty" style="color:var(--muted)">Connect to QIE RPC to load fraud log.</div>'
   }
+}
+
+function renderFraudPage(){
+  const el=document.getElementById('fraud-log'); if(!el) return
+  const total=_fraudAll.length
+  const pages=Math.ceil(total/FRAUD_PER_PAGE)
+  const start=_fraudPage*FRAUD_PER_PAGE
+  const slice=_fraudAll.slice(start,start+FRAUD_PER_PAGE)
+
+  const rows=slice.map(fr=>{
+    const wallet=fr.wallet||'unknown'
+    const short=wallet.slice(0,8)+'…'+wallet.slice(-6)
+    const explorerUrl=`${EXPLORER}/address/${wallet}`
+    const flags=(fr.flags||[]).map(f=>`<span class="fr-flag">${f}</span>`).join('')
+    const ts=fr.timestamp?new Date(Number(fr.timestamp)*1000).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—'
+    return `<div class="fraud-row">
+      <div class="fr-left">
+        <div class="fr-wallet">${short} <a href="${explorerUrl}" target="_blank" rel="noopener">Explorer ↗</a></div>
+        <div class="fr-reason">${fr.reason||'Hard-fail block'}</div>
+        ${flags?`<div class="fr-flags">${flags}</div>`:''}
+      </div>
+      <div class="fr-time">${ts}</div>
+    </div>`
+  }).join('')
+
+  const dots=pages>1?Array.from({length:pages},(_,i)=>
+    `<button class="fraud-pg-dot${i===_fraudPage?' active':''}" onclick="fraudGoPage(${i})" title="Page ${i+1}"></button>`
+  ).join(''):'';
+
+  const pager=pages>1?`
+    <div class="fraud-pager">
+      <button class="fraud-pg-btn" onclick="fraudGoPage(${_fraudPage-1})" ${_fraudPage===0?'disabled':''}>← Prev</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div class="fraud-pg-dots">${dots}</div>
+        <span class="fraud-pg-info">${start+1}–${Math.min(start+FRAUD_PER_PAGE,total)} of ${total} attempts</span>
+      </div>
+      <button class="fraud-pg-btn" onclick="fraudGoPage(${_fraudPage+1})" ${_fraudPage>=pages-1?'disabled':''}>Next →</button>
+    </div>`:''
+
+  el.innerHTML=rows+pager
+}
+
+function fraudGoPage(page){
+  const pages=Math.ceil(_fraudAll.length/FRAUD_PER_PAGE)
+  if(page<0||page>=pages) return
+  _fraudPage=page
+  renderFraudPage()
+  document.getElementById('fraud-log').scrollIntoView({behavior:'smooth',block:'nearest'})
 }
 
 function resetSubmitForm(){
