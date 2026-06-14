@@ -790,6 +790,7 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
     <button class="nav-link" onclick="showPage('submit')">Submit Project</button>
     <button class="nav-link" onclick="showPage('verify')">Verify</button>
     <button class="nav-link" onclick="showPage('market')">Marketplace</button>
+    <button class="nav-link" onclick="showPage('landing');setTimeout(()=>document.getElementById('faq-section').scrollIntoView({behavior:'smooth'}),80)">FAQ</button>
   </div>
   <div class="nav-right">
     <button class="qiepass-chip" id="qiepass-chip" onclick="openQiePass()"><span class="dot"></span><span id="qiepass-status">QIE Pass</span></button>
@@ -812,6 +813,7 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
   <button class="nav-link" onclick="showPage('submit');closeMobileMenu()">Submit Project</button>
   <button class="nav-link" onclick="showPage('verify');closeMobileMenu()">Verify</button>
   <button class="nav-link" onclick="showPage('market');closeMobileMenu()">Marketplace</button>
+  <button class="nav-link" onclick="showPage('landing');closeMobileMenu();setTimeout(()=>document.getElementById('faq-section').scrollIntoView({behavior:'smooth'}),80)">FAQ</button>
 </div>
 
 <div id="net-banner"><span id="net-banner-msg">⚠ Wrong network</span><button onclick="switchNetwork()">Switch network</button></div>
@@ -1072,11 +1074,11 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
     <p class="section-sub">How verification works, what gets flagged, what tokens prove, and what happens on-chain</p>
 
     <div class="faq-cats">
-      <button class="faq-cat active" data-cat="all">All questions</button>
-      <button class="faq-cat" data-cat="verify">Verification</button>
+      <button class="faq-cat active" data-cat="verify">Verification</button>
       <button class="faq-cat" data-cat="docs">Documents</button>
       <button class="faq-cat" data-cat="tokens">Tokens &amp; Credits</button>
       <button class="faq-cat" data-cat="onchain">On-chain</button>
+      <button class="faq-cat" data-cat="all">All questions</button>
     </div>
 
     <div class="faq-list">
@@ -3280,18 +3282,20 @@ function faqToggle(item) {
   }
 }
 
-document.querySelectorAll('.faq-cat').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.faq-cat').forEach(b => b.classList.remove('active'))
-    btn.classList.add('active')
-    const cat = btn.dataset.cat
-    document.querySelectorAll('.faq-item').forEach(item => {
-      const visible = cat === 'all' || item.dataset.cat === cat
-      item.style.display = visible ? '' : 'none'
-      if (!visible) { item.classList.remove('open'); item.querySelector('.faq-a').style.maxHeight = '0' }
-    })
+function applyFaqFilter(cat) {
+  document.querySelectorAll('.faq-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === cat))
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const visible = cat === 'all' || item.dataset.cat === cat
+    item.style.display = visible ? '' : 'none'
+    if (!visible) { item.classList.remove('open'); item.querySelector('.faq-a').style.maxHeight = '0' }
   })
+}
+
+document.querySelectorAll('.faq-cat').forEach(btn => {
+  btn.addEventListener('click', () => applyFaqFilter(btn.dataset.cat))
 })
+
+applyFaqFilter('verify')
 </script>
 </body>
 </html>
