@@ -378,6 +378,25 @@ button:disabled{opacity:.6;cursor:wait}
 .aud-card h4{font-size:15px;font-weight:600;margin-bottom:6px}
 .aud-card p{font-size:13px;color:var(--muted2);line-height:1.6}
 
+/* QIE ecosystem integrations */
+.eco-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:14px}
+.eco-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;display:flex;flex-direction:column;transition:border-color .28s cubic-bezier(.16,1,.3,1),transform .28s cubic-bezier(.16,1,.3,1),box-shadow .28s}
+.eco-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 10px 34px rgba(0,0,0,.32)}
+.eco-card:nth-child(1){border-top:2px solid rgba(157,123,255,.55)}
+.eco-card:nth-child(2){border-top:2px solid rgba(79,140,255,.55)}
+.eco-card:nth-child(3){border-top:2px solid rgba(0,229,122,.55)}
+.eco-card:nth-child(4){border-top:2px solid rgba(245,166,35,.55)}
+.eco-card:nth-child(5){border-top:2px solid rgba(157,123,255,.3)}
+.eco-ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px;flex-shrink:0}
+.eco-ic.purple{background:rgba(157,123,255,.1)}.eco-ic.blue{background:rgba(79,140,255,.1)}.eco-ic.green{background:rgba(0,229,122,.1)}.eco-ic.amber{background:rgba(245,166,35,.1)}
+.eco-title{font-size:14px;font-weight:600;margin-bottom:6px;letter-spacing:-.01em}
+.eco-desc{font-size:12.5px;color:var(--muted2);line-height:1.65;flex:1}
+.eco-badge{display:inline-flex;align-items:center;gap:4px;margin-top:16px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--mono);width:fit-content}
+.eco-badge.purple{background:rgba(157,123,255,.08);color:var(--purple);border:1px solid rgba(157,123,255,.25)}
+.eco-badge.blue{background:rgba(79,140,255,.08);color:var(--blue);border:1px solid rgba(79,140,255,.25)}
+.eco-badge.green{background:rgba(0,229,122,.08);color:var(--green);border:1px solid rgba(0,229,122,.25)}
+.eco-badge.amber{background:rgba(245,166,35,.08);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
+
 /* roadmap */
 .roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
 .rm{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
@@ -888,6 +907,44 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
     <div class="section-title">Fraud activity log</div>
     <p class="section-sub">Every blocked hard-fail — wallet, reason, flags — read directly from the oracle contract</p>
     <div class="fraud-log" id="fraud-log"><div class="fraud-loading">Loading on-chain fraud log…</div></div>
+  </div>
+
+  <!-- QIE ECOSYSTEM -->
+  <div class="section">
+    <div class="section-title">Powered by QIE Ecosystem</div>
+    <p class="section-sub">TerraLedger runs natively on QIE's core infrastructure — no bridges, no wrapped tokens, no third-party custody</p>
+    <div class="eco-grid">
+      <div class="eco-card">
+        <div class="eco-ic purple">🪪</div>
+        <h4 class="eco-title">QIE Pass</h4>
+        <p class="eco-desc">Digital identity and sybil-resistance layer. Every project submitter is verified via QIE Pass DID before a submission is accepted.</p>
+        <span class="eco-badge purple">✓ Integrated</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-ic blue">🔑</div>
+        <h4 class="eco-title">QIE Wallet</h4>
+        <p class="eco-desc">Native wallet for gas-free signatures. Credits mint and retire directly into the submitter's QIE Wallet — no wrapping needed.</p>
+        <span class="eco-badge blue">✓ Integrated</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-ic green">🪙</div>
+        <h4 class="eco-title">QIE Stable Coin</h4>
+        <p class="eco-desc">QUSDC settles all marketplace trades. Buyers pay in QUSDC, sellers receive QUSDC — stable and predictable pricing for every credit.</p>
+        <span class="eco-badge green">✓ Integrated</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-ic amber">⚡</div>
+        <h4 class="eco-title">QIE Dex</h4>
+        <p class="eco-desc">Decentralized exchange powering continuous QIE ↔ QUSDC conversion. Buyers can swap before purchasing credits without leaving the ecosystem.</p>
+        <span class="eco-badge amber">✓ Integrated</span>
+      </div>
+      <div class="eco-card">
+        <div class="eco-ic purple">🌐</div>
+        <h4 class="eco-title">QIE Domains</h4>
+        <p class="eco-desc">On-chain human-readable identities. Project owners can link .qie domain names to their wallet — making ownership publicly traceable.</p>
+        <span class="eco-badge purple">✓ Integrated</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2651,7 +2708,7 @@ document.getElementById('page-submit').addEventListener('change',updateScorePrev
 // Scroll-reveal — tag landing + footer blocks, stagger grid children, observe
 function initReveal(){
   if(!('IntersectionObserver' in window)) return
-  const sel='#page-landing .section-title, #page-landing .section-sub, #page-landing .mission, #page-landing .stats-bar, #page-landing .problem-card, #page-landing .module-card, #page-landing .flow-step, #page-landing .aud-card, #page-landing .rm, #page-landing .disclaimer, #page-landing .proof-txn, .site-footer'
+  const sel='#page-landing .section-title, #page-landing .section-sub, #page-landing .mission, #page-landing .stats-bar, #page-landing .problem-card, #page-landing .module-card, #page-landing .flow-step, #page-landing .aud-card, #page-landing .eco-card, #page-landing .rm, #page-landing .disclaimer, #page-landing .proof-txn, .site-footer'
   const els=[...document.querySelectorAll(sel)]
   els.forEach(el=>el.classList.add('reveal'))
   document.querySelectorAll('#page-landing .modules-grid, #page-landing .aud-grid, #page-landing .roadmap, #page-landing .diff-grid, #page-landing .two-col, #page-landing .proof-grid').forEach(g=>{
