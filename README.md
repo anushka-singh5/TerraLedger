@@ -149,4 +149,4 @@ store/            trained models, IPFS reports
 addresses/        deployed addresses per chain
 ```
 
-The oracle wallet only signs verification txns — it never touches user funds. Wallet ownership is proved via EIP-191 on `/verify`. Don't commit `.env`.
+The oracle wallet only signs verification txns — it never touches user funds. Wallet ownership is proved via EIP-191 on `/verify`.
