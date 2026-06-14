@@ -119,6 +119,7 @@ h1 span{color:var(--green)}
 /* forms */
 .submit-layout,.verify-layout{max-width:760px;margin:0 auto;padding:40px 24px}
 .market-layout{max-width:1140px;margin:0 auto;padding:40px 24px}
+.faq-layout{max-width:860px;margin:0 auto;padding:40px 24px}
 .page-header{margin-bottom:28px}
 .page-title{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
 .page-desc{color:var(--muted2);font-size:14px}
@@ -494,7 +495,7 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
   .mission p{font-size:14.5px}
   .form-row{grid-template-columns:1fr}        /* forms stack */
   .submit-layout,.verify-layout{padding:28px 16px}
-  .market-layout{padding:28px 16px}
+  .market-layout,.faq-layout{padding:28px 16px}
   .coord-row{flex-wrap:wrap}
   .coord-row input{flex:1 1 100%}
   .coord-label{min-width:auto}
@@ -790,7 +791,7 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
     <button class="nav-link" onclick="showPage('submit')">Submit Project</button>
     <button class="nav-link" onclick="showPage('verify')">Verify</button>
     <button class="nav-link" onclick="showPage('market')">Marketplace</button>
-    <button class="nav-link" onclick="goToFaq()">FAQ</button>
+    <button class="nav-link" onclick="showPage('faq')">FAQ</button>
   </div>
   <div class="nav-right">
     <button class="qiepass-chip" id="qiepass-chip" onclick="openQiePass()"><span class="dot"></span><span id="qiepass-status">QIE Pass</span></button>
@@ -813,7 +814,7 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
   <button class="nav-link" onclick="showPage('submit');closeMobileMenu()">Submit Project</button>
   <button class="nav-link" onclick="showPage('verify');closeMobileMenu()">Verify</button>
   <button class="nav-link" onclick="showPage('market');closeMobileMenu()">Marketplace</button>
-  <button class="nav-link" onclick="closeMobileMenu();goToFaq()">FAQ</button>
+  <button class="nav-link" onclick="showPage('faq');closeMobileMenu()">FAQ</button>
 </div>
 
 <div id="net-banner"><span id="net-banner-msg">⚠ Wrong network</span><button onclick="switchNetwork()">Switch network</button></div>
@@ -1067,11 +1068,145 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
     </div>
   </div>
 
-  <!-- FAQ -->
-  <div class="section">
-    <div class="section-label purple">FAQ</div>
-    <div class="section-title">Everything you need to know</div>
-    <p class="section-sub">How verification works, what gets flagged, what tokens prove, and what happens on-chain</p>
+  <!-- FAQ is a dedicated page (see page-faq) -->
+</div>
+
+<!-- SUBMIT -->
+<div class="page" id="page-submit">
+  <div class="submit-layout">
+    <div class="page-header"><div class="page-title">Submit Carbon Project</div><div class="page-desc">AI verifies before any token is minted. Score 70/100 minimum. Connect your wallet — you register on-chain first, then the credit mints directly to your address on pass.</div></div>
+    <div class="form-card">
+      <div class="form-section-title">Project information</div>
+      <div class="form-row">
+        <div class="field"><label>Project name <span>*</span></label><input type="text" id="f-name" placeholder="Amazon Reforestation Zone A"/></div>
+        <div class="field"><label>Project ID <span>*</span></label><input type="text" id="f-id" placeholder="auto-generated"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Project type <span>*</span></label><select id="f-type"><option value="">Select type</option><option value="forest">Forest / REDD+</option><option value="agriculture">Agriculture</option><option value="renewable">Renewable Energy</option><option value="methane">Methane Capture</option></select></div>
+        <div class="field"><label>Biome <span>*</span></label><select id="f-biome"><option value="">Select biome</option><option value="tropical">Tropical</option><option value="temperate">Temperate</option><option value="boreal">Boreal</option><option value="wetland">Wetland</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Forest area (hectares) <span>*</span></label><input type="number" id="f-ha" placeholder="5000" min="1"/></div>
+        <div class="field"><label>Claimed CO₂ (tonnes) <span>*</span></label><input type="number" id="f-tonnes" placeholder="25000" min="1"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Vintage year <span>*</span></label><input type="number" id="f-vintage" placeholder="2025" min="2000" max="2026"/></div>
+        <div class="field"><label>Country</label><input type="text" id="f-country" placeholder="Brazil"/></div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-section-title">GPS polygon <span style="color:var(--red)">*</span></div>
+      <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">At least 3 corner coordinates, decimal degrees.</p>
+      <div class="gps-input-area">
+        <div class="gps-coords" id="gps-coords">
+          <div class="coord-row"><span class="coord-label">P1</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
+          <div class="coord-row"><span class="coord-label">P2</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
+          <div class="coord-row"><span class="coord-label">P3</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
+        </div>
+        <div class="gps-actions"><button class="btn-ghost" onclick="addGpsPoint()">+ Add point</button><button class="btn-ghost" onclick="fillDemoGPS()">Use demo coords</button></div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-section-title">Ownership document <span style="color:var(--red)">*</span></div>
+      <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">Land title / cadastral certificate. AI extracts owner + GPS and checks authenticity.</p>
+      <label for="doc-upload"><div class="upload-area" id="upload-area"><div class="upload-icon">📄</div><div class="upload-text"><strong>Click to upload</strong> or drag & drop</div><div class="upload-sub">PDF, JPG, PNG — max 10MB</div><div class="upload-filename" id="upload-filename"></div></div></label>
+      <input type="file" id="doc-upload" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(this)"/>
+      <p style="font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.6">💡 The document's GPS must be within 50 km of the project polygon, or it hard-fails as a duplicate/mismatch (anti-fraud). <b style="color:var(--muted2)">Demo:</b> click “Use demo coords” then upload <span style="font-family:var(--mono);color:var(--green)">samples/genuine_land_deed.pdf</span> to PASS — or <span style="font-family:var(--mono);color:var(--red)">samples/forged_document.pdf</span> to see the forgery hard-fail.</p>
+    </div>
+    <div class="sp-card">
+      <div class="sp-head"><div class="sp-title">Estimated score preview</div><div class="sp-total" id="sp-total" style="color:var(--muted)">—<span style="font-size:13px;color:var(--muted)">/100</span></div></div>
+      <div class="sp-row"><div class="sp-lbl">GPS</div><div class="sp-track"><div class="sp-fill" id="spf-gps"></div></div><div class="sp-pts" id="spp-gps">0/30</div></div>
+      <div class="sp-row"><div class="sp-lbl">Ownership</div><div class="sp-track"><div class="sp-fill" id="spf-own"></div></div><div class="sp-pts" id="spp-own">0/25</div></div>
+      <div class="sp-row"><div class="sp-lbl">Anomaly AI</div><div class="sp-track"><div class="sp-fill" id="spf-ano"></div></div><div class="sp-pts" id="spp-ano">0/25</div></div>
+      <div class="sp-row"><div class="sp-lbl">Satellite</div><div class="sp-track"><div class="sp-fill" id="spf-sat"></div></div><div class="sp-pts" id="spp-sat">0/20</div></div>
+      <div class="sp-note">Estimate only — the real score comes from the live AI run. 70/100 needed to mint.</div>
+    </div>
+    <div class="cold-notice"><strong>Note:</strong> The AI backend runs on Render free tier — the <strong>first request after inactivity takes ~15–30 s</strong> to wake up. The verification timer above tracks live progress. Subsequent submissions are fast.</div>
+    <button class="submit-btn" id="submit-btn" onclick="submitProject()">Run AI Verification →</button>
+  </div>
+</div>
+
+<!-- VERIFY -->
+<div class="page" id="page-verify">
+  <div class="verify-layout">
+    <div class="page-header"><div class="page-title">Verification Status</div><div class="page-desc">Live AI verification pipeline — real modules, on-chain mint on pass.</div></div>
+
+    <!-- Empty state: show the AI pipeline when nothing is running -->
+    <div id="verify-empty">
+      <div class="form-card">
+        <div class="form-section-title">How AI verification works</div>
+        <p style="font-size:13px;color:var(--muted2);margin-bottom:18px;line-height:1.7">Submit a project and all 5 modules run in sequence. The first failing hard-check (duplicate GPS, forged deed, burned forest) blocks the mint immediately. A passing score is written on-chain and attested by the oracle before any NFT exists.</p>
+        <div class="pipe">
+          <div class="pipe-step"><div class="pipe-ind">1</div><div class="step-body"><div class="step-name">GPS Duplicate Detector · 30 pts</div><div class="step-detail">Polygon checked against every registered project + on-chain bounding-box guard. >20% overlap = hard reject.</div></div><div class="pipe-tag">shapely</div></div>
+          <div class="pipe-step"><div class="pipe-ind">2</div><div class="step-body"><div class="step-name">Ownership Document Parser · 25 pts</div><div class="step-detail">OCR/NLP extracts owner + GPS; ELA forgery + reuse detection. GPS mismatch or forgery = hard reject. SHA-256 stored on-chain.</div></div><div class="pipe-tag">spaCy · ELA</div></div>
+          <div class="pipe-step"><div class="pipe-ind">3</div><div class="step-body"><div class="step-name">Carbon Claim Anomaly AI · 25 pts</div><div class="step-detail">Isolation Forest trained on real Verra data flags abnormal tonnes/hectare claims.</div></div><div class="pipe-tag">sklearn</div></div>
+          <div class="pipe-step"><div class="pipe-ind">4</div><div class="step-body"><div class="step-name">NASA FIRMS Satellite Check · 20 pts</div><div class="step-detail">Real 90-day fire/deforestation data. Recently burned forest = no credit.</div></div><div class="pipe-tag">NASA</div></div>
+          <div class="pipe-step"><div class="pipe-ind">5</div><div class="step-body"><div class="step-name">Audit Report + On-chain Mint</div><div class="step-detail">Llama 3 audit pinned to IPFS; total + per-module score written into the NFT at mint.</div></div><div class="pipe-tag">Llama 3</div></div>
+        </div>
+      </div>
+      <div class="gate-line">Minimum <strong>70 / 100</strong> to mint. No passing AI = no NFT — verification is the gate.</div>
+      <div style="text-align:center;margin-top:20px"><button class="btn-primary" onclick="showPage('submit')">Submit a project →</button></div>
+    </div>
+
+    <div id="verify-processing" style="display:none">
+      <div class="processing-card"><div class="processing-ring"></div><div class="processing-title">AI Verification Running</div><div class="processing-sub" id="processing-step-label">Running 5 AI modules + on-chain oracle…</div><div class="processing-sub" id="verify-elapsed" style="margin-top:8px;font-family:var(--mono);font-size:12px;color:var(--muted)">Elapsed 0s · real NASA + AI checks take ~30–60s</div></div>
+    </div>
+    <div class="form-card" id="verify-steps" style="display:none">
+      <div class="form-section-title">Verification pipeline</div>
+      <div class="steps">
+        <div class="step"><div class="step-indicator pending" id="ind-gps">1</div><div class="step-body"><div class="step-name">GPS Duplicate Check</div><div class="step-detail" id="det-gps">Checking polygon against on-chain registry…</div></div><div class="step-score" id="score-gps" style="display:none"></div></div>
+        <div class="step"><div class="step-indicator pending" id="ind-own">2</div><div class="step-body"><div class="step-name">Ownership Document Parser</div><div class="step-detail" id="det-own">Extracting owner + GPS, forgery check…</div></div><div class="step-score" id="score-own" style="display:none"></div></div>
+        <div class="step"><div class="step-indicator pending" id="ind-ano">3</div><div class="step-body"><div class="step-name">Anomaly Detection (Isolation Forest)</div><div class="step-detail" id="det-ano">Running ML model on carbon claim…</div></div><div class="step-score" id="score-ano" style="display:none"></div></div>
+        <div class="step"><div class="step-indicator pending" id="ind-sat">4</div><div class="step-body"><div class="step-name">NASA FIRMS Satellite Check</div><div class="step-detail" id="det-sat">Querying real satellite fire data…</div></div><div class="step-score" id="score-sat" style="display:none"></div></div>
+        <div class="step"><div class="step-indicator pending" id="ind-rep">5</div><div class="step-body"><div class="step-name">Audit Report + On-chain Mint</div><div class="step-detail" id="det-rep">Generating report, pinning to IPFS, minting…</div></div><div class="step-score" id="score-rep" style="display:none"></div></div>
+      </div>
+    </div>
+    <div id="verify-result" style="display:none">
+      <div class="result-card" id="result-card">
+        <div class="rc-header"><div><div class="rc-verdict" id="rc-verdict">VERIFIED</div><div style="font-size:13px;color:var(--muted2);margin-top:4px" id="rc-project-name"></div></div><div class="rc-score" id="rc-score">—<span>/100</span></div></div>
+        <div class="score-bars" id="score-bars"></div>
+        <div class="flags" id="result-flags"></div>
+        <div id="rl-warning"></div>
+        <div class="tx-row" id="tx-row" style="display:none"><span style="color:var(--muted);font-size:11px">ON-CHAIN TX</span><span class="tx-hash" id="tx-hash">0x…</span><span class="tx-link" onclick="openExplorer()">QIE Explorer ↗</span></div>
+        <div class="report-box" id="audit-report"></div>
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap" id="result-actions"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MARKETPLACE -->
+<div class="page" id="page-market">
+  <div class="market-layout">
+    <div class="market-header">
+      <div><div class="page-title">Carbon Credits</div><div class="page-desc" style="margin-top:4px">Every credit AI-verified. <b>TCC</b> = 1 tonne CO₂ · buy any quantity · retire permanently on-chain.</div></div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px" id="qusdc-bal">QUSDC: —</div>
+        <div style="font-size:11px;color:var(--green);margin-bottom:6px;font-weight:600" id="tcc-bal">TCC: —</div>
+        <button class="btn-ghost" id="faucet-btn" onclick="getFaucet()">Get test QUSDC</button>
+      </div>
+    </div>
+    <div class="market-tabs" id="market-tabs">
+      <button class="filter-btn active" data-tab="tcc" onclick="setMarketTab('tcc',this)">TCC Credits <span class="tab-count" id="tc-tcc">—</span></button>
+      <button class="filter-btn" data-tab="all" onclick="setMarketTab('all',this)">Certificates <span class="tab-count" id="tc-all">0</span></button>
+      <button class="filter-btn" data-tab="mine" onclick="setMarketTab('mine',this)">My Certs <span class="tab-count" id="tc-mine">0</span></button>
+      <button class="filter-btn" data-tab="retired" onclick="setMarketTab('retired',this)">Retired <span class="tab-count" id="tc-retired">0</span></button>
+    </div>
+    <div style="margin-top:18px"></div>
+    <div id="tcc-market-panel">
+      <div id="tcc-market-content"><div class="empty-state">Loading TCC credit listings…</div></div>
+    </div>
+    <div class="credits-grid" id="credits-grid" style="display:none"><div class="empty-state">Loading certificates…</div></div>
+  </div>
+</div>
+
+<!-- FAQ PAGE -->
+<div class="page" id="page-faq">
+  <div class="faq-layout">
+    <div class="page-header">
+      <div class="page-title">Frequently Asked Questions</div>
+      <div class="page-desc">Everything about how verification works, what documents you need, how tokens are minted, and what lives on-chain.</div>
+    </div>
 
     <div class="faq-cats">
       <button class="faq-cat active" data-cat="verify">Verification</button>
@@ -1336,140 +1471,11 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
             <li>Failure reason string (e.g., "Forged document", "GPS overlap with project 0x…")</li>
             <li>Block timestamp — permanent, immutable, publicly readable forever</li>
           </ul>
-          <p>Additionally, the oracle marks that project ID as FraudFlagged in ProjectRegistry — status that blocks any future action on that project. You can see all blocked attempts in the Fraud Activity Log section above, read live from the contract.</p>
+          <p>Additionally, the oracle marks that project ID as FraudFlagged in ProjectRegistry — status that blocks any future action on that project. You can see all fraud events in the Fraud Activity Log on the home page, read live from the contract.</p>
         </div></div>
       </div>
 
     </div>
-  </div>
-</div>
-
-<!-- SUBMIT -->
-<div class="page" id="page-submit">
-  <div class="submit-layout">
-    <div class="page-header"><div class="page-title">Submit Carbon Project</div><div class="page-desc">AI verifies before any token is minted. Score 70/100 minimum. Connect your wallet — you register on-chain first, then the credit mints directly to your address on pass.</div></div>
-    <div class="form-card">
-      <div class="form-section-title">Project information</div>
-      <div class="form-row">
-        <div class="field"><label>Project name <span>*</span></label><input type="text" id="f-name" placeholder="Amazon Reforestation Zone A"/></div>
-        <div class="field"><label>Project ID <span>*</span></label><input type="text" id="f-id" placeholder="auto-generated"/></div>
-      </div>
-      <div class="form-row">
-        <div class="field"><label>Project type <span>*</span></label><select id="f-type"><option value="">Select type</option><option value="forest">Forest / REDD+</option><option value="agriculture">Agriculture</option><option value="renewable">Renewable Energy</option><option value="methane">Methane Capture</option></select></div>
-        <div class="field"><label>Biome <span>*</span></label><select id="f-biome"><option value="">Select biome</option><option value="tropical">Tropical</option><option value="temperate">Temperate</option><option value="boreal">Boreal</option><option value="wetland">Wetland</option></select></div>
-      </div>
-      <div class="form-row">
-        <div class="field"><label>Forest area (hectares) <span>*</span></label><input type="number" id="f-ha" placeholder="5000" min="1"/></div>
-        <div class="field"><label>Claimed CO₂ (tonnes) <span>*</span></label><input type="number" id="f-tonnes" placeholder="25000" min="1"/></div>
-      </div>
-      <div class="form-row">
-        <div class="field"><label>Vintage year <span>*</span></label><input type="number" id="f-vintage" placeholder="2025" min="2000" max="2026"/></div>
-        <div class="field"><label>Country</label><input type="text" id="f-country" placeholder="Brazil"/></div>
-      </div>
-    </div>
-    <div class="form-card">
-      <div class="form-section-title">GPS polygon <span style="color:var(--red)">*</span></div>
-      <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">At least 3 corner coordinates, decimal degrees.</p>
-      <div class="gps-input-area">
-        <div class="gps-coords" id="gps-coords">
-          <div class="coord-row"><span class="coord-label">P1</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
-          <div class="coord-row"><span class="coord-label">P2</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
-          <div class="coord-row"><span class="coord-label">P3</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
-        </div>
-        <div class="gps-actions"><button class="btn-ghost" onclick="addGpsPoint()">+ Add point</button><button class="btn-ghost" onclick="fillDemoGPS()">Use demo coords</button></div>
-      </div>
-    </div>
-    <div class="form-card">
-      <div class="form-section-title">Ownership document <span style="color:var(--red)">*</span></div>
-      <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">Land title / cadastral certificate. AI extracts owner + GPS and checks authenticity.</p>
-      <label for="doc-upload"><div class="upload-area" id="upload-area"><div class="upload-icon">📄</div><div class="upload-text"><strong>Click to upload</strong> or drag & drop</div><div class="upload-sub">PDF, JPG, PNG — max 10MB</div><div class="upload-filename" id="upload-filename"></div></div></label>
-      <input type="file" id="doc-upload" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(this)"/>
-      <p style="font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.6">💡 The document's GPS must be within 50 km of the project polygon, or it hard-fails as a duplicate/mismatch (anti-fraud). <b style="color:var(--muted2)">Demo:</b> click “Use demo coords” then upload <span style="font-family:var(--mono);color:var(--green)">samples/genuine_land_deed.pdf</span> to PASS — or <span style="font-family:var(--mono);color:var(--red)">samples/forged_document.pdf</span> to see the forgery hard-fail.</p>
-    </div>
-    <div class="sp-card">
-      <div class="sp-head"><div class="sp-title">Estimated score preview</div><div class="sp-total" id="sp-total" style="color:var(--muted)">—<span style="font-size:13px;color:var(--muted)">/100</span></div></div>
-      <div class="sp-row"><div class="sp-lbl">GPS</div><div class="sp-track"><div class="sp-fill" id="spf-gps"></div></div><div class="sp-pts" id="spp-gps">0/30</div></div>
-      <div class="sp-row"><div class="sp-lbl">Ownership</div><div class="sp-track"><div class="sp-fill" id="spf-own"></div></div><div class="sp-pts" id="spp-own">0/25</div></div>
-      <div class="sp-row"><div class="sp-lbl">Anomaly AI</div><div class="sp-track"><div class="sp-fill" id="spf-ano"></div></div><div class="sp-pts" id="spp-ano">0/25</div></div>
-      <div class="sp-row"><div class="sp-lbl">Satellite</div><div class="sp-track"><div class="sp-fill" id="spf-sat"></div></div><div class="sp-pts" id="spp-sat">0/20</div></div>
-      <div class="sp-note">Estimate only — the real score comes from the live AI run. 70/100 needed to mint.</div>
-    </div>
-    <div class="cold-notice"><strong>Note:</strong> The AI backend runs on Render free tier — the <strong>first request after inactivity takes ~15–30 s</strong> to wake up. The verification timer above tracks live progress. Subsequent submissions are fast.</div>
-    <button class="submit-btn" id="submit-btn" onclick="submitProject()">Run AI Verification →</button>
-  </div>
-</div>
-
-<!-- VERIFY -->
-<div class="page" id="page-verify">
-  <div class="verify-layout">
-    <div class="page-header"><div class="page-title">Verification Status</div><div class="page-desc">Live AI verification pipeline — real modules, on-chain mint on pass.</div></div>
-
-    <!-- Empty state: show the AI pipeline when nothing is running -->
-    <div id="verify-empty">
-      <div class="form-card">
-        <div class="form-section-title">How AI verification works</div>
-        <p style="font-size:13px;color:var(--muted2);margin-bottom:18px;line-height:1.7">Submit a project and all 5 modules run in sequence. The first failing hard-check (duplicate GPS, forged deed, burned forest) blocks the mint immediately. A passing score is written on-chain and attested by the oracle before any NFT exists.</p>
-        <div class="pipe">
-          <div class="pipe-step"><div class="pipe-ind">1</div><div class="step-body"><div class="step-name">GPS Duplicate Detector · 30 pts</div><div class="step-detail">Polygon checked against every registered project + on-chain bounding-box guard. >20% overlap = hard reject.</div></div><div class="pipe-tag">shapely</div></div>
-          <div class="pipe-step"><div class="pipe-ind">2</div><div class="step-body"><div class="step-name">Ownership Document Parser · 25 pts</div><div class="step-detail">OCR/NLP extracts owner + GPS; ELA forgery + reuse detection. GPS mismatch or forgery = hard reject. SHA-256 stored on-chain.</div></div><div class="pipe-tag">spaCy · ELA</div></div>
-          <div class="pipe-step"><div class="pipe-ind">3</div><div class="step-body"><div class="step-name">Carbon Claim Anomaly AI · 25 pts</div><div class="step-detail">Isolation Forest trained on real Verra data flags abnormal tonnes/hectare claims.</div></div><div class="pipe-tag">sklearn</div></div>
-          <div class="pipe-step"><div class="pipe-ind">4</div><div class="step-body"><div class="step-name">NASA FIRMS Satellite Check · 20 pts</div><div class="step-detail">Real 90-day fire/deforestation data. Recently burned forest = no credit.</div></div><div class="pipe-tag">NASA</div></div>
-          <div class="pipe-step"><div class="pipe-ind">5</div><div class="step-body"><div class="step-name">Audit Report + On-chain Mint</div><div class="step-detail">Llama 3 audit pinned to IPFS; total + per-module score written into the NFT at mint.</div></div><div class="pipe-tag">Llama 3</div></div>
-        </div>
-      </div>
-      <div class="gate-line">Minimum <strong>70 / 100</strong> to mint. No passing AI = no NFT — verification is the gate.</div>
-      <div style="text-align:center;margin-top:20px"><button class="btn-primary" onclick="showPage('submit')">Submit a project →</button></div>
-    </div>
-
-    <div id="verify-processing" style="display:none">
-      <div class="processing-card"><div class="processing-ring"></div><div class="processing-title">AI Verification Running</div><div class="processing-sub" id="processing-step-label">Running 5 AI modules + on-chain oracle…</div><div class="processing-sub" id="verify-elapsed" style="margin-top:8px;font-family:var(--mono);font-size:12px;color:var(--muted)">Elapsed 0s · real NASA + AI checks take ~30–60s</div></div>
-    </div>
-    <div class="form-card" id="verify-steps" style="display:none">
-      <div class="form-section-title">Verification pipeline</div>
-      <div class="steps">
-        <div class="step"><div class="step-indicator pending" id="ind-gps">1</div><div class="step-body"><div class="step-name">GPS Duplicate Check</div><div class="step-detail" id="det-gps">Checking polygon against on-chain registry…</div></div><div class="step-score" id="score-gps" style="display:none"></div></div>
-        <div class="step"><div class="step-indicator pending" id="ind-own">2</div><div class="step-body"><div class="step-name">Ownership Document Parser</div><div class="step-detail" id="det-own">Extracting owner + GPS, forgery check…</div></div><div class="step-score" id="score-own" style="display:none"></div></div>
-        <div class="step"><div class="step-indicator pending" id="ind-ano">3</div><div class="step-body"><div class="step-name">Anomaly Detection (Isolation Forest)</div><div class="step-detail" id="det-ano">Running ML model on carbon claim…</div></div><div class="step-score" id="score-ano" style="display:none"></div></div>
-        <div class="step"><div class="step-indicator pending" id="ind-sat">4</div><div class="step-body"><div class="step-name">NASA FIRMS Satellite Check</div><div class="step-detail" id="det-sat">Querying real satellite fire data…</div></div><div class="step-score" id="score-sat" style="display:none"></div></div>
-        <div class="step"><div class="step-indicator pending" id="ind-rep">5</div><div class="step-body"><div class="step-name">Audit Report + On-chain Mint</div><div class="step-detail" id="det-rep">Generating report, pinning to IPFS, minting…</div></div><div class="step-score" id="score-rep" style="display:none"></div></div>
-      </div>
-    </div>
-    <div id="verify-result" style="display:none">
-      <div class="result-card" id="result-card">
-        <div class="rc-header"><div><div class="rc-verdict" id="rc-verdict">VERIFIED</div><div style="font-size:13px;color:var(--muted2);margin-top:4px" id="rc-project-name"></div></div><div class="rc-score" id="rc-score">—<span>/100</span></div></div>
-        <div class="score-bars" id="score-bars"></div>
-        <div class="flags" id="result-flags"></div>
-        <div id="rl-warning"></div>
-        <div class="tx-row" id="tx-row" style="display:none"><span style="color:var(--muted);font-size:11px">ON-CHAIN TX</span><span class="tx-hash" id="tx-hash">0x…</span><span class="tx-link" onclick="openExplorer()">QIE Explorer ↗</span></div>
-        <div class="report-box" id="audit-report"></div>
-        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap" id="result-actions"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MARKETPLACE -->
-<div class="page" id="page-market">
-  <div class="market-layout">
-    <div class="market-header">
-      <div><div class="page-title">Carbon Credits</div><div class="page-desc" style="margin-top:4px">Every credit AI-verified. <b>TCC</b> = 1 tonne CO₂ · buy any quantity · retire permanently on-chain.</div></div>
-      <div style="text-align:right">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px" id="qusdc-bal">QUSDC: —</div>
-        <div style="font-size:11px;color:var(--green);margin-bottom:6px;font-weight:600" id="tcc-bal">TCC: —</div>
-        <button class="btn-ghost" id="faucet-btn" onclick="getFaucet()">Get test QUSDC</button>
-      </div>
-    </div>
-    <div class="market-tabs" id="market-tabs">
-      <button class="filter-btn active" data-tab="tcc" onclick="setMarketTab('tcc',this)">TCC Credits <span class="tab-count" id="tc-tcc">—</span></button>
-      <button class="filter-btn" data-tab="all" onclick="setMarketTab('all',this)">Certificates <span class="tab-count" id="tc-all">0</span></button>
-      <button class="filter-btn" data-tab="mine" onclick="setMarketTab('mine',this)">My Certs <span class="tab-count" id="tc-mine">0</span></button>
-      <button class="filter-btn" data-tab="retired" onclick="setMarketTab('retired',this)">Retired <span class="tab-count" id="tc-retired">0</span></button>
-    </div>
-    <div style="margin-top:18px"></div>
-    <div id="tcc-market-panel">
-      <div id="tcc-market-content"><div class="empty-state">Loading TCC credit listings…</div></div>
-    </div>
-    <div class="credits-grid" id="credits-grid" style="display:none"><div class="empty-state">Loading certificates…</div></div>
   </div>
 </div>
 
@@ -3142,7 +3148,7 @@ document.getElementById('page-submit').addEventListener('change',updateScorePrev
 // Scroll-reveal — tag landing + footer blocks, stagger grid children, observe
 function initReveal(){
   if(!('IntersectionObserver' in window)) return
-  const sel='#page-landing .section-title, #page-landing .section-sub, #page-landing .mission, #page-landing .stats-bar, #page-landing .problem-card, #page-landing .module-card, #page-landing .flow-step, #page-landing .aud-card, #page-landing .eco-card, #page-landing .faq-item, #page-landing .rm, #page-landing .disclaimer, #page-landing .proof-txn, .site-footer'
+  const sel='#page-landing .section-title, #page-landing .section-sub, #page-landing .mission, #page-landing .stats-bar, #page-landing .problem-card, #page-landing .module-card, #page-landing .flow-step, #page-landing .aud-card, #page-landing .eco-card, #page-landing .rm, #page-landing .disclaimer, #page-landing .proof-txn, .site-footer'
   const els=[...document.querySelectorAll(sel)]
   els.forEach(el=>el.classList.add('reveal'))
   document.querySelectorAll('#page-landing .modules-grid, #page-landing .aud-grid, #page-landing .roadmap, #page-landing .diff-grid, #page-landing .two-col, #page-landing .proof-grid').forEach(g=>{
@@ -3268,12 +3274,6 @@ window.addEventListener('scroll', () => {
 
 loadStats()
 loadFraudLog()
-
-function goToFaq(){
-  const onLanding = document.getElementById('page-landing').classList.contains('active')
-  if(!onLanding) showPage('landing')
-  setTimeout(()=>{ document.getElementById('faq-section').scrollIntoView({behavior:'smooth'}) }, onLanding ? 0 : 300)
-}
 
 // FAQ accordion + category filter
 function faqToggle(item) {
