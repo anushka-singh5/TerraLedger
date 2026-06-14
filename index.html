@@ -724,6 +724,46 @@ h1 span{background:linear-gradient(128deg,#00e57a 0%,#2dd4ff 100%);-webkit-backg
 /* nav scroll enhancement */
 nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!important}
 
+/* ─── FAQ accordion ────────────────────────────────────────────── */
+.faq-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:40px}
+.faq-cat{padding:7px 18px;border-radius:20px;font-size:12.5px;font-weight:600;border:1px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;transition:all .2s;font-family:var(--font)}
+.faq-cat:hover{border-color:var(--muted);color:var(--text);background:var(--surface2)}
+.faq-cat.active{background:rgba(0,229,122,.08);border-color:rgba(0,229,122,.3);color:var(--green)}
+.faq-list{display:flex;flex-direction:column;gap:10px}
+.faq-item{background:var(--surface);border:1px solid var(--border);border-left-width:3px;border-radius:16px;overflow:hidden;transition:border-color .28s,box-shadow .28s}
+.faq-item[data-cat="verify"]{border-left-color:rgba(0,229,122,.28)}
+.faq-item[data-cat="docs"]{border-left-color:rgba(245,166,35,.28)}
+.faq-item[data-cat="tokens"]{border-left-color:rgba(79,140,255,.28)}
+.faq-item[data-cat="onchain"]{border-left-color:rgba(157,123,255,.28)}
+.faq-item:hover{border-color:var(--border2)}
+.faq-item.open{box-shadow:0 4px 28px rgba(0,0,0,.3)}
+.faq-item[data-cat="verify"].open{border-color:rgba(0,229,122,.32);border-left-color:rgba(0,229,122,.65)}
+.faq-item[data-cat="docs"].open{border-color:rgba(245,166,35,.28);border-left-color:rgba(245,166,35,.65)}
+.faq-item[data-cat="tokens"].open{border-color:rgba(79,140,255,.28);border-left-color:rgba(79,140,255,.65)}
+.faq-item[data-cat="onchain"].open{border-color:rgba(157,123,255,.28);border-left-color:rgba(157,123,255,.65)}
+.faq-q{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 22px;background:none;border:none;cursor:pointer;text-align:left;font-family:var(--font);transition:background .2s}
+.faq-q:hover{background:rgba(255,255,255,.018)}
+.faq-q-text{font-size:14.5px;font-weight:600;color:var(--text);line-height:1.4;flex:1}
+.faq-q-meta{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.faq-cpill{font-size:9.5px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.09em;padding:2px 8px;border-radius:5px;white-space:nowrap}
+.faq-cpill.green{background:rgba(0,229,122,.1);color:var(--green);border:1px solid rgba(0,229,122,.2)}
+.faq-cpill.blue{background:rgba(79,140,255,.1);color:var(--blue);border:1px solid rgba(79,140,255,.2)}
+.faq-cpill.amber{background:rgba(245,166,35,.1);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.faq-cpill.purple{background:rgba(157,123,255,.1);color:var(--purple);border:1px solid rgba(157,123,255,.2)}
+.faq-toggle{width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;font-weight:300;line-height:1;flex-shrink:0;transition:all .38s cubic-bezier(.16,1,.3,1)}
+.faq-item.open .faq-toggle{background:rgba(0,229,122,.1);border-color:rgba(0,229,122,.3);color:var(--green);transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.16,1,.3,1)}
+.faq-a-inner{padding:0 22px 22px;border-top:1px solid var(--border)}
+.faq-a-inner p{font-size:13.5px;color:var(--muted2);line-height:1.75;margin-top:16px}
+.faq-a-inner p+p{margin-top:10px}
+.faq-a-inner strong{color:var(--text)}
+.faq-a-inner ul{margin-top:12px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.faq-a-inner li{font-size:13px;color:var(--muted2);padding-left:18px;position:relative;line-height:1.65}
+.faq-a-inner li::before{content:'›';position:absolute;left:0;color:var(--green);font-weight:700}
+.faq-note{display:flex;align-items:flex-start;gap:10px;margin-top:16px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;font-size:12.5px;color:var(--muted2);line-height:1.6}
+.faq-note-ic{font-size:15px;flex-shrink:0;margin-top:1px}
+@media(max-width:580px){.faq-cpill{display:none}.faq-q-text{font-size:13.5px}}
+
 /* credit card status pill */
 .cc-status{display:inline-flex;align-items:center;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-top:5px;width:fit-content}
 .cc-status.active{background:rgba(0,229,122,0.1);color:var(--green);border:1px solid rgba(0,229,122,0.25)}
@@ -1013,6 +1053,282 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
         <p class="eco-desc">Decentralized exchange powering continuous QIE ↔ QUSDC conversion. Buyers can swap before purchasing credits without leaving the ecosystem.</p>
         <span class="eco-badge amber">✓ Integrated</span>
       </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section">
+    <div class="section-label purple">FAQ</div>
+    <div class="section-title">Everything you need to know</div>
+    <p class="section-sub">How verification works, what gets flagged, what tokens prove, and what happens on-chain</p>
+
+    <div class="faq-cats">
+      <button class="faq-cat active" data-cat="all">All questions</button>
+      <button class="faq-cat" data-cat="verify">Verification</button>
+      <button class="faq-cat" data-cat="docs">Documents</button>
+      <button class="faq-cat" data-cat="tokens">Tokens &amp; Credits</button>
+      <button class="faq-cat" data-cat="onchain">On-chain</button>
+    </div>
+
+    <div class="faq-list">
+
+      <div class="faq-item" data-cat="verify">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">How do the 5 AI modules actually verify a project?</span>
+          <span class="faq-q-meta"><span class="faq-cpill green">Verification</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>Each module runs independently. Failing any hard-fail condition kills the submission immediately, regardless of other scores.</p>
+          <ul>
+            <li><strong>GPS Duplicate Detector · 30 pts</strong> — your polygon is checked against every approved project using on-chain bounding boxes as a pre-filter, then Shapely geometry for exact overlap. >20% overlap = hard-reject.</li>
+            <li><strong>Ownership Document Parser · 25 pts</strong> — OCR extracts owner name and GPS from your deed, Error Level Analysis checks for digital tampering, and the document SHA-256 is compared against every previously-used document hash stored on-chain.</li>
+            <li><strong>Carbon Anomaly AI · 25 pts</strong> — an Isolation Forest model trained on real Verra registry data flags statistically implausible tonnes-per-hectare claims vs. comparable verified projects.</li>
+            <li><strong>NASA Satellite Check · 20 pts</strong> — live NASA FIRMS API query for fire or deforestation events over your polygon in the last 90 days. Recent burning = no credit.</li>
+            <li><strong>Llama 3 Audit · no score</strong> — produces a plain-English audit report summarising all module results, pinned to IPFS and linked permanently to your TLCERT NFT.</li>
+          </ul>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="verify">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">What score do I need, and what happens if I score below 70?</span>
+          <span class="faq-q-meta"><span class="faq-cpill green">Verification</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>Minimum <strong>70 / 100</strong> to mint. Scoring 69 or below means no NFT, no TCC — but you can fix the issue and resubmit. A low score is not a fraud flag.</p>
+          <p>Hard-fails are different: GPS overlap >20%, forged document, reused document, unreadable file, or wrong file type are instant rejections that do not depend on the total score. These are logged on-chain.</p>
+          <div class="faq-note"><span class="faq-note-ic">💡</span><span>A failed submission <strong>does not</strong> block your wallet — only a confirmed fraud flag does. You can resubmit as many times as needed with corrected data.</span></div>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="verify">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">What is the M-of-N oracle and why does minting need it?</span>
+          <span class="faq-q-meta"><span class="faq-cpill green">Verification</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>The oracle is the on-chain bridge between the AI backend and the mint function. Instead of trusting a single backend result, the CarbonOracle contract requires a configurable number of independent validator signatures (M of N) before it will call mint. No single server can fake a credit.</p>
+          <p>On the current deployment the threshold is set by the contract owner. The M-of-N design means adding more validators later raises the bar without redeploying the token contract.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="verify">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">Can I resubmit after a failed verification?</span>
+          <span class="faq-q-meta"><span class="faq-cpill green">Verification</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>Yes — for score failures and most hard-fails. What you can fix and resubmit:</p>
+          <ul>
+            <li>Score below 70 — fix the underlying issue (better deed scan, adjusted polygon, etc.) and resubmit</li>
+            <li>Unreadable document — re-scan at ≥300 DPI and resubmit</li>
+            <li>Project ID not in document — use a deed that references the correct parcel number</li>
+            <li>GPS mismatch — align your polygon with the coordinates in the deed</li>
+          </ul>
+          <p>What you <strong>cannot</strong> resubmit: GPS overlap with an existing approved project (the land is already registered), or a wallet that has been permanently fraud-flagged on-chain.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="docs">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">What file types are accepted for ownership documents?</span>
+          <span class="faq-q-meta"><span class="faq-cpill amber">Documents</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>Only: <strong>PDF, JPG, JPEG, PNG, TIFF, TIF</strong>. The type check happens before any AI analysis — everything else is rejected instantly with an <strong>INVALID_FILE_TYPE</strong> flag.</p>
+          <p>This means Word documents, spreadsheets, text files, screenshots saved as WebP or GIF, and ZIP archives are all blocked at the gate. The accepted types represent scanned physical deeds and title documents — the only sources that can meaningfully prove land ownership.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="docs">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">Why does the document need to contain my Project ID?</span>
+          <span class="faq-q-meta"><span class="faq-cpill amber">Documents</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>A generic ownership deed could legally belong to any land. By requiring the Project ID to appear in the deed text, we ensure the document was specifically prepared for this submission and hasn't been recycled from a different project.</p>
+          <p>The check is fuzzy — it handles spacing and separator variations (e.g., "Khasra No. 123/B" matches "Khasra 123/B"). But if the parcel number genuinely doesn't appear in the document, verification returns a <strong>PROJECT_ID_MISMATCH</strong> hard-fail.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="docs">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">Why was my legitimate deed still rejected?</span>
+          <span class="faq-q-meta"><span class="faq-cpill amber">Documents</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>Most common reasons — check these in order:</p>
+          <ul>
+            <li><strong>Scan quality</strong> — resolution below ~150 DPI makes OCR unreliable. Re-scan at 300 DPI or higher</li>
+            <li><strong>Project ID missing</strong> — the parcel/khasra/survey number you entered must appear somewhere in the deed text</li>
+            <li><strong>GPS mismatch</strong> — if GPS coordinates appear in the deed and are more than 50 km from your submitted polygon, it's a hard-fail</li>
+            <li><strong>Authenticity below 30%</strong> — Error Level Analysis detected compression artefacts consistent with digital editing. Use the original scan, not a re-saved or screenshotted version</li>
+            <li><strong>Not a deed</strong> — the document must contain land registry keywords or a registration number. A utility bill or ID card won't pass even if it has your name and GPS</li>
+          </ul>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="docs">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">What happens if I submit a forged or previously-used document?</span>
+          <span class="faq-q-meta"><span class="faq-cpill amber">Documents</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>Hard-fail, permanently logged on-chain. The SHA-256 hash of every accepted document is stored in the oracle contract at first submission. Any re-submission of the same file — even with metadata changed — is detected and flagged <strong>DOCUMENT_REUSE</strong>.</p>
+          <p>Forgery is detected via Error Level Analysis (ELA): digitally-edited images show JPEG re-compression artefacts in the altered regions. If ELA confidence exceeds the threshold, the document is flagged <strong>FORGED_DOCUMENT</strong>.</p>
+          <div class="faq-note"><span class="faq-note-ic">⛔</span><span>Both flags result in a <strong>permanent on-chain fraud record</strong> against the submitting wallet. The wallet is blocked from future submissions. This cannot be undone — it is immutable on QIE Mainnet.</span></div>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="docs">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">If I'm fraud-flagged, how do I get unblocked?</span>
+          <span class="faq-q-meta"><span class="faq-cpill amber">Documents</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>You don't — by design. A fraud flag written to the CarbonOracle contract is permanent and immutable. Blockchain state cannot be rolled back. The flagFraud() function is intentionally one-way with no corresponding un-flag function.</p>
+          <p>This is a core security guarantee: if fraud flags could be cleared by an admin, the system would have a single point of trust. An unforgeable on-chain record that permanently associates fraudulent behaviour with a wallet is the only design that can't be gamed.</p>
+          <div class="faq-note"><span class="faq-note-ic">🔍</span><span>Every fraud flag is publicly readable — wallet address, project ID, reason, block timestamp. Anyone can query the contract and see the full history.</span></div>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="tokens">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">How exactly are TCC tokens minted?</span>
+          <span class="faq-q-meta"><span class="faq-cpill blue">Tokens</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>The minting flow is fully gated — no human can manually trigger a mint:</p>
+          <ul>
+            <li>You submit a project; the AI backend runs all five modules</li>
+            <li>If score ≥ 70 and no hard-fails, the backend calls <strong>submitVerification()</strong> on the CarbonOracle contract with the per-module scores and document hash</li>
+            <li>Once the required oracle validators attest, the oracle calls <strong>mint()</strong> on CarbonCreditToken — exactly the claimed number of TCC go directly to your wallet</li>
+            <li>Simultaneously, a <strong>TLCERT soulbound NFT</strong> is minted as your permanent verification certificate</li>
+          </ul>
+          <p>1 TCC = 1 tonne CO₂ sequestered. TCC has zero decimals — you can't have half a tonne.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="tokens">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">What is the difference between TLCERT, TCC, and TLRET?</span>
+          <span class="faq-q-meta"><span class="faq-cpill blue">Tokens</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <ul>
+            <li><strong>TLCERT (ERC-721, soulbound)</strong> — the verification certificate. Non-transferable, tied to your wallet and project ID. Stores AI score, per-module breakdown, document hash, IPFS audit link, and current project status. You get exactly one per verified project.</li>
+            <li><strong>TCC (ERC-20, transferable)</strong> — the actual carbon credit. 1 TCC = 1 tonne CO₂. Fully fungible. Can be held, listed on the marketplace, sold, and eventually burned (retired). This is the token that represents the carbon offset.</li>
+            <li><strong>TLRET (ERC-721, soulbound)</strong> — the retirement certificate. Minted to the wallet that calls retire(). Non-transferable proof that specific tonnes of CO₂ were permanently burned. Each retirement produces one TLRET.</li>
+          </ul>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="tokens">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">What proof do I get when I retire (burn) TCC credits?</span>
+          <span class="faq-q-meta"><span class="faq-cpill blue">Tokens</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>When you call retire(), two things happen simultaneously on-chain:</p>
+          <ul>
+            <li>The specified amount of TCC is <strong>permanently burned</strong> — destroyed with no possibility of recovery</li>
+            <li>A <strong>TLRET soulbound NFT</strong> is minted to your wallet, recording: project ID, tonnes burned, your wallet address, and the block timestamp</li>
+          </ul>
+          <p>From the UI you can also download a <strong>PDF retirement certificate</strong> that includes the same details plus the transaction hash — a human-readable document backed by an immutable on-chain record anyone can verify on QIE Explorer.</p>
+          <div class="faq-note"><span class="faq-note-ic">📄</span><span>The retirement is on QIE Mainnet (chain 1990). The transaction hash in your certificate can be pasted into the QIE Explorer to independently confirm the burn.</span></div>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="tokens">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">What happens after all TCC from a project is burned?</span>
+          <span class="faq-q-meta"><span class="faq-cpill blue">Tokens</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>The TLCERT for that project automatically updates its status to <strong>Fully Offset</strong> on-chain. No admin action, no manual update — CarbonCreditToken tracks total minted vs. total retired per project, and flips the certificate when they match.</p>
+          <p>This means a corporate buyer who retires the entire supply of a project's TCC gets a cryptographic proof that 100% of the verified credits from that land area have been permanently removed from circulation.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="tokens">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">What currency does the marketplace use, and how do fees work?</span>
+          <span class="faq-q-meta"><span class="faq-cpill blue">Tokens</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>The marketplace settles in <strong>QUSDC</strong> — QIE's stablecoin. Sellers set a price per TCC in QUSDC. Buyers pay QUSDC; TCC goes to the buyer; QUSDC goes to the seller minus a protocol fee.</p>
+          <p>The fee is configurable by the contract owner and is capped at 10% (1000 bps) by the MAX_FEE_BPS constant in the TCCMarketplace contract. The fee goes to a treasury address, also set by the owner. Both are readable on-chain — there are no hidden deductions.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="onchain">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">Where is my project and verification data stored?</span>
+          <span class="faq-q-meta"><span class="faq-cpill purple">On-chain</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <ul>
+            <li><strong>ProjectRegistry</strong> — GPS polygon GeoJSON, area, claimed tonnes, bounding box, status. Fully on-chain.</li>
+            <li><strong>CarbonOracle</strong> — total score, per-module scores, document SHA-256 hash, fraud log. All on-chain.</li>
+            <li><strong>CarbonCreditToken / TLCERT</strong> — total minted, total retired per project, certificate status. On-chain.</li>
+            <li><strong>IPFS</strong> — the Llama 3 audit report. The CID is linked to the NFT's tokenURI so it's permanently pinned via Pinata.</li>
+          </ul>
+          <p>Nothing verification-critical is off-chain-only. The backend is the gate — the chain is the record.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="onchain">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">Can I verify my credit independently without using this UI?</span>
+          <span class="faq-q-meta"><span class="faq-cpill purple">On-chain</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>Yes, entirely. Every piece of data lives on QIE Mainnet (chain ID 1990):</p>
+          <ul>
+            <li>Look up the TLCERT NFT by token ID on QIE Explorer — it carries AI score, document hash, and IPFS link to the full audit</li>
+            <li>Call getProject() on ProjectRegistry to read the GPS polygon and status</li>
+            <li>Call getVerification() on CarbonOracle for the per-module scores and document hash</li>
+            <li>Fetch the IPFS CID from the tokenURI and read the Llama 3 report directly</li>
+            <li>Check your wallet's TCC balance and TLRET certificates on any EVM block explorer pointed at chain 1990</li>
+          </ul>
+          <div class="faq-note"><span class="faq-note-ic">🔗</span><span>Explorer: <span style="font-family:var(--mono);font-size:11.5px;color:var(--blue)">mainnet.qie.digital</span> · RPC: <span style="font-family:var(--mono);font-size:11.5px;color:var(--blue)">rpc1mainnet.qie.digital</span></span></div>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="onchain">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">How does GPS overlap detection prevent double-counting?</span>
+          <span class="faq-q-meta"><span class="faq-cpill purple">On-chain</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>Two-layer architecture — cheap on-chain pre-filter + precise off-chain geometry:</p>
+          <ul>
+            <li>Every approved project stores a bounding box (min/max lat/lng) in ProjectRegistry as four int64 values (coordinates × 1e6 to avoid floats)</li>
+            <li>On submission, the backend calls <strong>findOverlaps()</strong> on-chain — this returns all approved projects whose bounding boxes intersect yours</li>
+            <li>For each candidate, Shapely runs an exact polygon intersection off-chain to compute the real overlap percentage</li>
+            <li>>20% overlap = hard-reject (OVERLAP_HARD_FAIL). 5–20% = warning flag added, but you can still pass if scores are high enough</li>
+          </ul>
+          <p>The bounding-box guard is publicly queryable — anyone can call findOverlaps() directly to see if their land would conflict before submitting.</p>
+        </div></div>
+      </div>
+
+      <div class="faq-item" data-cat="onchain">
+        <button class="faq-q" onclick="faqToggle(this.closest('.faq-item'))">
+          <span class="faq-q-text">What exactly gets logged when a fraud attempt is blocked?</span>
+          <span class="faq-q-meta"><span class="faq-cpill purple">On-chain</span><span class="faq-toggle">+</span></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">
+          <p>The CarbonOracle contract emits a <strong>FraudFlagged</strong> event and writes the record to chain:</p>
+          <ul>
+            <li>Project ID that was submitted</li>
+            <li>Wallet address of the submitter</li>
+            <li>Failure reason string (e.g., "Forged document", "GPS overlap with project 0x…")</li>
+            <li>Block timestamp — permanent, immutable, publicly readable forever</li>
+          </ul>
+          <p>Additionally, the oracle marks that project ID as FraudFlagged in ProjectRegistry — status that blocks any future action on that project. You can see all blocked attempts in the Fraud Activity Log section above, read live from the contract.</p>
+        </div></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -2777,7 +3093,7 @@ document.getElementById('page-submit').addEventListener('change',updateScorePrev
 // Scroll-reveal — tag landing + footer blocks, stagger grid children, observe
 function initReveal(){
   if(!('IntersectionObserver' in window)) return
-  const sel='#page-landing .section-title, #page-landing .section-sub, #page-landing .mission, #page-landing .stats-bar, #page-landing .problem-card, #page-landing .module-card, #page-landing .flow-step, #page-landing .aud-card, #page-landing .eco-card, #page-landing .rm, #page-landing .disclaimer, #page-landing .proof-txn, .site-footer'
+  const sel='#page-landing .section-title, #page-landing .section-sub, #page-landing .mission, #page-landing .stats-bar, #page-landing .problem-card, #page-landing .module-card, #page-landing .flow-step, #page-landing .aud-card, #page-landing .eco-card, #page-landing .faq-item, #page-landing .rm, #page-landing .disclaimer, #page-landing .proof-txn, .site-footer'
   const els=[...document.querySelectorAll(sel)]
   els.forEach(el=>el.classList.add('reveal'))
   document.querySelectorAll('#page-landing .modules-grid, #page-landing .aud-grid, #page-landing .roadmap, #page-landing .diff-grid, #page-landing .two-col, #page-landing .proof-grid').forEach(g=>{
@@ -2903,6 +3219,32 @@ window.addEventListener('scroll', () => {
 
 loadStats()
 loadFraudLog()
+
+// FAQ accordion + category filter
+function faqToggle(item) {
+  const isOpen = item.classList.contains('open')
+  document.querySelectorAll('.faq-item').forEach(el => {
+    el.classList.remove('open')
+    el.querySelector('.faq-a').style.maxHeight = '0'
+  })
+  if (!isOpen) {
+    item.classList.add('open')
+    item.querySelector('.faq-a').style.maxHeight = item.querySelector('.faq-a-inner').scrollHeight + 'px'
+  }
+}
+
+document.querySelectorAll('.faq-cat').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.faq-cat').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    const cat = btn.dataset.cat
+    document.querySelectorAll('.faq-item').forEach(item => {
+      const visible = cat === 'all' || item.dataset.cat === cat
+      item.style.display = visible ? '' : 'none'
+      if (!visible) { item.classList.remove('open'); item.querySelector('.faq-a').style.maxHeight = '0' }
+    })
+  })
+})
 </script>
 </body>
 </html>
