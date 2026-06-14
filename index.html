@@ -790,7 +790,7 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
     <button class="nav-link" onclick="showPage('submit')">Submit Project</button>
     <button class="nav-link" onclick="showPage('verify')">Verify</button>
     <button class="nav-link" onclick="showPage('market')">Marketplace</button>
-    <button class="nav-link" onclick="showPage('landing');setTimeout(()=>document.getElementById('faq-section').scrollIntoView({behavior:'smooth'}),80)">FAQ</button>
+    <button class="nav-link" onclick="goToFaq()">FAQ</button>
   </div>
   <div class="nav-right">
     <button class="qiepass-chip" id="qiepass-chip" onclick="openQiePass()"><span class="dot"></span><span id="qiepass-status">QIE Pass</span></button>
@@ -813,7 +813,7 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
   <button class="nav-link" onclick="showPage('submit');closeMobileMenu()">Submit Project</button>
   <button class="nav-link" onclick="showPage('verify');closeMobileMenu()">Verify</button>
   <button class="nav-link" onclick="showPage('market');closeMobileMenu()">Marketplace</button>
-  <button class="nav-link" onclick="showPage('landing');closeMobileMenu();setTimeout(()=>document.getElementById('faq-section').scrollIntoView({behavior:'smooth'}),80)">FAQ</button>
+  <button class="nav-link" onclick="closeMobileMenu();goToFaq()">FAQ</button>
 </div>
 
 <div id="net-banner"><span id="net-banner-msg">⚠ Wrong network</span><button onclick="switchNetwork()">Switch network</button></div>
@@ -3268,6 +3268,12 @@ window.addEventListener('scroll', () => {
 
 loadStats()
 loadFraudLog()
+
+function goToFaq(){
+  const onLanding = document.getElementById('page-landing').classList.contains('active')
+  if(!onLanding) showPage('landing')
+  setTimeout(()=>{ document.getElementById('faq-section').scrollIntoView({behavior:'smooth'}) }, onLanding ? 0 : 300)
+}
 
 // FAQ accordion + category filter
 function faqToggle(item) {
