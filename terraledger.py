@@ -91,14 +91,7 @@ BIOME_MEDIANS: dict = {
     "other":     12.0,
 }
 
-# literature-grounded median tco2/ha by (project type × biome)
-# Project type matters as much as biome: a REDD+ forest, an agroforestry plot and
-# a renewable-energy avoidance project have very different per-hectare profiles.
-# Values are credit-yield medians derived from published Verra/Gold Standard
-# project ranges and IPCC AR6 WGIII sequestration rates (tCO2e/ha, annualised then
-# typical crediting-period scaled). Used to generate a realistic training prior so
-# the anomaly ensemble doesn't mis-flag legitimate type/biome combinations.
-# A real registry export (store/verra_projects.csv) overrides this when present.
+# median tCO2/ha by (project type × biome) — training prior for anomaly ensemble
 TYPE_BIOME_MEDIANS: Dict[Tuple[str, str], float] = {
     # forest / REDD+ / afforestation — highest per-ha sequestration
     ("forest", "tropical"): 30.0, ("forest", "temperate"): 22.0,
@@ -121,10 +114,7 @@ MODEL_PATH = Path("store/isolation_forest.pkl")
 DATA_PATH  = Path("store/verra_projects.csv")
 VERRA_VOLUME_STATS_PATH = Path("store/verra_type_volume_stats.json")
 
-# Real per-project-type annual credit-volume distribution, built from 1,400+ real
-# Verra registry projects (scripts/build_verra_stats.py). Used as a complementary,
-# hectare-independent "volume realism" check: a claim whose magnitude is far above
-# what real projects of its type ever produce is flagged. Loaded once at import.
+# per-type volume stats from Verra registry — see tools/build_verra_stats.py
 def _load_verra_volume_stats() -> dict:
     if VERRA_VOLUME_STATS_PATH.exists():
         try:
@@ -293,16 +283,6 @@ def check_gps_overlap(
             else f"Minor overlap ({max_overlap:.1f}%) with {len(conflicting)} project(s)."
         ),
     }
-
-# Two passes: first "is it consistent?" — owner name + GPS present, and the GPS
-# actually matches where the project says it is. Then the harder question, "is it
-# real?", which is four separate checks:
-#   1. Forgery   — was the PDF spat out by reportlab/Word/Canva/ChatGPT? Real
-#                  deeds come off a scanner or a govt system, not a PDF library.
-#   2. Reuse     — same deed (or same owner) already used for a different GPS.
-#                  One deed, many forests = someone's recycling paperwork.
-#   3. Structure — does it actually read like a deed (reg number, registry terms)?
-#   4. Tampering — Error Level Analysis on uploaded photos.
 
 # Software that GENERATES PDFs — a real land deed is never produced by these.
 GENERATED_PDF_PRODUCERS = [
@@ -776,21 +756,7 @@ def _doc_confidence(
         score = min(score + 0.1, 1.0)
     return score
 
-# One IsolationForest has exactly one decision boundary, and anyone who studies
-# the training data can park their numbers just inside the safe zone and farm the
-# 25 points every time. So we stack five layers and make a claim clear all of them:
-#   1. IPCC physical hard cap — biome maxima from the science. No ML to game.
-#   2. Ensemble of 5 forests (different seeds/contamination), majority vote >=3/5.
-#      Reverse-engineering one model's edge still leaves four standing.
-#   3. Per-biome z-score — even past the ensemble, >2.5σ over the biome mean bleeds
-#      points. This is what catches the "just inside the boundary" trick.
-#   4. Boundary-proximity penalty — a claim sitting suspiciously close to a model's
-#      threshold is too well-calibrated; real projects don't land on the line.
-#   5. Cross-feature sanity — type/biome combos that don't make sense, e.g. a
-#      renewable-energy project in a wetland.
-
-# Source: IPCC AR6 WGIII, Table 7.1 — above these values is physically
-# impossible for the given biome regardless of what the ML model says.
+# IPCC AR6 WGIII Table 7.1 — biome hard caps; above these values is physically impossible
 BIOME_HARD_CAPS: dict = {
     "tropical":  400.0,   # tCO2/ha
     "temperate": 250.0,
@@ -799,9 +765,7 @@ BIOME_HARD_CAPS: dict = {
     "other":     350.0,
 }
 
-# Varying seeds + contamination. Features are log-transformed + StandardScaled
-# before fitting, so scale differences between tph and categorical features
-# don't skew the isolation trees.
+# 5 forests with varying seeds/contamination — majority vote (≥3/5) required
 ENSEMBLE_CONFIGS: List[Dict] = [
     {"n_estimators": 200, "contamination": 0.01, "random_state": 42,  "n_jobs": -1},
     {"n_estimators": 200, "contamination": 0.02, "random_state": 17,  "n_jobs": -1},
@@ -811,8 +775,7 @@ ENSEMBLE_CONFIGS: List[Dict] = [
 ]
 ENSEMBLE_MAJORITY = 3   # need ≥3/5 models to vote "normal"
 
-# IsolationForest.decision_function() near 0 = boundary. Legitimate projects
-# should be comfortably inside normal territory (large positive value).
+# decision_function() near 0 = boundary — edge-hugging claims trigger penalty
 BOUNDARY_ZONE = 0.04   # tighter — only truly edge-hugging claims trigger this
 
 IMPLAUSIBLE_COMBOS: List[Tuple[str, str]] = [
@@ -1399,12 +1362,7 @@ def upload_to_ipfs(
         log.error("Pinata IPFS upload failed: %s", exc)
         return None
 
-# Worth being clear: real QIE Pass is a REST API, not an on-chain isVerified().
-# The on-chain MockQIEPass is just the on-chain mirror. The actual partner flow is
-# three calls — create a verification request, poll until the user consents, then
-# claim the signed claims — authed with HMAC-SHA256 over (publicKey + timestamp).
-# Keys come from env (QIE_PASS_PUBLIC_KEY / _SECRET_KEY / _BASE_URL); with no keys
-# the client reports "not configured" and we fall back to the MockQIEPass path.
+# QIE Pass is a REST API; MockQIEPass is just the on-chain mirror of its results
 
 QIE_PASS_BASE_URL = os.getenv("QIE_PASS_BASE_URL", "https://pass-api.qie.digital").rstrip("/")
 
@@ -1422,7 +1380,7 @@ class QIEPassClient:
             log.warning("QIE Pass API keys not set — falling back to on-chain MockQIEPass demo mode.")
 
     def _headers(self) -> Dict[str, str]:
-        # hMAC-SHA256 signed headers. Signature = HMAC(secret, publicKey + timestamp)
+        # HMAC-SHA256: sign(secret, publicKey + timestamp)
 
         timestamp = str(int(time.time() * 1000))          # unix ms
         message   = self.public_key + timestamp
@@ -1488,7 +1446,7 @@ class QIEPassClient:
 
     @staticmethod
     def _unwrap(resp: "requests.Response") -> dict:
-        # qIE Pass wraps payloads as {success, data|...}. Surface errors as HTTP errors
+        # QIE Pass wraps payloads as {success, data|...}
 
         try:
             body = resp.json()

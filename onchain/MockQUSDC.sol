@@ -3,11 +3,7 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-// MockQUSDC
-// Throwaway QUSDC for tests and local runs — real QUSDC is on mainnet.
-///         6 decimals to match it exactly, so the marketplace code (written against
-///         plain IERC20) doesn't know or care which one it's talking to. Has a
-///         faucet so a local wallet can actually buy something.
+// MockQUSDC — test token, 6 decimals to match real QUSDC; has a faucet
 contract MockQUSDC is ERC20 {
     uint8   private constant DECIMALS        = 6;                 // match real QUSDC / USDC
     uint256 public  constant FAUCET_AMOUNT   = 1_000 * 10 ** 6;  // 1,000 QUSDC
@@ -18,7 +14,6 @@ contract MockQUSDC is ERC20 {
     event FaucetClaimed(address indexed to, uint256 amount);
 
     constructor() ERC20("QIE USD Coin (Test)", "QUSDC") {
-        // Give the deployer a million to play with.
         _mint(msg.sender, 1_000_000 * 10 ** DECIMALS);
     }
 

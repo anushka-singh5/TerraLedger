@@ -428,8 +428,7 @@ button:disabled{opacity:.6;cursor:wait}
 .ft-bottom{max-width:1100px;margin:32px auto 0;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
 .ft-honest{max-width:520px;text-align:right}
 
-/* Visual polish layer. Sits after the base styles but before the responsive
-   blocks, so it overrides the base while the media queries still win on mobile. */
+/* polish overrides */
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 :root{--shadow:0 2px 6px rgba(0,0,0,.35),0 14px 40px rgba(0,0,0,.28)}
 body{letter-spacing:-0.01em}
@@ -1877,7 +1876,7 @@ function countUp(el,target,fmt){
   requestAnimationFrame(tick)
 }
 async function loadStats(){
-  // Phase 1: read all countable stats directly from chain (no backend needed).
+  // on-chain stats
   // fraudsBlocked() and totalRetired() are now on-chain — always accurate.
   try{
     const rp=readProvider()
@@ -1895,7 +1894,7 @@ async function loadStats(){
       if(tonnes>0) countUp(document.getElementById('stat-tonnes'),tonnes,fmt)
     }
   }catch(_){}
-  // Phase 2: backend call for any stats not on-chain (e.g. enriched tonnes).
+  // backend enrichment
   try{
     const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),6000)
     const r=await fetch(`${AI_BACKEND}/api/stats`,{signal:ctl.signal}); clearTimeout(t)
@@ -2030,8 +2029,6 @@ async function submitProject(){
   if(!requireWallet()) return
   if(!projId){ projId='TL-'+Date.now(); document.getElementById('f-id').value=projId }
 
-  // Step 1: Register project on-chain from user's own wallet so project.owner = user wallet.
-  // This means the oracle will mint the NFT directly to the user — no intermediate transfer.
   const idB32 = projectIdToBytes32(projId)
   const lats = poly.map(p=>p[0]), lngs = poly.map(p=>p[1])
   const minLat=Math.round(Math.min(...lats)*1e6), maxLat=Math.round(Math.max(...lats)*1e6)
@@ -2052,7 +2049,6 @@ async function submitProject(){
     }
   }
 
-  // Step 2: Prove wallet ownership — sign the submission (backend recovers + checks it)
   let signature='', signedTs=String(Date.now())
   try{
     signature=await signer.signMessage(`TerraLedger: verify project ${projId} as ${walletAddr} @ ${signedTs}`)
@@ -2629,7 +2625,7 @@ async function buyTCC(listingId, pricePerTonne, projectId){
   }
   showToast(`Buying ${qty} TCC…`,'success')
   await rawSend(ADDRESSES.TCCMarketplace,IFACE.tccMkt,'buy',[listingId,qty],200000)
-  // After buy, offer immediate retire with the correct project ID (no guessing needed)
+  // offer retire immediately after buy
   showToast(`Bought ${qty} TCC ✓ — retire now to offset CO₂ for this project`,'success')
   updateQusdcBal(); loadTCCMarketplace()
   if(projectId && projectId!==''){ openRetireModal(projectId) }

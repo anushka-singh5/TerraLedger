@@ -160,7 +160,6 @@ contract CarbonCredit is ERC721, Ownable {
     function totalMinted() external view returns (uint256) { return _nextTokenId; }
     function totalRetired() external view returns (uint256) { return _retiredCount; }
 
-    // TODO: add pagination if this gets called on a large registry
     function tokensOfOwner(address owner_) external view returns (uint256[] memory) {
         require(owner_ != address(0), "CarbonCredit: zero address");
         uint256 total = _nextTokenId;
