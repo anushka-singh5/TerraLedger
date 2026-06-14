@@ -658,6 +658,72 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 .fr-time{font-family:var(--mono);font-size:10.5px;color:var(--muted);white-space:nowrap;padding-top:2px}
 .fraud-empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 0}
 .fraud-loading{text-align:center;color:var(--muted);font-size:12px;padding:16px 0}
+/* ─── Design refresh ──────────────────────────────────────────── */
+
+/* gradient headline — "Actually Verified." cyan-to-green */
+h1 span{background:linear-gradient(128deg,#00e57a 0%,#2dd4ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* context label chips that appear above section titles */
+.section-label{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.12em;padding:4px 12px;border-radius:20px;margin-bottom:14px;color:var(--green);background:rgba(0,229,122,.07);border:1px solid rgba(0,229,122,.18)}
+.section-label.blue{color:var(--blue);background:rgba(79,140,255,.07);border-color:rgba(79,140,255,.2)}
+.section-label.amber{color:var(--amber);background:rgba(245,166,35,.07);border-color:rgba(245,166,35,.2)}
+.section-label.purple{color:var(--purple);background:rgba(157,123,255,.07);border-color:rgba(157,123,255,.2)}
+.section-label.red{color:var(--red);background:rgba(255,69,96,.07);border-color:rgba(255,69,96,.18)}
+
+/* short accent underline anchored below each section title */
+.section-title{position:relative;padding-bottom:18px}
+.section-title::after{content:'';position:absolute;bottom:0;left:0;width:44px;height:3px;background:linear-gradient(90deg,var(--green),transparent);border-radius:2px}
+
+/* module cards — inner tint echoes the top stripe colour */
+.module-card:nth-child(1){background:linear-gradient(150deg,rgba(0,229,122,.06) 0%,var(--surface) 52%)}
+.module-card:nth-child(2){background:linear-gradient(150deg,rgba(79,140,255,.06) 0%,var(--surface) 52%)}
+.module-card:nth-child(3){background:linear-gradient(150deg,rgba(157,123,255,.06) 0%,var(--surface) 52%)}
+.module-card:nth-child(4){background:linear-gradient(150deg,rgba(245,166,35,.06) 0%,var(--surface) 52%)}
+.module-card:nth-child(5){background:linear-gradient(150deg,rgba(0,229,122,.03) 0%,var(--surface) 52%)}
+
+/* eco cards — same treatment */
+.eco-card:nth-child(1){background:linear-gradient(150deg,rgba(157,123,255,.06) 0%,var(--surface) 52%)}
+.eco-card:nth-child(2){background:linear-gradient(150deg,rgba(79,140,255,.06) 0%,var(--surface) 52%)}
+.eco-card:nth-child(3){background:linear-gradient(150deg,rgba(0,229,122,.06) 0%,var(--surface) 52%)}
+.eco-card:nth-child(4){background:linear-gradient(150deg,rgba(245,166,35,.06) 0%,var(--surface) 52%)}
+
+/* roadmap tints */
+.rm:nth-child(1){background:linear-gradient(150deg,rgba(0,229,122,.05) 0%,var(--surface) 45%)}
+.rm:nth-child(2){background:linear-gradient(150deg,rgba(79,140,255,.05) 0%,var(--surface) 45%)}
+.rm:nth-child(3){background:linear-gradient(150deg,rgba(157,123,255,.05) 0%,var(--surface) 45%)}
+
+/* fraud stat cards */
+.fraud-stat-card:nth-child(1),.fraud-stat-card:nth-child(2){background:linear-gradient(150deg,rgba(255,69,96,.05) 0%,var(--surface) 52%)}
+.fraud-stat-card.hl{background:linear-gradient(150deg,rgba(0,229,122,.09) 0%,var(--surface) 52%)!important}
+
+/* mission stronger gradient */
+.mission{background:linear-gradient(135deg,rgba(0,229,122,.1) 0%,rgba(79,140,255,.07) 55%,rgba(157,123,255,.05) 100%)!important;border-color:rgba(0,229,122,.25)!important}
+
+/* number glow on stats */
+.stat-val.green{text-shadow:0 0 28px rgba(0,229,122,.5)}
+.stat-val.red{text-shadow:0 0 28px rgba(255,69,96,.4)}
+.fsc-val.red{text-shadow:0 0 32px rgba(255,69,96,.45)}
+.fsc-val.green{text-shadow:0 0 32px rgba(0,229,122,.45)}
+
+/* btn-primary subtle gradient */
+.btn-primary{background:linear-gradient(135deg,var(--green) 0%,#00c96b 100%)}
+.btn-primary:hover{background:linear-gradient(135deg,#1af787 0%,var(--green) 100%)}
+
+/* problem cards — coloured left rail for instant visual read */
+.problem-card.bad{border-left:3px solid rgba(255,69,96,.55)!important}
+.problem-card.good{border-left:3px solid rgba(0,229,122,.55)!important}
+
+/* gate line — slow ambient light sweep */
+.gate-line{position:relative;overflow:hidden}
+.gate-line::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,229,122,.08),transparent);animation:glowSweep 5s ease-in-out infinite;pointer-events:none}
+@keyframes glowSweep{0%,100%{transform:translateX(-110%)}50%{transform:translateX(110%)}}
+
+/* footer depth gradient */
+.site-footer{background:linear-gradient(180deg,var(--surface) 0%,rgba(4,5,7,.98) 100%)}
+
+/* nav scroll enhancement */
+nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!important}
+
 /* credit card status pill */
 .cc-status{display:inline-flex;align-items:center;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-top:5px;width:fit-content}
 .cc-status.active{background:rgba(0,229,122,0.1);color:var(--green);border:1px solid rgba(0,229,122,0.25)}
@@ -725,6 +791,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
       <div class="stat-item"><div class="stat-val green">0</div><div class="stat-label">Double-counted</div></div>
     </div>
 
+    <div class="section-label red">Market Reality</div>
     <div class="section-title">The scale of the problem</div>
     <p class="section-sub">Carbon credit fraud isn't theoretical — it's documented, quantified, and growing</p>
     <div class="fraud-stats-grid">
@@ -750,6 +817,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
       </div>
     </div>
 
+    <div class="section-label red">The Problem</div>
     <div class="section-title">The problem with existing carbon markets</div>
     <p class="section-sub">Every major blockchain carbon project made the same fatal mistake</p>
     <div class="two-col" style="margin-bottom:60px">
@@ -771,6 +839,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
       </div>
     </div>
 
+    <div class="section-label">Our Solution</div>
     <div class="section-title">5 AI verification layers</div>
     <p class="section-sub">Every submission passes all checks before a single token is minted</p>
     <div class="modules-grid">
@@ -801,6 +870,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 
   <!-- HOW IT WORKS -->
   <div class="section">
+    <div class="section-label blue">Process</div>
     <div class="section-title">How it works — end to end</div>
     <p class="section-sub">Verification gates the mint. Credits are fungible. Retirement is permanent and tracked per project.</p>
     <div class="flow">
@@ -814,6 +884,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 
   <!-- WHO IT'S FOR -->
   <div class="section">
+    <div class="section-label purple">Audience</div>
     <div class="section-title">Who it's for</div>
     <p class="section-sub">A trust layer that serves every side of the carbon market</p>
     <div class="aud-grid">
@@ -826,6 +897,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 
   <!-- BUILT TO SCALE -->
   <div class="section">
+    <div class="section-label">Architecture</div>
     <div class="section-title">Built to scale</div>
     <p class="section-sub">Designed to grow from a hackathon pilot to a production trust layer</p>
     <div class="aud-grid">
@@ -838,6 +910,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 
   <!-- ROADMAP -->
   <div class="section">
+    <div class="section-label blue">Roadmap</div>
     <div class="section-title">Roadmap — where this goes next</div>
     <p class="section-sub">How the model improves from fraud-gating toward measurement-grade trust</p>
     <div class="roadmap">
@@ -870,6 +943,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 
   <!-- LIVE PROOF -->
   <div class="section">
+    <div class="section-label">Proof of Work</div>
     <div class="section-title">Live on-chain — verify yourself</div>
     <p class="section-sub">Real transactions on QIE Mainnet · anyone can check these hashes</p>
     <div class="proof-grid">
@@ -903,6 +977,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 
   <!-- FRAUD ACTIVITY LOG -->
   <div class="section">
+    <div class="section-label red">Live Data</div>
     <div class="section-title">Fraud activity log</div>
     <p class="section-sub">Every blocked hard-fail — wallet, reason, flags — read directly from the oracle contract</p>
     <div class="fraud-log" id="fraud-log"><div class="fraud-loading">Loading on-chain fraud log…</div></div>
@@ -910,6 +985,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 
   <!-- QIE ECOSYSTEM -->
   <div class="section">
+    <div class="section-label purple">Ecosystem</div>
     <div class="section-title">Powered by QIE Ecosystem</div>
     <p class="section-sub">TerraLedger runs natively on QIE's core infrastructure — no bridges, no wrapped tokens, no third-party custody</p>
     <div class="eco-grid">
