@@ -13,25 +13,29 @@
 <meta name="twitter:description" content="Verify-before-mint: no passing AI = no NFT. Live on QIE Mainnet with 1 credit minted and 1 credit retired on-chain."/>
 <link rel="icon" type="image/png" href="assets/logo-icon.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" crossorigin="anonymous"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#040507; --surface:#0b0d12; --surface2:#111420;
-  --border:#1c2035; --border2:#252a40;
-  --green:#00e57a; --green2:#00b861; --green-glow:rgba(0,229,122,0.1);
-  --red:#ff4560; --amber:#f5a623; --blue:#4f8cff; --purple:#9d7bff;
-  --text:#e8eaf0; --muted:#6b7280; --muted2:#9aa0b0;
-  --font:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace;
+  --bg:#0f1a0d; --surface:#162214; --surface2:#1c2d1a;
+  --border:#253422; --border2:#2f4229;
+  --green:#4a7c59; --green2:#3d6b4b; --green-glow:rgba(74,124,89,0.12);
+  --green-bright:#8fcf6a; --green-bright-glow:rgba(143,207,106,0.14);
+  --red:#ff4560; --amber:#e8a23c; --blue:#0b84d8; --purple:#9d7bff;
+  --text:#d4e0cc; --muted:#5e7457; --muted2:#8fa385;
+  --font:'Plus Jakarta Sans',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --display:'DM Serif Display',serif;
 }
-html{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
+html{background:var(--bg);color:var(--text);font-family:var(--font);font-size:17px;line-height:1.75}
 body{min-height:100vh;overflow-x:hidden}
 a{color:var(--blue);text-decoration:none}
 
 /* nav */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
-  padding:0 28px;height:60px;background:rgba(4,5,7,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+  padding:0 28px;height:60px;background:rgba(15,26,13,0.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
 .nav-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.02em;cursor:pointer}
 .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
 .logo-mark{width:42px;height:42px;border-radius:11px;object-fit:cover;flex-shrink:0;box-shadow:0 0 0 1px rgba(255,255,255,.07),0 3px 14px rgba(0,0,0,.45);transition:transform .25s cubic-bezier(.16,1,.3,1)}
@@ -49,9 +53,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .qiepass-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
 .qiepass-chip.verified{color:var(--purple);border-color:rgba(157,123,255,0.4)}
 .qiepass-chip.verified .dot{background:var(--purple);box-shadow:0 0 6px var(--purple)}
-.nav-cta{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;background:var(--green);color:#040507;border:none;cursor:pointer;transition:all .15s;font-family:var(--font)}
-.nav-cta:hover{background:var(--green2)}
-.nav-cta.connected{background:var(--surface2);color:var(--green);border:1px solid rgba(0,229,122,0.3);font-family:var(--mono);font-size:12px}
+.nav-cta{padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;background:var(--green-bright);color:#0f1a0d;border:none;cursor:pointer;transition:all .2s;font-family:var(--font)}
+.nav-cta:hover{background:var(--green-bright);box-shadow:0 0 18px var(--green-bright-glow),0 0 40px var(--green-bright-glow);transform:translateY(-1px)}
+.nav-cta.connected{background:var(--surface2);color:var(--green-bright);border:1px solid rgba(143,207,106,0.3);font-family:var(--mono);font-size:12px}
 .wallet-wrap{position:relative}
 .wallet-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:220px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:6px;box-shadow:0 16px 44px rgba(0,0,0,0.55);display:none;z-index:200}
 .wallet-menu.show{display:block;animation:fadeIn .15s ease}
@@ -67,30 +71,32 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .page.active{display:block}
 
 /* landing */
-.hero{text-align:center;padding:90px 24px 70px;background:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,229,122,0.08) 0%, transparent 70%)}
-.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;border:1px solid rgba(0,229,122,0.25);
-  background:rgba(0,229,122,0.06);font-size:12px;font-weight:500;color:var(--green);margin-bottom:26px;font-family:var(--mono);letter-spacing:.02em}
-.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-h1{font-size:clamp(36px,6vw,64px);font-weight:700;line-height:1.05;letter-spacing:-.03em;margin-bottom:18px}
-h1 span{color:var(--green)}
-.hero-sub{font-size:17px;color:var(--muted2);max-width:600px;margin:0 auto 36px;font-weight:400;line-height:1.7}
-.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.btn-primary{padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;background:var(--green);color:#040507;border:none;cursor:pointer;transition:all .15s;font-family:var(--font)}
-.btn-primary:hover{background:var(--green2);transform:translateY(-1px)}
-.btn-secondary{padding:12px 28px;border-radius:10px;font-size:14px;font-weight:500;background:transparent;color:var(--text);border:1px solid var(--border2);cursor:pointer;transition:all .15s;font-family:var(--font)}
-.btn-secondary:hover{border-color:var(--muted);background:var(--surface2)}
+.hero{text-align:center;padding:120px 24px 100px;background:radial-gradient(ellipse 80% 55% at 50% -5%, rgba(74,124,89,0.13) 0%, transparent 68%);position:relative;overflow:hidden}
+.hero-hex-grid{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:0;animation:hexPulse 6s ease-in-out infinite}
+@keyframes hexPulse{0%,100%{opacity:.04}50%{opacity:.08}}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 16px;border-radius:20px;border:1px solid rgba(74,124,89,0.4);
+  background:rgba(74,124,89,0.1);font-size:11.5px;font-weight:500;color:var(--green-bright);margin-bottom:30px;font-family:var(--mono);letter-spacing:.06em}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green-bright);animation:pulse 2s infinite;box-shadow:0 0 6px var(--green-bright)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+h1{font-family:var(--display);font-size:clamp(42px,6vw,72px);font-weight:400;line-height:1.08;letter-spacing:-.01em;margin-bottom:22px}
+h1 span{color:var(--green-bright)}
+.hero-sub{font-size:17px;color:var(--muted2);max-width:640px;margin:0 auto 40px;font-weight:400;line-height:1.75}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-primary{padding:13px 32px;border-radius:10px;font-size:14px;font-weight:600;background:var(--green-bright);color:#0f1a0d;border:none;cursor:pointer;transition:all .2s;font-family:var(--font)}
+.btn-primary:hover{box-shadow:0 0 22px var(--green-bright-glow),0 4px 16px rgba(0,0,0,.4);transform:translateY(-2px)}
+.btn-secondary{padding:13px 32px;border-radius:10px;font-size:14px;font-weight:500;background:transparent;color:var(--text);border:1px solid var(--border2);cursor:pointer;transition:all .2s;font-family:var(--font)}
+.btn-secondary:hover{border-color:var(--green);color:var(--green-bright);background:rgba(74,124,89,.06)}
 
-.stats-bar{display:flex;justify-content:center;border:1px solid var(--border);border-radius:14px;max-width:680px;margin:0 auto 70px;overflow:hidden;background:var(--surface)}
-.stat-item{flex:1;padding:20px 16px;text-align:center;border-right:1px solid var(--border)}
+.stats-bar{display:flex;justify-content:center;border:1px solid var(--border);border-radius:16px;max-width:700px;margin:0 auto 90px;overflow:hidden;background:var(--surface)}
+.stat-item{flex:1;padding:24px 16px;text-align:center;border-right:1px solid var(--border)}
 .stat-item:last-child{border-right:none}
-.stat-val{font-size:24px;font-weight:700;color:var(--text);font-family:var(--mono)}
-.stat-val.green{color:var(--green)}.stat-val.red{color:var(--red)}
-.stat-label{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+.stat-val{font-size:26px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.stat-val.green{color:var(--green-bright)}.stat-val.red{color:var(--red)}
+.stat-label{font-size:10.5px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.08em}
 
-.section{max-width:1100px;margin:0 auto;padding:0 24px 70px}
-.section-title{font-size:28px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
-.section-sub{color:var(--muted2);margin-bottom:36px;font-size:15px}
+.section{max-width:1100px;margin:0 auto;padding:0 24px 120px}
+.section-title{font-family:var(--display);font-size:36px;font-weight:400;letter-spacing:-.01em;margin-bottom:10px}
+.section-sub{color:var(--muted2);margin-bottom:44px;font-size:16px;line-height:1.7}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:700px){.two-col{grid-template-columns:1fr}}
 .problem-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px}
@@ -108,21 +114,44 @@ h1 span{color:var(--green)}
   text-align:center;font-size:15px;color:var(--muted2)}
 .gate-line strong{color:var(--green);font-weight:600}
 
-.modules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:20px}
-.module-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;transition:border-color .2s,transform .2s}
-.module-card:hover{border-color:var(--border2);transform:translateY(-3px)}
-.mc-num{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--green);margin-bottom:10px;letter-spacing:.06em}
-.mc-title{font-size:14px;font-weight:600;margin-bottom:6px}
-.mc-desc{font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:12px}
-.mc-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;background:var(--surface2);color:var(--muted2);border:1px solid var(--border);font-family:var(--mono)}
+.modules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:24px}
+.module-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;transition:border-color .25s,transform .25s,box-shadow .25s;display:flex;flex-direction:column;gap:0}
+.module-card:hover{border-color:var(--green);transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 0 1px rgba(74,124,89,.2)}
+.mc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.mc-arc{position:relative;width:44px;height:44px;flex-shrink:0}
+.mc-arc svg{transform:rotate(-90deg)}
+.mc-arc-bg{fill:none;stroke:var(--border2);stroke-width:3}
+.mc-arc-fill{fill:none;stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.16,1,.3,1)}
+.mc-arc-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--muted2)}
+.mc-title{font-size:15px;font-weight:600;margin-bottom:8px;line-height:1.3}
+.mc-desc{font-size:13px;color:var(--muted2);line-height:1.65;margin-bottom:14px;flex:1}
+.mc-tags{display:flex;flex-wrap:wrap;gap:6px}
+.mc-tag{display:inline-block;font-size:11px;padding:3px 10px;border-radius:7px;background:#1a3a1a;color:var(--green-bright);border:1px solid rgba(143,207,106,.2);font-family:var(--mono);font-weight:500}
 
+/* 3-step wizard */
+.wizard-steps{display:flex;align-items:center;gap:0;margin-bottom:36px;padding:0 4px}
+.wz-step{display:flex;align-items:center;gap:10px;flex:1}
+.wz-step:last-child{flex:0}
+.wz-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:600;flex-shrink:0;transition:all .3s;border:1.5px solid var(--border2);color:var(--muted);background:var(--surface2)}
+.wz-num.active{border-color:var(--green-bright);color:var(--green-bright);background:rgba(143,207,106,.1);box-shadow:0 0 12px rgba(143,207,106,.2)}
+.wz-num.done{border-color:var(--green);background:var(--green);color:#0f1a0d}
+.wz-label{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;transition:color .3s}
+.wz-label.active{color:var(--green-bright)}
+.wz-line{flex:1;height:1px;background:var(--border2);margin:0 10px;transition:background .3s}
+.wz-line.done{background:var(--green)}
+.wizard-nav{display:flex;gap:12px;margin-top:16px}
+.wz-back{padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;background:transparent;color:var(--muted2);border:1px solid var(--border2);cursor:pointer;font-family:var(--font);transition:all .2s}
+.wz-back:hover{border-color:var(--green);color:var(--text)}
+.wz-next{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:600;background:var(--green);color:var(--text);border:none;cursor:pointer;font-family:var(--font);transition:all .2s}
+.wz-next:hover{background:var(--green-bright);color:#0f1a0d}
+.wizard-step-label{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:20px;display:block}
 /* forms */
 .submit-layout,.verify-layout{max-width:760px;margin:0 auto;padding:40px 24px}
 .market-layout{max-width:1140px;margin:0 auto;padding:40px 24px}
 .faq-layout{max-width:860px;margin:0 auto;padding:40px 24px}
-.page-header{margin-bottom:28px}
-.page-title{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
-.page-desc{color:var(--muted2);font-size:14px}
+.page-header{margin-bottom:32px}
+.page-title{font-family:var(--display);font-size:34px;font-weight:400;letter-spacing:-.01em;margin-bottom:8px}
+.page-desc{color:var(--muted2);font-size:14px;line-height:1.7}
 .form-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;margin-bottom:16px}
 .form-section-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
@@ -130,8 +159,8 @@ h1 span{color:var(--green)}
 .field{display:flex;flex-direction:column;gap:5px}
 label{font-size:12px;font-weight:500;color:var(--muted2)}
 label span{color:var(--red)}
-input,select,textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text);font-family:var(--font);transition:border-color .15s;outline:none;width:100%}
-input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,229,122,0.08)}
+input,select,textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);font-family:var(--font);transition:border-color .15s;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(74,124,89,0.15)}
 select option{background:var(--surface2)}
 textarea{resize:vertical;min-height:80px;font-family:var(--mono);font-size:12px}
 .gps-input-area{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:14px}
@@ -142,15 +171,15 @@ textarea{resize:vertical;min-height:80px;font-family:var(--mono);font-size:12px}
 .gps-actions{display:flex;gap:8px}
 .btn-ghost{padding:6px 12px;border-radius:7px;font-size:12px;font-weight:500;background:transparent;color:var(--muted2);border:1px solid var(--border2);cursor:pointer;transition:all .15s;font-family:var(--font)}
 .btn-ghost:hover{color:var(--text);border-color:var(--muted)}
-.upload-area{border:1.5px dashed var(--border2);border-radius:10px;padding:26px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
-.upload-area:hover,.upload-area.has-file{border-color:var(--green);background:rgba(0,229,122,0.04)}
+.upload-area{border:2px dashed var(--green);border-radius:12px;padding:36px 26px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface)}
+.upload-area:hover,.upload-area.has-file{border-color:var(--green-bright);background:rgba(143,207,106,0.05);box-shadow:0 0 0 4px rgba(74,124,89,.08)}
 .upload-icon{font-size:26px;margin-bottom:8px;opacity:.6}
 .upload-text{font-size:13px;color:var(--muted2)}.upload-text strong{color:var(--text)}
 .upload-sub{font-size:11px;color:var(--muted);margin-top:4px}
 .upload-filename{font-size:12px;color:var(--green);font-family:var(--mono);margin-top:6px}
 input[type=file]{display:none}
-.submit-btn{width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:600;background:var(--green);color:#040507;border:none;cursor:pointer;transition:all .2s;font-family:var(--font);margin-top:8px}
-.submit-btn:hover{background:var(--green2)}
+.submit-btn{width:100%;padding:15px;border-radius:10px;font-size:15px;font-weight:600;background:var(--green-bright);color:#0f1a0d;border:none;cursor:pointer;transition:all .2s;font-family:var(--font);margin-top:8px}
+.submit-btn:hover{box-shadow:0 0 24px var(--green-bright-glow),0 4px 16px rgba(0,0,0,.3);transform:translateY(-1px)}
 .submit-btn:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed}
 .confirm-actions{display:flex;gap:10px;margin-top:20px}
 .confirm-actions .submit-btn{margin-top:0;flex:1}
@@ -162,7 +191,7 @@ input[type=file]{display:none}
 
 /* verify */
 .processing-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:34px 28px;text-align:center;margin-bottom:20px}
-.processing-ring{width:68px;height:68px;border-radius:50%;margin:0 auto 18px;border:3px solid var(--border);border-top-color:var(--green);animation:spin 1s linear infinite}
+.processing-ring{width:68px;height:68px;border-radius:50%;margin:0 auto 18px;border:3px solid var(--border);border-top-color:var(--green-bright);animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .processing-title{font-size:19px;font-weight:700;margin-bottom:6px}
 .processing-sub{font-size:13px;color:var(--muted2)}
@@ -171,7 +200,7 @@ input[type=file]{display:none}
 .step:last-child{border-bottom:none}
 .step-indicator{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid var(--border2);background:var(--surface2);transition:all .3s}
 .step-indicator.running{border-color:var(--amber);color:var(--amber);animation:stepPulse 1s infinite}
-.step-indicator.done{border-color:var(--green);background:rgba(0,229,122,0.1);color:var(--green)}
+.step-indicator.done{border-color:var(--green-bright);background:rgba(143,207,106,0.1);color:var(--green-bright)}
 .step-indicator.fail{border-color:var(--red);background:rgba(255,69,96,0.1);color:var(--red)}
 .step-indicator.pending{border-color:var(--border2);color:var(--muted)}
 @keyframes stepPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,0.4)}50%{box-shadow:0 0 0 6px rgba(245,166,35,0)}}
@@ -180,11 +209,11 @@ input[type=file]{display:none}
 .step-detail{font-size:12px;color:var(--muted2)}
 .step-score{font-family:var(--mono);font-size:13px;font-weight:600;padding-top:6px}
 .result-card{border-radius:16px;padding:28px;margin-bottom:16px;border:1.5px solid}
-.result-card.pass{border-color:rgba(0,229,122,0.3);background:rgba(0,229,122,0.04)}
+.result-card.pass{border-color:rgba(143,207,106,0.3);background:rgba(143,207,106,0.04)}
 .result-card.fail{border-color:rgba(255,69,96,0.3);background:rgba(255,69,96,0.03)}
 .rc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .rc-verdict{font-size:22px;font-weight:700}
-.rc-verdict.pass{color:var(--green)}.rc-verdict.fail{color:var(--red)}
+.rc-verdict.pass{color:var(--green-bright)}.rc-verdict.fail{color:var(--red)}
 .rc-score{font-family:var(--mono);font-size:32px;font-weight:700;line-height:1}
 .rc-score span{font-size:16px;color:var(--muted);font-weight:400}
 .score-bars{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
@@ -192,7 +221,7 @@ input[type=file]{display:none}
 .sb-label{font-size:12px;color:var(--muted2)}
 .sb-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
 .sb-fill{height:100%;border-radius:3px;transition:width .8s ease .2s}
-.sb-fill.green{background:var(--green)}.sb-fill.amber{background:var(--amber)}.sb-fill.red{background:var(--red)}
+.sb-fill.green{background:var(--green-bright)}.sb-fill.amber{background:var(--amber)}.sb-fill.red{background:var(--red)}
 .sb-val{font-size:12px;font-family:var(--mono);color:var(--muted2);text-align:right}
 .flags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .flag{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;font-family:var(--mono);background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.25)}
@@ -227,7 +256,7 @@ button:disabled{opacity:.6;cursor:wait}
 .sp-pts{font-size:11px;font-family:var(--mono);color:var(--muted2);text-align:right}
 .sp-note{font-size:11px;color:var(--muted);margin-top:10px}
 .tx-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--muted2);margin-bottom:8px}
-.tx-hash{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx-hash{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--blue);font-weight:500}
 .tx-link{color:var(--blue);cursor:pointer;font-size:11px;white-space:nowrap}
 .report-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--muted2);max-height:240px;overflow-y:auto;margin-top:14px;white-space:pre-wrap}
 
@@ -394,14 +423,14 @@ button:disabled{opacity:.6;cursor:wait}
 .eco-badge{display:inline-flex;align-items:center;gap:4px;margin-top:16px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--mono);width:fit-content}
 .eco-badge.purple{background:rgba(157,123,255,.08);color:var(--purple);border:1px solid rgba(157,123,255,.25)}
 .eco-badge.blue{background:rgba(79,140,255,.08);color:var(--blue);border:1px solid rgba(79,140,255,.25)}
-.eco-badge.green{background:rgba(0,229,122,.08);color:var(--green);border:1px solid rgba(0,229,122,.25)}
+.eco-badge.green{background:rgba(143,207,106,.08);color:var(--green-bright);border:1px solid rgba(143,207,106,.25)}
 .eco-badge.amber{background:rgba(245,166,35,.08);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
 
 /* roadmap */
 .roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
 .rm{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
 .rm-tag{display:inline-block;font-size:10px;font-family:var(--mono);padding:3px 9px;border-radius:6px;margin-bottom:12px;letter-spacing:.04em}
-.rm-tag.now{background:var(--green-glow);color:var(--green);border:1px solid rgba(0,229,122,0.3)}
+.rm-tag.now{background:rgba(143,207,106,0.08);color:var(--green-bright);border:1px solid rgba(143,207,106,0.3)}
 .rm-tag.next{background:rgba(79,140,255,0.12);color:var(--blue);border:1px solid rgba(79,140,255,0.3)}
 .rm-tag.later{background:rgba(157,123,255,0.12);color:var(--purple);border:1px solid rgba(157,123,255,0.3)}
 .rm ul{list-style:none;display:flex;flex-direction:column;gap:8px}
@@ -412,21 +441,28 @@ button:disabled{opacity:.6;cursor:wait}
 
 /* ── Hamburger + mobile menu ─────────────────────────────── */
 .nav-burger{display:none;background:none;border:1px solid var(--border2);color:var(--text);font-size:18px;width:38px;height:34px;border-radius:8px;cursor:pointer;line-height:1}
-.mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;z-index:95;flex-direction:column;background:rgba(8,10,15,0.98);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:8px}
+.mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;z-index:95;flex-direction:column;background:rgba(15,26,13,0.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:8px}
 .mobile-menu.show{display:flex;animation:fadeIn .15s ease}
 .mobile-menu .nav-link{text-align:left;padding:12px 16px;font-size:15px;border-radius:8px}
 
 /* ── Footer ──────────────────────────────────────────────── */
-.site-footer{border-top:1px solid var(--border);background:var(--surface);margin-top:40px;padding:48px 24px 28px}
+.site-footer{border-top:1px solid var(--border);background:linear-gradient(180deg,var(--surface) 0%,#0d1c0b 100%);margin-top:0;padding:72px 24px 32px}
+.ft-live-stats{max-width:1100px;margin:0 auto 56px;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--bg)}
+.ft-ls-item{padding:28px 24px;text-align:center;border-right:1px solid var(--border)}
+.ft-ls-item:last-child{border-right:none}
+.ft-ls-num{font-family:var(--display);font-size:44px;font-weight:400;line-height:1;color:var(--text);margin-bottom:8px}
+.ft-ls-num.green{color:var(--green-bright)}
+.ft-ls-num.red{color:var(--red)}
+.ft-ls-label{font-size:12px;color:var(--muted2);line-height:1.5}
 .ft-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px}
-.ft-brand p{font-size:13px;color:var(--muted2);line-height:1.7;margin-top:6px;max-width:420px}
-.ft-live{display:inline-flex;align-items:center;gap:7px;margin-top:16px;font-size:12px;font-family:var(--mono);color:var(--green)}
-.ft-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite}
-.ft-col h5{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
-.ft-col a{display:block;font-size:13.5px;color:var(--muted2);margin-bottom:10px;cursor:pointer;transition:color .15s}
-.ft-col a:hover{color:var(--green)}
+.ft-brand p{font-size:13px;color:var(--muted2);line-height:1.75;margin-top:6px;max-width:420px}
+.ft-live{display:inline-flex;align-items:center;gap:7px;margin-top:16px;font-size:11.5px;font-family:var(--mono);color:var(--green-bright);letter-spacing:.04em}
+.ft-dot{width:7px;height:7px;border-radius:50%;background:var(--green-bright);box-shadow:0 0 8px var(--green-bright);animation:pulse 2s infinite}
+.ft-col h5{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
+.ft-col a{display:block;font-size:13px;color:var(--muted2);margin-bottom:10px;cursor:pointer;transition:color .15s}
+.ft-col a:hover{color:var(--green-bright)}
 .ft-bottom{max-width:1100px;margin:32px auto 0;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
-.ft-honest{max-width:520px;text-align:right}
+.ft-honest{max-width:540px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.6}
 
 /* polish overrides */
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -438,38 +474,23 @@ body{letter-spacing:-0.01em}
 .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1!important;transform:none!important;transition:none}}
 
-/* roomier, calmer sections + dramatic type hierarchy */
-.section{padding:0 24px 100px}
-.section-title{font-size:36px;font-weight:700;letter-spacing:-.035em;line-height:1.08;margin-bottom:10px}
-.section-sub{font-size:16.5px;color:var(--muted2);margin-bottom:48px;max-width:620px;line-height:1.6}
+/* layout rhythm */
+.section{padding:0 24px 120px}
+.hero{padding:120px 24px 100px}
 
-/* hero — more air + drama */
-.hero{padding:118px 24px 88px;background:radial-gradient(ellipse 70% 50% at 50% -5%,rgba(0,229,122,0.10),transparent 65%)}
-h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
-.hero-sub{font-size:18px;line-height:1.75;margin:0 auto 42px;max-width:640px}
-.hero-badge{margin-bottom:34px}
-
-/* premium pill buttons with lift */
+/* pill buttons */
 .btn-primary,.btn-secondary,.nav-cta{border-radius:999px}
-.btn-primary{padding:14px 32px;font-size:15px;box-shadow:0 6px 22px rgba(0,229,122,.2)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,229,122,.32)}
-.btn-secondary{padding:14px 32px;font-size:15px}
-.btn-secondary:hover{transform:translateY(-2px)}
 
-/* cards — unified radius, depth, smoother hover */
+/* cards — unified radius */
 .problem-card,.module-card,.aud-card,.rm,.credit-card,.form-card,.mission,.stats-bar{border-radius:20px}
-.module-card,.aud-card,.problem-card{transition:transform .28s cubic-bezier(.16,1,.3,1),border-color .28s,box-shadow .28s}
-.module-card:hover,.aud-card:hover{box-shadow:var(--shadow);border-color:var(--border2);transform:translateY(-4px)}
 
 /* premium stats strip */
-.stats-bar{box-shadow:var(--shadow);margin-bottom:88px}
-.stat-item{padding:28px 18px}
-.stat-val{font-size:32px;letter-spacing:-.025em}
-.stat-label{font-size:11px;letter-spacing:.08em;margin-top:6px}
+.stats-bar{box-shadow:0 2px 6px rgba(0,0,0,.35),0 14px 40px rgba(0,0,0,.28);margin-bottom:90px}
+.stat-item{padding:26px 18px}
+.stat-val{font-size:30px;letter-spacing:-.025em}
 
-/* tighter, premium module text */
-.mc-title,.aud-card h4{letter-spacing:-.01em}
-.gate-line{padding:22px 26px;font-size:15.5px;border-radius:14px}
+/* gate line */
+.gate-line{padding:22px 26px;font-size:15px;border-radius:14px}
 
 /* ── RESPONSIVE ──────────────────────────────────────────── */
 @media(max-width:768px){
@@ -533,14 +554,14 @@ h1{font-size:clamp(40px,7vw,76px);letter-spacing:-.045em;line-height:1.02}
 ::-webkit-scrollbar-thumb:hover{background:var(--muted)}
 
 /* Nav scroll shadow */
-nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--border2)}
+nav.scrolled{background:rgba(15,26,13,0.88)!important;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important;box-shadow:0 1px 0 var(--border2)}
 
 /* Hero layers */
 .hero{position:relative;overflow:hidden}
 #hero-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 .grid-bg{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;z-index:0;-webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,black 20%,transparent 75%);mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,black 20%,transparent 75%)}
 .hero-orb{position:absolute;border-radius:50%;pointer-events:none;z-index:0}
-.hero-orb-1{width:600px;height:600px;background:radial-gradient(circle,rgba(0,229,122,.11) 0%,transparent 65%);top:-200px;left:50%;transform:translateX(-50%);animation:orb1 7s ease-in-out infinite alternate}
+.hero-orb-1{width:600px;height:600px;background:radial-gradient(circle,rgba(74,124,89,.14) 0%,transparent 65%);top:-200px;left:50%;transform:translateX(-50%);animation:orb1 7s ease-in-out infinite alternate}
 .hero-orb-2{width:340px;height:340px;background:radial-gradient(circle,rgba(79,140,255,.08) 0%,transparent 70%);top:5%;left:-8%;animation:orb2 9s ease-in-out infinite alternate}
 .hero-orb-3{width:300px;height:300px;background:radial-gradient(circle,rgba(157,123,255,.07) 0%,transparent 70%);top:10%;right:-5%;animation:orb3 8s ease-in-out infinite alternate}
 @keyframes orb1{from{transform:translateX(-50%) scale(1);opacity:.7}to{transform:translateX(-50%) scale(1.2);opacity:1}}
@@ -551,8 +572,8 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 
 /* Hero badge ring */
 .hero-badge{position:relative}
-.hero-badge::after{content:'';position:absolute;inset:-5px;border-radius:26px;border:1px solid rgba(0,229,122,.18);animation:badgeRing 3.5s ease-in-out infinite;pointer-events:none}
-@keyframes badgeRing{0%,100%{opacity:0;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+.hero-badge::after{content:'';position:absolute;inset:-5px;border-radius:26px;border:1px solid rgba(143,207,106,.15);animation:badgeRing 3.5s ease-in-out infinite;pointer-events:none}
+@keyframes badgeRing{0%,100%{opacity:0;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
 
 /* Section separators */
 #page-landing .section+.section::before{content:'';display:block;height:1px;background:linear-gradient(90deg,transparent 0%,var(--border2) 30%,var(--border2) 70%,transparent 100%);margin-bottom:80px;opacity:.55}
@@ -567,7 +588,7 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 .fraud-stat-card:nth-child(1).vis,.fraud-stat-card:nth-child(2).vis{animation:redPulse 3.8s ease-in-out infinite 0.7s}
 @keyframes redPulse{0%,100%{border-color:rgba(255,69,96,.18);box-shadow:none}50%{border-color:rgba(255,69,96,.48);box-shadow:0 0 20px rgba(255,69,96,.07)}}
 .fraud-stat-card.hl.vis{animation:greenPulse 4s ease-in-out infinite 1s}
-@keyframes greenPulse{0%,100%{border-color:rgba(0,229,122,.25);box-shadow:none}50%{border-color:rgba(0,229,122,.52);box-shadow:0 0 24px rgba(0,229,122,.1)}}
+@keyframes greenPulse{0%,100%{border-color:rgba(143,207,106,.25);box-shadow:none}50%{border-color:rgba(143,207,106,.5);box-shadow:0 0 24px rgba(143,207,106,.08)}}
 /* Bigger stat numbers */
 .fsc-val{font-size:50px!important;line-height:1!important}
 
@@ -597,10 +618,10 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 
 /* Mission card enhanced */
 .mission{transition:box-shadow .3s}
-.mission:hover{box-shadow:0 12px 44px rgba(0,0,0,.3),0 0 0 1px rgba(0,229,122,.1)!important}
+.mission:hover{box-shadow:0 12px 44px rgba(0,0,0,.3),0 0 0 1px rgba(74,124,89,.2)!important}
 
 /* Gate line enhanced */
-.gate-line{border:1px solid rgba(0,229,122,.3)!important;background:rgba(0,229,122,.05)!important}
+.gate-line{border:1px solid rgba(74,124,89,.4)!important;background:rgba(74,124,89,.06)!important}
 
 /* Proof cards hover */
 .proof-txn.mint:hover{border-color:rgba(0,229,122,.5)!important;box-shadow:0 6px 28px rgba(0,229,122,.1)!important}
@@ -610,37 +631,42 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 @keyframes statFlash{0%{transform:scale(1.18);filter:brightness(1.4)}100%{transform:scale(1);filter:brightness(1)}}
 .stat-val.flash{animation:statFlash .55s cubic-bezier(.16,1,.3,1) forwards}
 
+/* The big ~90% standalone stat */
+.stat-hero-section{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 24px;text-align:center;background:radial-gradient(ellipse 60% 40% at 50% 50%,rgba(255,69,96,.05) 0%,transparent 70%)}
+.stat-hero-number{font-family:var(--display);font-size:clamp(90px,14vw,160px);font-weight:400;color:var(--red);line-height:1;letter-spacing:-.02em;margin-bottom:28px}
+.stat-hero-label{font-size:18px;color:var(--muted2);max-width:540px;line-height:1.7;margin-bottom:20px}
+.stat-hero-source{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.04em}
 /* fraud scale stats grid */
 .fraud-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:60px}
 .fraud-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 24px;display:flex;flex-direction:column;gap:6px;transition:transform .25s cubic-bezier(.16,1,.3,1),border-color .25s}
 .fraud-stat-card:hover{transform:translateY(-3px)}
-.fraud-stat-card.hl{border-color:rgba(0,229,122,0.25);background:rgba(0,229,122,0.04)}
-.fsc-val{font-size:38px;font-weight:700;font-family:var(--mono);letter-spacing:-.035em;color:var(--text);line-height:1}
-.fsc-val.red{color:var(--red)}.fsc-val.green{color:var(--green)}
-.fsc-label{font-size:13.5px;color:var(--text);line-height:1.55;margin-top:4px}
-.fsc-source{font-size:10.5px;color:var(--muted);font-family:var(--mono);margin-top:6px;letter-spacing:.02em}
+.fraud-stat-card.hl{border-color:rgba(143,207,106,0.25);background:rgba(143,207,106,0.04)}
+.fsc-val{font-size:44px;font-weight:400;font-family:var(--display);letter-spacing:-.01em;color:var(--text);line-height:1}
+.fsc-val.red{color:var(--red)}.fsc-val.green{color:var(--green-bright)}
+.fsc-label{font-size:13.5px;color:var(--text);line-height:1.6;margin-top:6px}
+.fsc-source{font-size:10.5px;color:var(--muted);font-family:var(--mono);margin-top:8px;letter-spacing:.04em}
 /* live on-chain proof cards */
 .proof-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:6px}
 .proof-txn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;transition:transform .25s cubic-bezier(.16,1,.3,1),border-color .25s,box-shadow .25s;text-decoration:none;color:inherit}
 .proof-txn:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.35)}
-.proof-txn.mint{border-color:rgba(0,229,122,0.22);background:rgba(0,229,122,0.03)}
-.proof-txn.mint:hover{border-color:rgba(0,229,122,0.45);box-shadow:0 8px 32px rgba(0,229,122,0.08)}
+.proof-txn.mint{border-color:rgba(143,207,106,0.22);background:rgba(143,207,106,0.03)}
+.proof-txn.mint:hover{border-color:rgba(143,207,106,0.45);box-shadow:0 8px 32px rgba(143,207,106,0.08)}
 .proof-txn.fraud{border-color:rgba(255,69,96,0.22);background:rgba(255,69,96,0.03)}
 .proof-txn.fraud:hover{border-color:rgba(255,69,96,0.45);box-shadow:0 8px 32px rgba(255,69,96,0.08)}
-.proof-txn.retire{border-color:rgba(79,140,255,0.22);background:rgba(79,140,255,0.03)}
-.proof-txn.retire:hover{border-color:rgba(79,140,255,0.45);box-shadow:0 8px 32px rgba(79,140,255,0.08)}
+.proof-txn.retire{border-color:rgba(11,132,216,0.22);background:rgba(11,132,216,0.03)}
+.proof-txn.retire:hover{border-color:rgba(11,132,216,0.45);box-shadow:0 8px 32px rgba(11,132,216,0.08)}
 .proof-txn.list{border-color:rgba(245,166,35,0.22);background:rgba(245,166,35,0.03)}
 .proof-txn.list:hover{border-color:rgba(245,166,35,0.45);box-shadow:0 8px 32px rgba(245,166,35,0.08)}
 .proof-txn.buy{border-color:rgba(157,123,255,0.22);background:rgba(157,123,255,0.03)}
 .proof-txn.buy:hover{border-color:rgba(157,123,255,0.45);box-shadow:0 8px 32px rgba(157,123,255,0.08)}
 .ptag{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:6px;width:fit-content}
-.ptag.mint{background:rgba(0,229,122,0.12);color:var(--green)}
+.ptag.mint{background:rgba(143,207,106,0.12);color:var(--green-bright)}
 .ptag.fraud{background:rgba(255,69,96,0.12);color:var(--red)}
-.ptag.retire{background:rgba(79,140,255,0.12);color:var(--blue)}
+.ptag.retire{background:rgba(11,132,216,0.12);color:var(--blue)}
 .ptag.list{background:rgba(245,166,35,0.12);color:#f5a623}
 .ptag.buy{background:rgba(157,123,255,0.12);color:var(--purple)}
 .pdesc{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.35}
-.phash{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.5}
+.phash{font-family:var(--mono);font-size:11px;color:var(--blue);line-height:1.5}
 .plink{font-size:11px;color:var(--blue);margin-top:2px;display:flex;align-items:center;gap:4px}
 /* cold-start notice */
 .cold-notice{font-size:12px;color:var(--muted2);line-height:1.7;padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface);margin-bottom:16px}
@@ -660,35 +686,35 @@ nav.scrolled{background:rgba(4,5,7,0.97)!important;box-shadow:0 1px 0 var(--bord
 .fraud-loading{text-align:center;color:var(--muted);font-size:12px;padding:16px 0}
 .fraud-pager{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:14px;padding:13px 18px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
 .fraud-pg-btn{padding:7px 18px;border-radius:8px;font-size:12.5px;font-weight:600;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);cursor:pointer;transition:all .18s;font-family:var(--font)}
-.fraud-pg-btn:hover:not(:disabled){border-color:var(--green);color:var(--green);background:rgba(0,229,122,.06)}
+.fraud-pg-btn:hover:not(:disabled){border-color:var(--green);color:var(--green-bright);background:rgba(74,124,89,.06)}
 .fraud-pg-btn:disabled{opacity:.3;cursor:not-allowed}
 .fraud-pg-info{font-size:11.5px;color:var(--muted);font-family:var(--mono);text-align:center}
 .fraud-pg-dots{display:flex;gap:6px;align-items:center}
 .fraud-pg-dot{width:7px;height:7px;border-radius:50%;background:var(--border2);cursor:pointer;transition:all .2s;border:none;padding:0}
-.fraud-pg-dot.active{background:var(--green);box-shadow:0 0 6px rgba(0,229,122,.5)}
+.fraud-pg-dot.active{background:var(--green-bright);box-shadow:0 0 6px rgba(143,207,106,.5)}
 .fraud-pg-dot:hover:not(.active){background:var(--muted)}
 /* ─── Design refresh ──────────────────────────────────────────── */
 
-/* gradient headline — "Actually Verified." cyan-to-green */
-h1 span{background:linear-gradient(128deg,#00e57a 0%,#2dd4ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+/* headline accent — DM Serif Display leaf green */
+h1 span{color:var(--green-bright);-webkit-text-fill-color:var(--green-bright)}
 
-/* context label chips that appear above section titles */
-.section-label{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.12em;padding:4px 12px;border-radius:20px;margin-bottom:14px;color:var(--green);background:rgba(0,229,122,.07);border:1px solid rgba(0,229,122,.18)}
-.section-label.blue{color:var(--blue);background:rgba(79,140,255,.07);border-color:rgba(79,140,255,.2)}
-.section-label.amber{color:var(--amber);background:rgba(245,166,35,.07);border-color:rgba(245,166,35,.2)}
+/* context label chips */
+.section-label{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em;padding:4px 12px;border-radius:20px;margin-bottom:16px;color:var(--green-bright);background:rgba(143,207,106,.07);border:1px solid rgba(143,207,106,.2)}
+.section-label.blue{color:var(--blue);background:rgba(11,132,216,.07);border-color:rgba(11,132,216,.22)}
+.section-label.amber{color:var(--amber);background:rgba(232,162,60,.07);border-color:rgba(232,162,60,.22)}
 .section-label.purple{color:var(--purple);background:rgba(157,123,255,.07);border-color:rgba(157,123,255,.2)}
 .section-label.red{color:var(--red);background:rgba(255,69,96,.07);border-color:rgba(255,69,96,.18)}
 
 /* short accent underline anchored below each section title */
-.section-title{position:relative;padding-bottom:18px}
-.section-title::after{content:'';position:absolute;bottom:0;left:0;width:44px;height:3px;background:linear-gradient(90deg,var(--green),transparent);border-radius:2px}
+.section-title{position:relative;padding-bottom:20px}
+.section-title::after{content:'';position:absolute;bottom:0;left:0;width:44px;height:2px;background:linear-gradient(90deg,var(--green-bright),transparent);border-radius:2px}
 
-/* module cards — inner tint echoes the top stripe colour */
-.module-card:nth-child(1){background:linear-gradient(150deg,rgba(0,229,122,.06) 0%,var(--surface) 52%)}
-.module-card:nth-child(2){background:linear-gradient(150deg,rgba(79,140,255,.06) 0%,var(--surface) 52%)}
-.module-card:nth-child(3){background:linear-gradient(150deg,rgba(157,123,255,.06) 0%,var(--surface) 52%)}
-.module-card:nth-child(4){background:linear-gradient(150deg,rgba(245,166,35,.06) 0%,var(--surface) 52%)}
-.module-card:nth-child(5){background:linear-gradient(150deg,rgba(0,229,122,.03) 0%,var(--surface) 52%)}
+/* module cards — top colour stripe + inner tint */
+.module-card:nth-child(1){border-top:2px solid rgba(143,207,106,.55);background:linear-gradient(150deg,rgba(143,207,106,.05) 0%,var(--surface) 55%)}
+.module-card:nth-child(2){border-top:2px solid rgba(11,132,216,.55);background:linear-gradient(150deg,rgba(11,132,216,.05) 0%,var(--surface) 55%)}
+.module-card:nth-child(3){border-top:2px solid rgba(157,123,255,.55);background:linear-gradient(150deg,rgba(157,123,255,.05) 0%,var(--surface) 55%)}
+.module-card:nth-child(4){border-top:2px solid rgba(232,162,60,.55);background:linear-gradient(150deg,rgba(232,162,60,.05) 0%,var(--surface) 55%)}
+.module-card:nth-child(5){border-top:2px solid rgba(143,207,106,.25);background:linear-gradient(150deg,rgba(143,207,106,.03) 0%,var(--surface) 55%)}
 
 /* eco cards — same treatment */
 .eco-card:nth-child(1){background:linear-gradient(150deg,rgba(157,123,255,.06) 0%,var(--surface) 52%)}
@@ -728,7 +754,7 @@ h1 span{background:linear-gradient(128deg,#00e57a 0%,#2dd4ff 100%);-webkit-backg
 @keyframes glowSweep{0%,100%{transform:translateX(-110%)}50%{transform:translateX(110%)}}
 
 /* footer depth gradient */
-.site-footer{background:linear-gradient(180deg,var(--surface) 0%,rgba(4,5,7,.98) 100%)}
+.site-footer{background:linear-gradient(180deg,var(--surface) 0%,#0d1c0b 100%)}
 
 /* nav scroll enhancement */
 nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!important}
@@ -823,6 +849,7 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
   <div class="hero">
     <canvas id="hero-canvas"></canvas>
     <div class="grid-bg"></div>
+    <svg class="hero-hex-grid" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" style="position:absolute;inset:0;pointer-events:none;z-index:0"><defs><pattern id="hex" x="0" y="0" width="60" height="52" patternUnits="userSpaceOnUse"><polygon points="30,2 58,16 58,36 30,50 2,36 2,16" fill="none" stroke="#8fcf6a" stroke-width="0.6"/></pattern></defs><rect width="100%" height="100%" fill="url(#hex)"/></svg>
     <div class="hero-orb hero-orb-1"></div>
     <div class="hero-orb hero-orb-2"></div>
     <div class="hero-orb hero-orb-3"></div>
@@ -842,8 +869,14 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
       <div class="stat-item"><div class="stat-val green">0</div><div class="stat-label">Double-counted</div></div>
     </div>
 
+    <div class="stat-hero-section reveal">
+      <div class="stat-hero-number">~90%</div>
+      <p class="stat-hero-label">of Verra's REDD+ rainforest credits found to be phantom — they didn't represent real CO₂ reductions</p>
+      <div class="stat-hero-source">West et al., Science (2023)</div>
+    </div>
+
     <div class="section-label red">Market Reality</div>
-    <div class="section-title">The scale of the problem</div>
+    <div class="section-title">The full scale of the problem</div>
     <p class="section-sub">Carbon credit fraud isn't theoretical — it's documented, quantified, and growing</p>
     <div class="fraud-stats-grid">
       <div class="fraud-stat-card">
@@ -894,11 +927,46 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
     <div class="section-title">5 AI verification layers</div>
     <p class="section-sub">Every submission passes all checks before a single token is minted</p>
     <div class="modules-grid">
-      <div class="module-card"><div class="mc-num">MODULE 01 · 30 PTS</div><div class="mc-title">GPS Duplicate Detector</div><div class="mc-desc">Checks the GPS polygon against every registered project. >20% overlap = hard reject. An on-chain bounding-box guard makes duplicate land claims publicly queryable.</div><span class="mc-tag">shapely + on-chain bbox</span></div>
-      <div class="module-card"><div class="mc-num">MODULE 02 · 25 PTS</div><div class="mc-title">Ownership Document Parser</div><div class="mc-desc">Extracts owner + GPS from the land deed via OCR/NLP, runs forgery (ELA) and reuse detection. GPS mismatch or forgery = hard reject. SHA-256 stored on-chain.</div><span class="mc-tag">PyMuPDF · spaCy · ELA</span></div>
-      <div class="module-card"><div class="mc-num">MODULE 03 · 25 PTS</div><div class="mc-title">Carbon Claim Anomaly AI</div><div class="mc-desc">Isolation Forest trained on real Verra registry data. Flags abnormal tonnes/hectare claims vs. similar real-world projects.</div><span class="mc-tag">sklearn IsolationForest</span></div>
-      <div class="module-card"><div class="mc-num">MODULE 04 · 20 PTS</div><div class="mc-title">NASA Satellite Check</div><div class="mc-desc">Queries real NASA FIRMS data for fire/deforestation over 90 days. Forest burned recently? No credit. Real data, not mock.</div><span class="mc-tag">NASA FIRMS API</span></div>
-      <div class="module-card"><div class="mc-num">MODULE 05 · REPORT</div><div class="mc-title">Audit Report + On-chain Score</div><div class="mc-desc">Llama 3 writes a plain-English audit, pinned to IPFS and linked to the NFT. The total + per-module score is written on-chain at mint.</div><span class="mc-tag">Llama 3 · IPFS</span></div>
+      <div class="module-card">
+        <div class="mc-header">
+          <div><div class="mc-title">GPS Duplicate Detector</div></div>
+          <div class="mc-arc"><svg width="44" height="44" viewBox="0 0 44 44"><circle class="mc-arc-bg" cx="22" cy="22" r="18"/><circle class="mc-arc-fill" cx="22" cy="22" r="18" stroke="#8fcf6a" stroke-dasharray="113.1" stroke-dashoffset="34"/></svg><div class="mc-arc-label">30</div></div>
+        </div>
+        <div class="mc-desc">Checks the GPS polygon against every registered project. &gt;20% overlap = hard reject. On-chain bounding-box guard is publicly queryable.</div>
+        <div class="mc-tags"><span class="mc-tag">shapely</span><span class="mc-tag">on-chain bbox</span></div>
+      </div>
+      <div class="module-card">
+        <div class="mc-header">
+          <div><div class="mc-title">Ownership Document Parser</div></div>
+          <div class="mc-arc"><svg width="44" height="44" viewBox="0 0 44 44"><circle class="mc-arc-bg" cx="22" cy="22" r="18"/><circle class="mc-arc-fill" cx="22" cy="22" r="18" stroke="#0b84d8" stroke-dasharray="113.1" stroke-dashoffset="42.4"/></svg><div class="mc-arc-label">25</div></div>
+        </div>
+        <div class="mc-desc">OCR/NLP extracts owner + GPS, ELA forgery detection, SHA-256 reuse check. GPS mismatch or forgery = hard reject. Hash stored on-chain.</div>
+        <div class="mc-tags"><span class="mc-tag">PyMuPDF</span><span class="mc-tag">spaCy</span><span class="mc-tag">ELA</span></div>
+      </div>
+      <div class="module-card">
+        <div class="mc-header">
+          <div><div class="mc-title">Carbon Claim Anomaly AI</div></div>
+          <div class="mc-arc"><svg width="44" height="44" viewBox="0 0 44 44"><circle class="mc-arc-bg" cx="22" cy="22" r="18"/><circle class="mc-arc-fill" cx="22" cy="22" r="18" stroke="#9d7bff" stroke-dasharray="113.1" stroke-dashoffset="42.4"/></svg><div class="mc-arc-label">25</div></div>
+        </div>
+        <div class="mc-desc">Isolation Forest ensemble trained on real Verra registry data. Flags abnormal tonnes/hectare claims vs. similar verified projects.</div>
+        <div class="mc-tags"><span class="mc-tag">sklearn</span><span class="mc-tag">IsolationForest</span></div>
+      </div>
+      <div class="module-card">
+        <div class="mc-header">
+          <div><div class="mc-title">NASA Satellite Check</div></div>
+          <div class="mc-arc"><svg width="44" height="44" viewBox="0 0 44 44"><circle class="mc-arc-bg" cx="22" cy="22" r="18"/><circle class="mc-arc-fill" cx="22" cy="22" r="18" stroke="#e8a23c" stroke-dasharray="113.1" stroke-dashoffset="56.6"/></svg><div class="mc-arc-label">20</div></div>
+        </div>
+        <div class="mc-desc">Real NASA FIRMS fire/deforestation data over your polygon, 90-day window. Forest burned recently = no credit. Live API, not mock data.</div>
+        <div class="mc-tags"><span class="mc-tag">NASA FIRMS</span><span class="mc-tag">VIIRS</span></div>
+      </div>
+      <div class="module-card">
+        <div class="mc-header">
+          <div><div class="mc-title">Audit Report + On-chain Score</div></div>
+          <div class="mc-arc"><svg width="44" height="44" viewBox="0 0 44 44"><circle class="mc-arc-bg" cx="22" cy="22" r="18"/><circle class="mc-arc-fill" cx="22" cy="22" r="18" stroke="#8fcf6a" stroke-dasharray="113.1" stroke-dashoffset="85"/></svg><div class="mc-arc-label">—</div></div>
+        </div>
+        <div class="mc-desc">Llama 3 writes a plain-English audit, pinned to IPFS and linked permanently to the NFT. Total + per-module score written on-chain at mint.</div>
+        <div class="mc-tags"><span class="mc-tag">Llama 3</span><span class="mc-tag">IPFS</span></div>
+      </div>
     </div>
     <div class="gate-line">Minimum <strong>70 / 100</strong> to mint. No passing AI = no NFT — verification is the gate. Minting requires an <strong>M-of-N oracle</strong> attestation.</div>
   </div>
@@ -1071,57 +1139,98 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
 </div>
 
 <!-- SUBMIT -->
-<div class="page" id="page-submit">
-  <div class="submit-layout">
-    <div class="page-header"><div class="page-title">Submit Carbon Project</div><div class="page-desc">AI verifies before any token is minted. Score 70/100 minimum. Connect your wallet — you register on-chain first, then the credit mints directly to your address on pass.</div></div>
-    <div class="form-card">
-      <div class="form-section-title">Project information</div>
-      <div class="form-row">
-        <div class="field"><label>Project name <span>*</span></label><input type="text" id="f-name" placeholder="Amazon Reforestation Zone A"/></div>
-        <div class="field"><label>Project ID <span>*</span></label><input type="text" id="f-id" placeholder="auto-generated"/></div>
+<div class=”page” id=”page-submit”>
+  <div class=”submit-layout”>
+    <div class=”page-header”><div class=”page-title”>Submit Carbon Project</div><div class=”page-desc”>AI verifies before any token is minted. Score 70/100 minimum.</div></div>
+
+    <!-- Wizard step indicator -->
+    <div class=”wizard-steps”>
+      <div class=”wz-step”>
+        <div class=”wz-num active” id=”wz-num-1”>1</div>
+        <div class=”wz-label active” id=”wz-lbl-1”>Project Info</div>
       </div>
-      <div class="form-row">
-        <div class="field"><label>Project type <span>*</span></label><select id="f-type"><option value="">Select type</option><option value="forest">Forest / REDD+</option><option value="agriculture">Agriculture</option><option value="renewable">Renewable Energy</option><option value="methane">Methane Capture</option></select></div>
-        <div class="field"><label>Biome <span>*</span></label><select id="f-biome"><option value="">Select biome</option><option value="tropical">Tropical</option><option value="temperate">Temperate</option><option value="boreal">Boreal</option><option value="wetland">Wetland</option></select></div>
+      <div class=”wz-line” id=”wz-line-1”></div>
+      <div class=”wz-step”>
+        <div class=”wz-num” id=”wz-num-2”>2</div>
+        <div class=”wz-label” id=”wz-lbl-2”>Location & Docs</div>
       </div>
-      <div class="form-row">
-        <div class="field"><label>Forest area (hectares) <span>*</span></label><input type="number" id="f-ha" placeholder="5000" min="1"/></div>
-        <div class="field"><label>Claimed CO₂ (tonnes) <span>*</span></label><input type="number" id="f-tonnes" placeholder="25000" min="1"/></div>
-      </div>
-      <div class="form-row">
-        <div class="field"><label>Vintage year <span>*</span></label><input type="number" id="f-vintage" placeholder="2025" min="2000" max="2026"/></div>
-        <div class="field"><label>Country</label><input type="text" id="f-country" placeholder="Brazil"/></div>
+      <div class=”wz-line” id=”wz-line-2”></div>
+      <div class=”wz-step”>
+        <div class=”wz-num” id=”wz-num-3”>3</div>
+        <div class=”wz-label” id=”wz-lbl-3”>Review & Submit</div>
       </div>
     </div>
-    <div class="form-card">
-      <div class="form-section-title">GPS polygon <span style="color:var(--red)">*</span></div>
-      <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">At least 3 corner coordinates, decimal degrees.</p>
-      <div class="gps-input-area">
-        <div class="gps-coords" id="gps-coords">
-          <div class="coord-row"><span class="coord-label">P1</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
-          <div class="coord-row"><span class="coord-label">P2</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
-          <div class="coord-row"><span class="coord-label">P3</span><input type="number" placeholder="Latitude" step="0.0001" class="gps-lat"/><input type="number" placeholder="Longitude" step="0.0001" class="gps-lon"/></div>
+
+    <!-- Step 1: Project Information -->
+    <div id=”wz-step-1”>
+      <span class=”wizard-step-label”>STEP 1 OF 3 · PROJECT DETAILS</span>
+      <div class=”form-card”>
+        <div class=”form-section-title”>Project information</div>
+        <div class=”form-row”>
+          <div class=”field”><label>Project name <span>*</span></label><input type=”text” id=”f-name” placeholder=”Amazon Reforestation Zone A”/></div>
+          <div class=”field”><label>Project ID <span>*</span></label><input type=”text” id=”f-id” placeholder=”auto-generated”/></div>
         </div>
-        <div class="gps-actions"><button class="btn-ghost" onclick="addGpsPoint()">+ Add point</button><button class="btn-ghost" onclick="fillDemoGPS()">Use demo coords</button></div>
+        <div class=”form-row”>
+          <div class=”field”><label>Project type <span>*</span></label><select id=”f-type”><option value=””>Select type</option><option value=”forest”>Forest / REDD+</option><option value=”agriculture”>Agriculture</option><option value=”renewable”>Renewable Energy</option><option value=”methane”>Methane Capture</option></select></div>
+          <div class=”field”><label>Biome <span>*</span></label><select id=”f-biome”><option value=””>Select biome</option><option value=”tropical”>Tropical</option><option value=”temperate”>Temperate</option><option value=”boreal”>Boreal</option><option value=”wetland”>Wetland</option></select></div>
+        </div>
+        <div class=”form-row”>
+          <div class=”field”><label>Forest area (hectares) <span>*</span></label><input type=”number” id=”f-ha” placeholder=”5000” min=”1”/></div>
+          <div class=”field”><label>Claimed CO₂ (tonnes) <span>*</span></label><input type=”number” id=”f-tonnes” placeholder=”25000” min=”1”/></div>
+        </div>
+        <div class=”form-row”>
+          <div class=”field”><label>Vintage year <span>*</span></label><input type=”number” id=”f-vintage” placeholder=”2025” min=”2000” max=”2026”/></div>
+          <div class=”field”><label>Country</label><input type=”text” id=”f-country” placeholder=”Brazil”/></div>
+        </div>
+      </div>
+      <div class=”wizard-nav”><button class=”wz-next” onclick=”wizardNext()”>Continue → Location &amp; Docs</button></div>
+    </div>
+
+    <!-- Step 2: GPS + Ownership -->
+    <div id=”wz-step-2” style=”display:none”>
+      <span class=”wizard-step-label”>STEP 2 OF 3 · LOCATION &amp; OWNERSHIP</span>
+      <div class=”form-card”>
+        <div class=”form-section-title”>GPS polygon <span style=”color:var(--red)”>*</span></div>
+        <p style=”font-size:12px;color:var(--muted2);margin-bottom:14px”>At least 3 corner coordinates, decimal degrees.</p>
+        <div class=”gps-input-area”>
+          <div class=”gps-coords” id=”gps-coords”>
+            <div class=”coord-row”><span class=”coord-label”>P1</span><input type=”number” placeholder=”Latitude” step=”0.0001” class=”gps-lat”/><input type=”number” placeholder=”Longitude” step=”0.0001” class=”gps-lon”/></div>
+            <div class=”coord-row”><span class=”coord-label”>P2</span><input type=”number” placeholder=”Latitude” step=”0.0001” class=”gps-lat”/><input type=”number” placeholder=”Longitude” step=”0.0001” class=”gps-lon”/></div>
+            <div class=”coord-row”><span class=”coord-label”>P3</span><input type=”number” placeholder=”Latitude” step=”0.0001” class=”gps-lat”/><input type=”number” placeholder=”Longitude” step=”0.0001” class=”gps-lon”/></div>
+          </div>
+          <div class=”gps-actions”><button class=”btn-ghost” onclick=”addGpsPoint()”>+ Add point</button><button class=”btn-ghost” onclick=”fillDemoGPS()”>Use demo coords</button></div>
+        </div>
+      </div>
+      <div class=”form-card”>
+        <div class=”form-section-title”>Ownership document <span style=”color:var(--red)”>*</span></div>
+        <p style=”font-size:12px;color:var(--muted2);margin-bottom:14px”>Land title / cadastral certificate. AI extracts owner + GPS and checks authenticity.</p>
+        <label for=”doc-upload”><div class=”upload-area” id=”upload-area”><div class=”upload-icon”>📄</div><div class=”upload-text”><strong>Click to upload</strong> or drag & drop</div><div class=”upload-sub”>PDF, JPG, PNG — max 10MB</div><div class=”upload-filename” id=”upload-filename”></div></div></label>
+        <input type=”file” id=”doc-upload” accept=”.pdf,.jpg,.jpeg,.png” onchange=”handleFileUpload(this)”/>
+        <p style=”font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.6”>The document's GPS must be within 50 km of the polygon — mismatch hard-fails as anti-fraud. <b style=”color:var(--muted2)”>Demo:</b> use demo coords + <span style=”font-family:var(--mono);color:var(--green-bright)”>samples/genuine_land_deed.pdf</span> to pass, or <span style=”font-family:var(--mono);color:var(--red)”>samples/forged_document.pdf</span> to trigger forgery fail.</p>
+      </div>
+      <div class=”wizard-nav”>
+        <button class=”wz-back” onclick=”wizardBack()”>← Back</button>
+        <button class=”wz-next” onclick=”wizardNext()”>Continue → Review</button>
       </div>
     </div>
-    <div class="form-card">
-      <div class="form-section-title">Ownership document <span style="color:var(--red)">*</span></div>
-      <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">Land title / cadastral certificate. AI extracts owner + GPS and checks authenticity.</p>
-      <label for="doc-upload"><div class="upload-area" id="upload-area"><div class="upload-icon">📄</div><div class="upload-text"><strong>Click to upload</strong> or drag & drop</div><div class="upload-sub">PDF, JPG, PNG — max 10MB</div><div class="upload-filename" id="upload-filename"></div></div></label>
-      <input type="file" id="doc-upload" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(this)"/>
-      <p style="font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.6">💡 The document's GPS must be within 50 km of the project polygon, or it hard-fails as a duplicate/mismatch (anti-fraud). <b style="color:var(--muted2)">Demo:</b> click “Use demo coords” then upload <span style="font-family:var(--mono);color:var(--green)">samples/genuine_land_deed.pdf</span> to PASS — or <span style="font-family:var(--mono);color:var(--red)">samples/forged_document.pdf</span> to see the forgery hard-fail.</p>
+
+    <!-- Step 3: Review + Submit -->
+    <div id=”wz-step-3” style=”display:none”>
+      <span class=”wizard-step-label”>STEP 3 OF 3 · REVIEW &amp; SUBMIT</span>
+      <div class=”sp-card”>
+        <div class=”sp-head”><div class=”sp-title”>Estimated score preview</div><div class=”sp-total” id=”sp-total” style=”color:var(--muted)”>—<span style=”font-size:13px;color:var(--muted)”>/100</span></div></div>
+        <div class=”sp-row”><div class=”sp-lbl”>GPS</div><div class=”sp-track”><div class=”sp-fill” id=”spf-gps”></div></div><div class=”sp-pts” id=”spp-gps”>0/30</div></div>
+        <div class=”sp-row”><div class=”sp-lbl”>Ownership</div><div class=”sp-track”><div class=”sp-fill” id=”spf-own”></div></div><div class=”sp-pts” id=”spp-own”>0/25</div></div>
+        <div class=”sp-row”><div class=”sp-lbl”>Anomaly AI</div><div class=”sp-track”><div class=”sp-fill” id=”spf-ano”></div></div><div class=”sp-pts” id=”spp-ano”>0/25</div></div>
+        <div class=”sp-row”><div class=”sp-lbl”>Satellite</div><div class=”sp-track”><div class=”sp-fill” id=”spf-sat”></div></div><div class=”sp-pts” id=”spp-sat”>0/20</div></div>
+        <div class=”sp-note”>Estimate only — real score comes from the live AI run. 70/100 needed to mint.</div>
+      </div>
+      <div class=”cold-notice”><strong>Note:</strong> The AI backend runs on Render free tier — the <strong>first request after inactivity takes ~15–30 s</strong> to wake up. Subsequent submissions are fast.</div>
+      <div class=”wizard-nav”>
+        <button class=”wz-back” onclick=”wizardBack()”>← Back</button>
+        <button class=”wz-next” id=”submit-btn” onclick=”submitProject()”>Run AI Verification →</button>
+      </div>
     </div>
-    <div class="sp-card">
-      <div class="sp-head"><div class="sp-title">Estimated score preview</div><div class="sp-total" id="sp-total" style="color:var(--muted)">—<span style="font-size:13px;color:var(--muted)">/100</span></div></div>
-      <div class="sp-row"><div class="sp-lbl">GPS</div><div class="sp-track"><div class="sp-fill" id="spf-gps"></div></div><div class="sp-pts" id="spp-gps">0/30</div></div>
-      <div class="sp-row"><div class="sp-lbl">Ownership</div><div class="sp-track"><div class="sp-fill" id="spf-own"></div></div><div class="sp-pts" id="spp-own">0/25</div></div>
-      <div class="sp-row"><div class="sp-lbl">Anomaly AI</div><div class="sp-track"><div class="sp-fill" id="spf-ano"></div></div><div class="sp-pts" id="spp-ano">0/25</div></div>
-      <div class="sp-row"><div class="sp-lbl">Satellite</div><div class="sp-track"><div class="sp-fill" id="spf-sat"></div></div><div class="sp-pts" id="spp-sat">0/20</div></div>
-      <div class="sp-note">Estimate only — the real score comes from the live AI run. 70/100 needed to mint.</div>
-    </div>
-    <div class="cold-notice"><strong>Note:</strong> The AI backend runs on Render free tier — the <strong>first request after inactivity takes ~15–30 s</strong> to wake up. The verification timer above tracks live progress. Subsequent submissions are fast.</div>
-    <button class="submit-btn" id="submit-btn" onclick="submitProject()">Run AI Verification →</button>
   </div>
 </div>
 
@@ -1594,6 +1703,11 @@ nav.scrolled{box-shadow:0 1px 0 var(--border2),0 4px 28px rgba(0,0,0,.45)!import
 </div>
 
 <footer class="site-footer">
+  <div class="ft-live-stats">
+    <div class="ft-ls-item"><div class="ft-ls-num green" id="ft-tonnes">24,500</div><div class="ft-ls-label">Tonnes CO₂<br>Permanently Retired</div></div>
+    <div class="ft-ls-item"><div class="ft-ls-num red" id="ft-frauds">3</div><div class="ft-ls-label">Fraud Attempts<br>Blocked On-Chain</div></div>
+    <div class="ft-ls-item"><div class="ft-ls-num" id="ft-credits">1</div><div class="ft-ls-label">Verified Credits<br>Live on Mainnet</div></div>
+  </div>
   <div class="ft-grid">
     <div class="ft-brand">
       <div class="nav-logo" style="cursor:default;margin-bottom:12px"><img class="logo-mark" src="assets/logo-icon.png" alt="TerraLedger"/>TerraLedger</div>
@@ -1791,6 +1905,7 @@ function showPage(id){
   if(id==='market') loadMarketplace()
   if(id==='landing'){ loadStats(); loadFraudLog() }
   if(id==='verify') startPipeAnim(); else stopPipeAnim()
+  if(id==='submit'){ currentWizardStep=1; for(let i=1;i<=3;i++) document.getElementById('wz-step-'+i).style.display=i===1?'':'none'; updateWizardIndicator() }
 }
 
 // Looping "scan" through the empty-state pipeline so it feels live
@@ -3140,6 +3255,40 @@ if(!IS_TESTNET){ const fb=document.getElementById('faucet-btn'); if(fb) fb.style
 // Live score preview as the submit form changes
 document.getElementById('page-submit').addEventListener('input',updateScorePreview)
 document.getElementById('page-submit').addEventListener('change',updateScorePreview)
+
+let currentWizardStep=1
+function wizardNext(){
+  if(currentWizardStep<3){
+    document.getElementById('wz-step-'+currentWizardStep).style.display='none'
+    currentWizardStep++
+    document.getElementById('wz-step-'+currentWizardStep).style.display=''
+    updateWizardIndicator()
+    window.scrollTo(0,0)
+    if(currentWizardStep===3) updateScorePreview()
+  }
+}
+function wizardBack(){
+  if(currentWizardStep>1){
+    document.getElementById('wz-step-'+currentWizardStep).style.display='none'
+    currentWizardStep--
+    document.getElementById('wz-step-'+currentWizardStep).style.display=''
+    updateWizardIndicator()
+    window.scrollTo(0,0)
+  }
+}
+function updateWizardIndicator(){
+  for(let i=1;i<=3;i++){
+    const num=document.getElementById('wz-num-'+i)
+    const lbl=document.getElementById('wz-lbl-'+i)
+    if(i<currentWizardStep){ num.className='wz-num done'; num.textContent='✓'; lbl.className='wz-label' }
+    else if(i===currentWizardStep){ num.className='wz-num active'; num.textContent=String(i); lbl.className='wz-label active' }
+    else{ num.className='wz-num'; num.textContent=String(i); lbl.className='wz-label' }
+    if(i<3){
+      const line=document.getElementById('wz-line-'+i)
+      line.className=i<currentWizardStep?'wz-line done':'wz-line'
+    }
+  }
+}
 
 // Scroll-reveal — tag landing + footer blocks, stagger grid children, observe
 function initReveal(){
